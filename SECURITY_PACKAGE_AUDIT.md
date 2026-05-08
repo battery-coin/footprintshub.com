@@ -38,6 +38,38 @@ The package has not been installed or enabled.
 - No real secrets or private keys were identified in the lightweight scan. Test fixtures include placeholder values such as `abc123`, `password`, and sample tokens.
 - The package includes observers, plugins, setup patches, admin controllers, Web API/GraphQL hooks, and admin security behavior. Those are expected for this package type but require runtime validation before enablement.
 
+## Deeper Structure Audit
+
+Observed package contents include:
+
+- Magento module `registration.php` files.
+- Module `etc/module.xml` files.
+- Composer module definitions using `type: magento2-module`.
+- Admin routes, ACL configuration, admin system configuration, and UI components.
+- Frontend routes/layouts/templates for reCAPTCHA and security.txt flows.
+- Plugins and observers for login, forgot password, checkout, coupon, PayPal, review, contact, newsletter, wishlist, send-friend, web API, and GraphQL protections.
+- CLI commands for two-factor authentication administration.
+- Setup data/schema patches for two-factor authentication migration and encrypted configuration handling.
+- Database schema definitions for two-factor authentication user configuration and country data.
+- Email templates and admin notification behavior for 2FA configuration.
+- CSP whitelist configuration for reCAPTCHA modules.
+
+Not observed in the lightweight audit:
+
+- Hardcoded production secrets.
+- Private key files.
+- Database dumps.
+- Obvious cron job definitions.
+- Production credential files.
+
+## Compatibility Notes
+
+The security package and the cloned Magento fork both target PHP `~8.3.0 || ~8.4.0 || ~8.5.0`.
+
+Compatibility still needs to be validated against the exact Magento source installed in `footprintshub.com`.
+
+Composer HTTPS is currently blocked by local CA validation, so Composer-based integration is not ready.
+
 ## Recommendation
 
 Do not integrate yet.
