@@ -2,7 +2,7 @@
 
 Audit date: 2026-05-08
 
-## Current Repository State
+## Previous Repository State
 
 State A: this repository currently contains baseline docs only and no Magento source.
 
@@ -44,14 +44,38 @@ Observed:
 
 ## Import Decision
 
-Magento source was not copied into this repository during this pass.
+Magento source foundation was copied into this repository on branch `magento-local-readiness`.
 
-Reasons:
+Copied from:
 
-- Composer HTTPS is blocked.
-- OpenSearch is not running.
-- Magento source import is large and should be done as a separate reviewed commit.
-- The fork contains directories such as `vendor`, `generated`, and `var` that should not be copied blindly.
+`C:\Users\saveo\OneDrive\Documents\GitHub\magento2`
+
+Included:
+
+- `app/`
+- `bin/`
+- `dev/`
+- `lib/`
+- `phpserver/`
+- `pub/`
+- `setup/`
+- Magento root metadata and sample config files
+- `composer.json`
+- `composer.lock`
+
+Excluded or ignored:
+
+- `.git`
+- `vendor/`
+- `generated/`
+- `var/`
+- `app/etc/env.php`
+- `auth.json`
+- `.env`
+
+Magento test fixture `.sql` and `.zip` files under `dev/` remain ignored by the repository dump/archive rules.
+
+Composer dependency installation has not completed.
 
 ## Copy Exclusions If Source Import Is Chosen
 
@@ -70,4 +94,3 @@ Reasons:
 ## Rollback Method
 
 Use a dedicated branch and review `git status` before committing. If the import is wrong, delete only uncommitted imported files from the branch or reset the branch before push. Do not force-push over shared work.
-

@@ -19,7 +19,11 @@ Observed error:
 open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified
 ```
 
-OpenSearch is not responding at `http://localhost:9200`.
+OpenSearch is now responding at `http://localhost:9200`.
+
+Observed local version:
+
+- OpenSearch 2.19.5
 
 ## Local Compose File
 

@@ -20,6 +20,7 @@ Passing items:
 - Disk free space is OK.
 - HTTP connectivity to Packagist is OK.
 - `zip` extension is now present.
+- `ftp` extension is now present.
 
 Blocking items:
 
@@ -48,6 +49,21 @@ The following settings were applied:
 
 Composer HTTPS still fails, so Magento Composer install is blocked until the Windows/Laragon CA trust issue is repaired.
 
+## Install Attempt
+
+After enabling `ext-ftp`, `composer install --no-interaction` was attempted from the Magento root in this repository.
+
+Result: not complete.
+
+Observed issues:
+
+- Install timed out before all 214 package operations completed.
+- Multiple dist downloads failed with curl error 60.
+- Some package ZIP writes under `vendor/composer/tmp-*.zip` failed with `Permission denied`.
+- Composer fell back to source downloads for several packages.
+
+`vendor/` remains ignored and must not be committed.
+
 ## Auth Status
 
 No project `auth.json` exists in this repository.
@@ -62,4 +78,3 @@ Magento Marketplace credentials may be required for Composer-based Magento packa
 2. Re-run `composer diagnose`.
 3. Run `composer self-update --update-keys` if Composer asks for verification keys.
 4. Keep `auth.json` outside Git.
-

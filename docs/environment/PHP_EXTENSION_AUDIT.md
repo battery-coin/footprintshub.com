@@ -12,6 +12,7 @@ Backups created before editing:
 
 - `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak`
 - `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-ca`
+- `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-ftp`
 
 ## Summary
 
@@ -19,6 +20,7 @@ Magento-required PHP extensions are now loaded from the CLI.
 
 The following existing `php.ini` extension lines were uncommented after confirming the DLLs existed:
 
+- `extension=ftp`
 - `extension=soap`
 - `extension=sockets`
 - `extension=zip`
@@ -34,6 +36,7 @@ Composer still has a separate HTTPS CA validation blocker documented in `COMPOSE
 | curl | yes | required | none |
 | dom | yes | required | none |
 | fileinfo | yes | required | none |
+| ftp | yes | required by current Magento lock file | enabled in php.ini |
 | gd | yes | required | none |
 | hash | yes | required | none |
 | iconv | yes | required | none |
@@ -53,4 +56,3 @@ Composer still has a separate HTTPS CA validation blocker documented in `COMPOSE
 | xsl | yes | required | none |
 | zip | yes | required | enabled in php.ini |
 | zlib | yes | required | none |
-
