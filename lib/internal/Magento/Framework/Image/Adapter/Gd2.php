@@ -91,6 +91,10 @@ class Gd2 extends AbstractAdapter
      */
     private function validateURLScheme(string $filename) : bool
     {
+        if (preg_match('/^[a-zA-Z]:[\\\\\\/]/', $filename)) {
+            return true;
+        }
+
         $allowed_schemes = ['ftp', 'ftps', 'http', 'https'];
         $url = parse_url($filename);
         if ($url && isset($url['scheme']) && !in_array($url['scheme'], $allowed_schemes)) {

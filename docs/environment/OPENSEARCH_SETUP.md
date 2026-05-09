@@ -11,19 +11,15 @@ Docker CLI is installed:
 - Docker version: 27.4.0
 - Docker Compose version: v2.31.0-desktop.2
 
-Docker Desktop Linux engine is not currently running.
-
-Observed error:
-
-```text
-open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified
-```
-
 OpenSearch is now responding at `http://localhost:9200`.
 
 Observed local version:
 
 - OpenSearch 2.19.5
+
+Container:
+
+- `footprintshub-opensearch`
 
 ## Local Compose File
 
@@ -31,7 +27,7 @@ The repository includes `docker-compose.opensearch.yml` for local development.
 
 `docker compose -f docker-compose.opensearch.yml config` succeeds. Docker Compose warns that the top-level `version` attribute is obsolete in modern Compose, but the file is still valid.
 
-Start Docker Desktop, then run:
+Start Docker Desktop if needed, then run:
 
 ```powershell
 docker compose -f docker-compose.opensearch.yml up -d

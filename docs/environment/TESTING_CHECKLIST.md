@@ -14,12 +14,12 @@
 ## Magento
 
 - `composer validate`
-- `composer install`
-- `php bin/magento --version`
-- `php bin/magento setup:install`
-- `php bin/magento cache:flush`
-- `php bin/magento indexer:reindex`
-- `php bin/magento module:status`
+- `composer install` - completed locally
+- `php bin/magento --version` - completed locally
+- `php bin/magento setup:install` - completed locally
+- `php bin/magento cache:flush` - completed locally
+- `php bin/magento indexer:reindex` - completed locally
+- `php bin/magento module:status` - completed locally
 - frontend loads
 - admin loads
 - product page loads
@@ -46,4 +46,3 @@
 - OpenSearch secured in production
 - CSP reviewed
 - file permissions documented
-

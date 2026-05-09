@@ -10,7 +10,7 @@ PHP binary: `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.exe`
 
 ## Diagnose Result
 
-`composer diagnose` does not fully pass.
+`composer install` completed successfully, but `composer diagnose` still reports environment cleanup items.
 
 Passing items:
 
@@ -22,47 +22,55 @@ Passing items:
 - `zip` extension is now present.
 - `ftp` extension is now present.
 
-Blocking items:
+Remaining items:
 
 - Missing Composer pubkeys for tag and dev verification.
-- Composer version check fails because HTTPS requests fail with curl error 60.
-- Composer audit fails because HTTPS requests to Packagist fail with curl error 60.
-- GitHub API rate-limit check fails because HTTPS requests fail with curl error 60.
+- Composer 2.9.4 is installed while a newer Composer release may be available.
+- HTTPS checks in `composer diagnose` still report curl error 60 in this shell.
+- Composer's audit check reported a local cache permission problem under `C:\Users\saveo\AppData\Local\Composer`.
 
-Observed error:
+Observed recurring error:
 
 ```text
 SSL certificate problem: unable to get local issuer certificate
 ```
 
-## CA Configuration Attempted
+## CA Configuration
 
-Laragon CA bundle exists:
+A Windows certificate-store bundle was generated and configured for PHP:
 
-`D:\laragon\etc\ssl\cacert.pem`
+`D:\laragon\etc\ssl\windows-ca-bundle.pem`
 
-The following settings were applied:
+The following PHP settings were applied:
 
-- `curl.cainfo="D:\laragon\etc\ssl\cacert.pem"`
-- `openssl.cafile="D:\laragon\etc\ssl\cacert.pem"`
-- Composer global `cafile` set to `D:\laragon\etc\ssl\cacert.pem`
+- `curl.cainfo="D:\laragon\etc\ssl\windows-ca-bundle.pem"`
+- `openssl.cafile="D:\laragon\etc\ssl\windows-ca-bundle.pem"`
 
-Composer HTTPS still fails, so Magento Composer install is blocked until the Windows/Laragon CA trust issue is repaired.
+Backup created before the CA edit:
+
+- `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-windows-ca`
+
+Composer global config currently still reports a cafile under Git for Windows:
+
+```text
+D:\Program Files\Git\mingw64\etc\ssl\certs\ca-bundle.crt
+```
+
+Do not write machine-specific `cafile` settings into this repository's `composer.json`.
 
 ## Install Attempt
 
-After enabling `ext-ftp`, `composer install --no-interaction` was attempted from the Magento root in this repository.
+After enabling `ext-ftp` and making local CA adjustments, Composer installation was completed from the Magento root in this repository:
 
-Result: not complete.
+```powershell
+composer install --no-dev --prefer-dist --no-progress --no-interaction
+```
 
-Observed issues:
+Result: complete.
 
-- Install timed out before all 214 package operations completed.
-- Multiple dist downloads failed with curl error 60.
-- Some package ZIP writes under `vendor/composer/tmp-*.zip` failed with `Permission denied`.
-- Composer fell back to source downloads for several packages.
+`vendor/` exists locally and remains ignored. Do not commit it unless the deployment policy explicitly changes.
 
-`vendor/` remains ignored and must not be committed.
+Composer reported abandoned package notices. These are inherited from the current Magento dependency set and should be reviewed during later dependency maintenance, not changed during initial store setup.
 
 ## Auth Status
 
@@ -72,9 +80,10 @@ Do not commit `auth.json`.
 
 Magento Marketplace credentials may be required for Composer-based Magento package installation. If needed, configure them manually outside Git.
 
-## Recommended Manual Fixes
+## Recommended Follow-Ups
 
-1. Update or replace `D:\laragon\etc\ssl\cacert.pem` with a current CA bundle.
-2. Re-run `composer diagnose`.
-3. Run `composer self-update --update-keys` if Composer asks for verification keys.
-4. Keep `auth.json` outside Git.
+1. Run `composer self-update --update-keys` if Composer asks for verification keys.
+2. Repair Composer's global CA/cafile configuration outside the repository.
+3. Clear or repair permissions on `C:\Users\saveo\AppData\Local\Composer` if audit/cache reads fail.
+4. Review Composer version updates outside this Magento setup branch.
+5. Keep `auth.json` outside Git.

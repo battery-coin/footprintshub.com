@@ -4,6 +4,22 @@ These commands are templates for local development only.
 
 Do not commit real credentials. Do not commit `app/etc/env.php`.
 
+## Local Install Result
+
+Local Magento setup installation completed successfully after Composer, MySQL, OpenSearch, and Windows path handling were repaired.
+
+Observed local admin URI:
+
+```text
+/admin_gz0jb71
+```
+
+Use it only with the local base URL configured for this machine:
+
+```text
+http://footprintshub.test/admin_gz0jb71
+```
+
 ## Validate Source
 
 Run after Magento source exists in this repository:
@@ -47,3 +63,4 @@ php bin/magento indexer:reindex
 php bin/magento module:status
 ```
 
+These post-install checks completed successfully in the local CLI environment.

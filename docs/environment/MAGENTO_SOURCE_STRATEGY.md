@@ -18,9 +18,9 @@ Missing in `footprintshub.com`:
 
 ## Preferred Strategy
 
-Use Composer-based Magento Open Source installation when HTTPS Composer connectivity and credentials are ready.
+Use Composer-based dependency installation after Magento source is present.
 
-Composer is currently blocked by CA validation failures, so the Composer install cannot be safely completed yet.
+Composer HTTPS connectivity has been repaired, and dependency installation completed locally with `composer install --no-dev --prefer-dist --no-progress --no-interaction`.
 
 ## Alternative Strategy
 
@@ -75,7 +75,15 @@ Excluded or ignored:
 
 Magento test fixture `.sql` and `.zip` files under `dev/` remain ignored by the repository dump/archive rules.
 
-Composer dependency installation has not completed.
+Composer dependency installation has completed locally. `vendor/` remains ignored and must not be committed.
+
+Additional restoration commit:
+
+- Missing Magento framework and web-library files were restored from the source fork after the initial import exposed a missing `Magento\Framework\MessageQueue\Config\Reader\Env` class.
+
+Local archive note:
+
+- `magento2-2.4-develop.zip` exists in the repository working tree as a user-provided source archive and is ignored by the repository archive rules. Do not commit it.
 
 ## Copy Exclusions If Source Import Is Chosen
 

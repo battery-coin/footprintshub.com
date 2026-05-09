@@ -1,25 +1,30 @@
-# Magento Install Blockers
+# Magento Install Status
 
 Audit date: 2026-05-08
 
-Magento is not installed yet.
+Magento has been installed locally for development.
 
-## Current Blockers
+## Completed
 
-- Composer HTTPS requests fail with `SSL certificate problem: unable to get local issuer certificate`.
-- `composer install --no-interaction` timed out before dependency installation completed.
-- Composer also reported permission errors writing package ZIPs under `vendor/composer`.
-- Local base URL and Laragon virtual host still need to be configured.
-- `php bin/magento --version` does not run until `vendor/autoload.php` exists.
+- Composer HTTPS requests were fixed by configuring a Windows certificate-store bundle.
+- `composer install --no-dev --prefer-dist --no-progress --no-interaction` completed.
+- `php bin/magento --version` runs and reports `Magento CLI dev-main`.
+- OpenSearch responds at `http://localhost:9200`.
+- MySQL database `footprintshub_magento` exists.
+- Local Magento setup installation completed successfully.
+- `php bin/magento cache:flush` completed.
+- `php bin/magento indexer:reindex` completed.
+- `php bin/magento module:status` completed.
 
-## Cleared Items
+## Resolved Install Issues
 
-- PHP 8.3.30 is available.
-- Required PHP extensions are loaded.
-- Composer 2.9.4 is available.
-- MySQL 8.4.3 is available.
-- Local database `footprintshub_magento` exists.
-- Local database user `footprintshub` exists.
-- OpenSearch is running at `http://localhost:9200`.
-- `.gitignore` excludes Magento secrets and generated directories.
-- Magento source foundation exists in this repository.
+- Composer CA validation failed until PHP and Composer were pointed at `D:\laragon\etc\ssl\windows-ca-bundle.pem`.
+- Magento setup initially failed on MySQL trigger creation until local MySQL `log_bin_trust_function_creators` was enabled.
+- Magento setup initially failed while registering themes because PHP GD rejected Windows drive-letter image paths. The Magento framework image adapter was patched to allow local Windows absolute paths such as `C:\...`.
+
+## Remaining Local Work
+
+- Configure Laragon so `http://footprintshub.test/` serves this repository's `pub` directory.
+- Verify storefront and admin pages in a browser.
+- Keep `app/etc/env.php`, `app/etc/config.php`, `vendor/`, `var/`, `generated/`, `pub/static` generated files, and `pub/media` generated files out of Git.
+- Do not reuse local development credentials in staging or production.

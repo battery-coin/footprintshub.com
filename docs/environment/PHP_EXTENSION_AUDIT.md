@@ -13,6 +13,7 @@ Backups created before editing:
 - `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak`
 - `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-ca`
 - `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-ftp`
+- `D:\laragon\bin\php\php-8.3.30-Win32-vs16-x64\php.ini.bak-windows-ca`
 
 ## Summary
 
@@ -25,7 +26,7 @@ The following existing `php.ini` extension lines were uncommented after confirmi
 - `extension=sockets`
 - `extension=zip`
 
-Composer still has a separate HTTPS CA validation blocker documented in `COMPOSER_AUDIT.md`.
+Composer HTTPS CA validation was fixed by configuring PHP and Composer to use `D:\laragon\etc\ssl\windows-ca-bundle.pem`.
 
 ## Extension Matrix
 

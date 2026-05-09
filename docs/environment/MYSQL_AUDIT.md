@@ -29,9 +29,16 @@ The local development user was granted privileges on `footprintshub_magento`.
 
 The user connection was tested successfully.
 
+For local Magento installation, MySQL binary logging required enabling function/trigger trust:
+
+```sql
+SET GLOBAL log_bin_trust_function_creators = 1;
+```
+
+This cleared Magento's trigger creation error during setup. Review production database policy separately instead of blindly carrying this local setting forward.
+
 ## Secret Handling
 
 The local development password is only for local setup and must not be reused in staging or production.
 
 Do not commit real database credentials to `.env`, `app/etc/env.php`, docs, scripts, or deployment config.
-
