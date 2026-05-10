@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Founder Decoder Bundle">
+  <rect width="900" height="900" fill="#111"/>
+  <rect x="130" y="130" width="640" height="640" fill="none" stroke="#c7a057" stroke-width="28"/>
+  <path d="M260 450 H640 M450 260 V640" stroke="#fffaf2" stroke-width="28"/>
+  <circle cx="450" cy="450" r="90" fill="#a02334"/>
+  <text x="190" y="820" fill="#fffaf2" font-family="Arial" font-size="44" font-weight="700">DECODER BUNDLE</text>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Footprints Supporter Bundle">
+  <rect width="900" height="900" fill="#111"/>
+  <circle cx="180" cy="160" r="180" fill="#c7a057" opacity=".35"/>
+  <path d="M120 650 C260 500 390 740 520 570 S720 470 800 610" fill="none" stroke="#fffaf2" stroke-width="28" stroke-linecap="round"/>
+  <text x="80" y="790" fill="#fffaf2" font-family="Arial" font-size="54" font-weight="700">FOOTPRINTS</text>
+</svg>

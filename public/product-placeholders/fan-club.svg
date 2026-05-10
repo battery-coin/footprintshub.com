@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Hero Studio Fan Club Starter Pack">
+  <rect width="900" height="900" fill="#f7f5f0"/>
+  <path d="M450 150 L675 280 V620 L450 750 L225 620 V280 Z" fill="#111"/>
+  <path d="M350 520 V330 H430 C510 330 555 365 555 430 C555 495 510 520 430 520 Z" fill="none" stroke="#c7a057" stroke-width="28"/>
+  <text x="235" y="820" fill="#111" font-family="Arial" font-size="46" font-weight="700">FAN CLUB</text>
+</svg>

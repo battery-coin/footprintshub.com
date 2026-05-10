@@ -1,16 +1,24 @@
 # Legal Copy Guardrails
 
-## Purpose
+This repository includes placeholder legal pages for early product and checkout planning. They are not legal advice and need attorney review before public sales.
 
-This document captures early copy and claims guardrails for commerce pages, product pages, promotions, collectibles, digital unlocks, and future token-gated utility products.
+## Required Copy Rules
 
-## Initial Guardrails
+- Do not describe Battery Coin as an investment.
+- Do not promise profits, ROI, resale value, appreciation, yield, passive income, or financial returns.
+- Do not describe blind boxes, booster packs, or randomized collectibles as gambling.
+- Publish odds before selling randomized products where required.
+- Use terms like collectible, game utility, membership access, supporter bundle, merchandise, and digital unlock.
+- Include preorder terms before accepting preorder payments.
+- Include shipping timelines only when real.
+- Include fan club official/unofficial disclaimers where needed.
 
-- Do not imply guaranteed resale value, investment return, token appreciation, or financial gain.
-- Keep collectible descriptions focused on product contents, edition details, availability, and fan utility.
-- Clearly distinguish physical products from digital unlocks.
-- Clearly distinguish future roadmap items from available functionality.
-- Avoid unauthorized use of third-party trademarks, likenesses, music, art, or copyrighted material.
-- Use accurate inventory, shipping, refund, and preorder language.
-- Add jurisdiction-specific legal review before launching token-gated utility or crypto-adjacent checkout features.
+## Placeholder Pages
 
+- `/legal/terms`
+- `/legal/privacy`
+- `/legal/refunds`
+- `/legal/shipping`
+- `/legal/preorders`
+- `/legal/fan-club-disclaimer`
+- `/legal/digital-goods`

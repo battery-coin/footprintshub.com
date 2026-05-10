@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Digital Twin Registration">
+  <rect width="900" height="900" fill="#090909"/>
+  <circle cx="450" cy="450" r="250" fill="none" stroke="#fffaf2" stroke-width="18" opacity=".5"/>
+  <circle cx="450" cy="450" r="150" fill="none" stroke="#c7a057" stroke-width="24"/>
+  <path d="M450 210 V690 M210 450 H690" stroke="#a02334" stroke-width="18"/>
+  <text x="240" y="790" fill="#fffaf2" font-family="Arial" font-size="46" font-weight="700">DIGITAL TWIN</text>
+</svg>

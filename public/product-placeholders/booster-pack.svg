@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Matrix Decoded Booster Pack">
+  <rect width="900" height="900" fill="#101010"/>
+  <path d="M210 140 H690 L640 760 H260 Z" fill="#a02334"/>
+  <path d="M260 210 H640 L600 690 H300 Z" fill="#111"/>
+  <circle cx="450" cy="430" r="130" fill="none" stroke="#c7a057" stroke-width="24"/>
+  <text x="270" y="805" fill="#fffaf2" font-family="Arial" font-size="46" font-weight="700">BOOSTER S1</text>
+</svg>

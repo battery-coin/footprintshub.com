@@ -1,38 +1,54 @@
-# Footprints Hub Store
+# FootprintsHub Commerce
 
-Standalone Magento Open Source ecommerce store for Footprints Hub, Matrix Decoded, Hero Studio commerce, collectibles, merchandise, blind boxes, booster packs, founder bundles, digital unlocks, and future Battery Coin utility checkout.
+Custom Next.js ecommerce application for FootprintsHub and the future Hero Studio creator shop engine.
 
-This repository is intended to become the primary ecommerce engine for:
+This branch pivots away from Magento and builds a lighter open-source commerce stack:
 
-- Footprints music merchandise
-- Matrix Decoded trading cards
-- booster packs
-- blind boxes
-- Team Tardee plushes
-- Satoshi Nakamoto collectibles
-- Hero Studio creator drops
-- fan club merchandise
-- supporter bundles
-- limited edition collectibles
-- future digital twin registration
-- future token-gated utility products
+- Next.js App Router
+- React
+- TypeScript
+- Tailwind CSS
+- Prisma ORM
+- Neon Postgres
+- Stripe Checkout
+- Railway hosting
+- Cloudflare DNS, SSL, WAF, and future wildcard shop routing
 
-## Architecture
+## Current Scope
 
-Hero Studio remains the fan, audition, campaign, social, and creator platform.
+FootprintsHub is the flagship standalone shop at `footprintshub.com`.
 
-Footprints Hub Store becomes the standalone Magento commerce engine.
+Hero Studio commerce comes later through shared shop IDs, product cards, checkout redirects, webhooks, and digital unlock events. Magento is not embedded in Hero Studio.
 
-Integration between them should happen through:
+## Development
 
-- store links
-- checkout redirects
-- Magento REST API
-- Magento GraphQL API
-- signed webhooks
-- product feed components
-- customer/order ownership verification
-- future digital unlock bridge
+```powershell
+npm install
+npm run dev
+```
 
-Do not place Magento directly inside Hero Studio.
+Open:
 
+```text
+http://localhost:3000
+```
+
+## Environment
+
+Copy `.env.example` to `.env.local` and fill in local values. Never commit `.env`, Stripe secrets, Neon credentials, or production secrets.
+
+## Key Scripts
+
+```powershell
+npm run dev
+npm run build
+npm run lint
+npm run typecheck
+npm run prisma:generate
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+## Safety
+
+The app never trusts client-side prices at checkout. Checkout routes recalculate line items from the server catalog/database before creating a Stripe Checkout Session.

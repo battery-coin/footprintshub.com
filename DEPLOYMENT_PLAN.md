@@ -1,35 +1,30 @@
 # Deployment Plan
 
-## First-Pass Strategy
+Primary deployment target: Railway.
 
-Keep deployment planning separate from Magento installation until the local foundation is stable.
+Primary database: Neon Postgres.
 
-## Environments
+Primary DNS/security edge: Cloudflare.
 
-- Local development
-- Staging
-- Production
+## Railway
 
-## Secrets Policy
+- Build command: `npm run build`
+- Start command: `npm run start`
+- Health check: `/api/health`
+- Required env vars are documented in `.env.example`.
 
-Do not commit:
+## Neon
 
-- `app/etc/env.php`
-- `auth.json`
-- production `.env` files
-- private keys
-- database dumps
-- payment provider secrets
-- webhook signing secrets
+- Create a Neon project.
+- Copy the pooled production connection string into Railway as `DATABASE_URL`.
+- Run Prisma migrations from a trusted environment.
 
-## Deployment Questions
+## Cloudflare
 
-- Hosting target for Magento runtime
-- Database provider and backup policy
-- OpenSearch hosting
-- Redis/cache hosting
-- CDN/media storage approach
-- Domain and SSL management
-- CI/CD build and deploy process
-- Magento configuration management policy, including whether `app/etc/config.php` should eventually be committed
+- Point `footprintshub.com` and `www.footprintshub.com` to Railway.
+- Enable SSL, WAF, bot protection, and caching rules.
+- Future wildcard: `*.herostudio.org` for creator shops.
 
+## SiteGround
+
+Use SiteGround only for email, legacy PHP, static fallback pages, or emergency redirects if needed.

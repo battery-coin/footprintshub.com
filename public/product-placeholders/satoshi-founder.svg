@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Satoshi Founder Pack">
+  <rect width="900" height="900" fill="#0d0d0d"/>
+  <circle cx="450" cy="370" r="210" fill="none" stroke="#c7a057" stroke-width="30"/>
+  <path d="M350 440 C350 520 550 520 550 440 C550 360 350 380 350 300 C350 230 550 230 550 300" fill="none" stroke="#fffaf2" stroke-width="30" stroke-linecap="round"/>
+  <text x="210" y="760" fill="#fffaf2" font-family="Arial" font-size="48" font-weight="700">FOUNDER PACK</text>
+</svg>

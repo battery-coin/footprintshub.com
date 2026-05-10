@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Team Tardee Plush Blind Box">
+  <rect width="900" height="900" fill="#fffaf2"/>
+  <rect x="160" y="210" width="580" height="460" rx="34" fill="#111"/>
+  <path d="M160 320 L450 180 L740 320" fill="#a02334"/>
+  <circle cx="370" cy="445" r="46" fill="#c7a057"/>
+  <circle cx="530" cy="445" r="46" fill="#c7a057"/>
+  <text x="190" y="760" fill="#111" font-family="Arial" font-size="48" font-weight="700">BLIND BOX</text>
+</svg>

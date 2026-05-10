@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ShopStatus {
+  draft
+  active
+  suspended
+}
+
+enum DomainType {
+  system_subdomain
+  custom_domain
+  root_domain
+}
+
+enum DomainStatus {
+  pending
+  active
+  failed
+}
+
+enum ProductType {
+  physical
+  digital
+  bundle
+  membership
+  preorder
+  blind_box
+  booster_pack
+}
+
+enum Franchise {
+  footprints
+  matrix_decoded
+  hero_studio
+  battery_movement
+  other
+}
+
+enum ProductStatus {
+  draft
+  active
+  archived
+}
+
+enum OrderStatus {
+  pending
+  paid
+  fulfilled
+  cancelled
+  refunded
+}
+
+enum DiscountType {
+  percent
+  fixed
+}
+
+model Shop {
+  id           String       @id @default(cuid())
+  name         String
+  slug         String       @unique
+  subdomain    String?      @unique
+  customDomain String?      @unique
+  description  String?
+  logoUrl      String?
+  bannerUrl    String?
+  ownerUserId  String?
+  status       ShopStatus   @default(draft)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  domains        ShopDomain[]
+  products       Product[]
+  carts          Cart[]
+  orders         Order[]
+  discounts      DiscountCode[]
+  digitalUnlocks DigitalUnlock[]
+  creatorPayouts CreatorPayout[]
+}
+
+model ShopDomain {
+  id        String       @id @default(cuid())
+  shopId    String
+  hostname  String       @unique
+  type      DomainType
+  status    DomainStatus @default(pending)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model Product {
+  id                     String        @id @default(cuid())
+  shopId                 String
+  title                  String
+  slug                   String
+  subtitle               String?
+  description            String
+  shortDescription       String?
+  productType            ProductType
+  franchise              Franchise
+  status                 ProductStatus @default(draft)
+  priceCents             Int
+  compareAtPriceCents    Int?
+  currency               String        @default("USD")
+  sku                    String?
+  inventoryQuantity      Int           @default(0)
+  trackInventory         Boolean       @default(true)
+  imageUrl               String?
+  galleryUrls            String[]      @default([])
+  isFeatured             Boolean       @default(false)
+  isLimitedEdition       Boolean       @default(false)
+  preorderStatus         String?
+  digitalUnlockIncluded  Boolean       @default(false)
+  tokenGated             Boolean       @default(false)
+  metadata               Json?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  shop       Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  variants   ProductVariant[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  unlocks    DigitalUnlock[]
+
+  @@unique([shopId, slug])
+  @@index([shopId])
+  @@index([franchise])
+  @@index([productType])
+}
+
+model ProductVariant {
+  id                String   @id @default(cuid())
+  productId         String
+  title             String
+  sku               String?
+  priceCents        Int?
+  inventoryQuantity Int      @default(0)
+  attributes        Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+model Cart {
+  id         String   @id @default(cuid())
+  shopId     String
+  customerId String?
+  sessionId  String
+  currency   String   @default("USD")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?  @relation(fields: [customerId], references: [id])
+  items    CartItem[]
+
+  @@index([shopId])
+  @@index([sessionId])
+}
+
+model CartItem {
+  id             String   @id @default(cuid())
+  cartId         String
+  productId      String
+  variantId      String?
+  quantity       Int
+  unitPriceCents Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@index([cartId])
+  @@index([productId])
+}
+
+model Order {
+  id                      String   @id @default(cuid())
+  shopId                  String
+  customerId              String?
+  orderNumber             String   @unique
+  status                  OrderStatus @default(pending)
+  paymentStatus           String   @default("pending")
+  fulfillmentStatus       String   @default("unfulfilled")
+  subtotalCents           Int
+  discountCents           Int      @default(0)
+  taxCents                Int      @default(0)
+  shippingCents           Int      @default(0)
+  totalCents              Int
+  currency                String   @default("USD")
+  stripeCheckoutSessionId String?  @unique
+  stripePaymentIntentId   String?
+  customerEmail           String?
+  shippingAddress         Json?
+  billingAddress          Json?
+  metadata                Json?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  shop     Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?   @relation(fields: [customerId], references: [id])
+  items    OrderItem[]
+  unlocks  DigitalUnlock[]
+  payouts  CreatorPayout[]
+
+  @@index([shopId])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  productId      String
+  variantId      String?
+  titleSnapshot  String
+  skuSnapshot    String?
+  quantity       Int
+  unitPriceCents Int
+  totalCents     Int
+  metadata       Json?
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  unlocks DigitalUnlock[]
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  carts   Cart[]
+  orders  Order[]
+  unlocks DigitalUnlock[]
+}
+
+model DiscountCode {
+  id              String       @id @default(cuid())
+  shopId          String
+  code            String
+  type            DiscountType
+  value           Int
+  startsAt        DateTime?
+  endsAt          DateTime?
+  maxRedemptions  Int?
+  redemptionCount Int          @default(0)
+  active          Boolean      @default(true)
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, code])
+  @@index([shopId])
+}
+
+model DigitalUnlock {
+  id          String    @id @default(cuid())
+  shopId      String
+  orderId     String
+  orderItemId String
+  customerId  String
+  productId   String
+  unlockType  String
+  unlockCode  String
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  redeemedAt  DateTime?
+
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  customer  Customer  @relation(fields: [customerId], references: [id])
+  product   Product   @relation(fields: [productId], references: [id])
+
+  @@index([shopId])
+  @@index([customerId])
+  @@index([unlockCode])
+}
+
+model CreatorPayout {
+  id            String    @id @default(cuid())
+  shopId        String
+  orderId       String
+  creatorUserId String
+  amountCents   Int
+  status        String    @default("pending")
+  createdAt     DateTime  @default(now())
+  paidAt        DateTime?
+
+  shop  Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+  @@index([creatorUserId])
+}
