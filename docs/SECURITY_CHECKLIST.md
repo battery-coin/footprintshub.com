@@ -49,3 +49,14 @@
 - Check admin permissions before product, order, return, payout, settings, and user actions.
 - Keep gift vouchers, store credit, and loyalty balances ledger-based.
 - Do not expose customer private data in wishlist, review, return, or download routes.
+
+## Medusa-Derived Additions
+
+- Treat `PaymentProviderConfig.config` as non-secret unless encrypted; keep provider secrets in environment variables.
+- Use `PaymentSession`, `WebhookEvent`, `CommerceEvent`, and `IdempotencyKey` for retry-safe workflows.
+- Reserve inventory before checkout only with expiration and idempotency.
+- Deduct inventory only after verified payment.
+- Release reservations on checkout cancellation/expiration.
+- Keep event subscribers server-only.
+- Do not expose workflow errors or stack traces to buyers in production.
+- Ensure future Hero Studio webhooks are signed and replay-protected.

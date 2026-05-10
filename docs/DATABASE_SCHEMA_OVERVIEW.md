@@ -67,8 +67,29 @@ Order items must not be recalculated from live products after purchase.
 ## Inventory
 
 - `InventoryLedger`: stock changes for initial adjustments, reservations, releases, paid deductions, restocks, refund adjustments, and manual changes.
+- `StockLocation`: Medusa-inspired stock location for the shop's default warehouse or future creator/fulfillment locations.
+- `InventoryItem`: SKU-level stock unit separate from product/variant display data.
+- `ProductVariantInventoryItem`: links variants to one or more inventory items with required quantity.
+- `InventoryLevel`: stocked, reserved, and available quantity by inventory item and location.
+- `InventoryReservation`: temporary hold for checkout/order flows with release/deduct/expire status.
 
 Inventory quantity remains on product/variant for fast reads, but every paid deduction should also create a ledger row with an idempotency key.
+
+## Medusa-Inspired Market, Payment, Fulfillment, and Events
+
+- `MarketRegion`: shop-scoped market settings for currency, supported countries, and tax-inclusive mode. This does not replace `Shop`.
+- `SalesChannel`: where products are available, such as FootprintsHub Online Store, Hero Studio Marketplace, Creator Subdomain Shops, Campaign Pages, and Affiliate Landing Pages.
+- `ProductSalesChannel`: many-to-many product/channel availability.
+- `PaymentProviderConfig`: shop-scoped provider enablement and non-secret config for Stripe Checkout, manual, PayPal placeholder, and Battery Coin placeholder.
+- `PaymentSession`: provider-neutral checkout/payment session with provider identifiers and idempotency key.
+- `PaymentCollection`: order-level payable/refundable amount grouping for future capture/refund workflows.
+- `FulfillmentProvider`: shop-scoped fulfillment provider configuration.
+- `ShippingProfile`: shipping behavior groups such as standard, digital, heavy, fragile, and collectible.
+- `ShippingOption`: region/provider shipping choices returned to checkout.
+- `Fulfillment` / `FulfillmentItem`: provider-neutral fulfillment records separate from shipment tracking history.
+- `Promotion` / `PromotionRule` / `PromotionAction`: higher-level coupon, automatic, and campaign promotion engine.
+- `CommerceEvent`: internal outbox for order, payment, inventory, affiliate, digital unlock, and Hero Studio webhook events.
+- `IdempotencyKey`: generic idempotency table for workflows and API operations.
 
 ## Webhooks
 

@@ -19,6 +19,7 @@ const pages: Record<string, { title: string; body: string[] }> = {
     title: "Refund Policy",
     body: [
       "Refund terms must be finalized before accepting payment. Physical products, digital goods, memberships, preorders, and randomized collectibles may need separate rules.",
+      "Refunds, partial refunds, chargebacks, and failed fulfillment may reverse discounts, loyalty credits, store credit adjustments, and affiliate or ambassador commissions.",
     ],
   },
   shipping: {
@@ -128,6 +129,20 @@ const pages: Record<string, { title: string; body: string[] }> = {
     body: [
       "Digital download access may have download limits, expiration, account requirements, and fraud controls.",
       "Digital products and downloads provide access or collectible utility only and do not promise profit, ROI, yield, resale value, or appreciation.",
+    ],
+  },
+  "payment-authorization": {
+    title: "Payment Authorization",
+    body: [
+      "Checkout sessions, payment authorization, capture, cancellation, and refund timing depend on the payment provider and final store policy.",
+      "FootprintsHub does not store raw card data. Payment credentials are handled by approved payment providers such as Stripe Checkout.",
+    ],
+  },
+  "creator-shop-responsibility": {
+    title: "Creator Shop Responsibility",
+    body: [
+      "Future creator shops are responsible for accurate product descriptions, lawful marketing, fulfillment promises, refund rules, and required disclosures for their products and campaigns.",
+      "The platform may suspend products, shops, affiliate activity, or payouts for fraud, policy violations, legal risk, chargebacks, or customer harm.",
     ],
   },
 };

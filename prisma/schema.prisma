@@ -488,6 +488,92 @@ enum TaxRuleBasedOn {
   store
 }
 
+enum SalesChannelStatus {
+  draft
+  active
+  archived
+}
+
+enum PaymentProviderConfigCode {
+  stripe_checkout
+  manual
+  paypal_placeholder
+  battery_coin_placeholder
+}
+
+enum PaymentSessionStatus {
+  pending
+  authorized
+  captured
+  failed
+  cancelled
+  refunded
+}
+
+enum PaymentCollectionStatus {
+  pending
+  authorized
+  captured
+  partially_refunded
+  refunded
+  cancelled
+}
+
+enum InventoryReservationStatus {
+  reserved
+  released
+  deducted
+  expired
+}
+
+enum ShippingProfileType {
+  standard
+  digital
+  heavy
+  fragile
+  collectible
+}
+
+enum FulfillmentRecordStatus {
+  pending
+  packed
+  shipped
+  delivered
+  cancelled
+}
+
+enum PromotionStatus {
+  draft
+  active
+  archived
+}
+
+enum PromotionType {
+  coupon
+  automatic
+  campaign
+}
+
+enum PromotionActionType {
+  percentage
+  fixed
+  free_shipping
+  buy_x_get_y
+}
+
+enum CommerceEventStatus {
+  pending
+  processed
+  failed
+}
+
+enum IdempotencyKeyStatus {
+  processing
+  completed
+  failed
+  expired
+}
+
 model Shop {
   id           String       @id @default(cuid())
   name         String
@@ -531,6 +617,20 @@ model Shop {
   shippingMethods ShippingMethod[]
   weightClasses  WeightClass[]
   lengthClasses  LengthClass[]
+  marketRegions  MarketRegion[]
+  salesChannels  SalesChannel[]
+  paymentProviderConfigs PaymentProviderConfig[]
+  paymentSessions PaymentSession[]
+  paymentCollections PaymentCollection[]
+  stockLocations StockLocation[]
+  inventoryItems InventoryItem[]
+  inventoryReservations InventoryReservation[]
+  fulfillmentProviders FulfillmentProvider[]
+  shippingProfiles ShippingProfile[]
+  shippingOptions ShippingOption[]
+  fulfillments Fulfillment[]
+  promotions Promotion[]
+  commerceEvents CommerceEvent[]
   shopSettings   ShopSetting[]
   adminRoles     AdminRole[]
   adminUserRoles AdminUserRole[]
@@ -669,6 +769,7 @@ model Product {
   reviews    ProductReview[]
   productCategories ProductCategory[]
   productCollections ProductCollection[]
+  salesChannels ProductSalesChannel[]
   relatedProducts RelatedProduct[] @relation("ProductRelatedSource")
   relatedTo RelatedProduct[] @relation("ProductRelatedTarget")
   wishlistItems WishlistItem[]
@@ -746,6 +847,7 @@ model ProductVariant {
   orderItems OrderItem[]
   wishlistItems WishlistItem[]
   inventoryLedgers InventoryLedger[]
+  variantInventoryItems ProductVariantInventoryItem[]
 
   @@index([productId])
   @@index([sku])
@@ -871,6 +973,8 @@ model Cart {
   customer Customer?  @relation(fields: [customerId], references: [id])
   discountCode DiscountCode? @relation(fields: [appliedDiscountCodeId], references: [id])
   items    CartItem[]
+  paymentSessions PaymentSession[]
+  inventoryReservations InventoryReservation[]
 
   @@index([shopId])
   @@index([sessionId])
@@ -928,8 +1032,11 @@ model Order {
   items    OrderItem[]
   addresses OrderAddress[]
   payments Payment[]
+  paymentSessions PaymentSession[]
+  paymentCollections PaymentCollection[]
   refunds Refund[]
   shipments Shipment[]
+  fulfillments Fulfillment[]
   histories OrderHistory[]
   returnRequests ReturnRequest[]
   storeCreditLedgers StoreCreditLedger[]
@@ -941,6 +1048,8 @@ model Order {
   affiliateCommissions AffiliateCommission[]
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
   inventoryLedgers InventoryLedger[]
+  inventoryReservations InventoryReservation[]
+  commerceEvents CommerceEvent[]
   webhookEvents WebhookEvent[]
 
   @@index([shopId])
@@ -973,6 +1082,7 @@ model OrderItem {
   downloadEntitlements DownloadEntitlement[]
   shipmentItems ShipmentItem[]
   inventoryLedgers InventoryLedger[]
+  fulfillmentItems FulfillmentItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -2279,6 +2389,386 @@ model ShippingMethod {
 
   @@unique([shopId, code])
   @@index([shopId, active])
+}
+
+model MarketRegion {
+  id           String   @id @default(cuid())
+  shopId       String
+  name         String
+  currencyCode String  @default("USD")
+  countries    String[] @default([])
+  taxInclusive Boolean @default(false)
+  active       Boolean @default(true)
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shippingOptions ShippingOption[]
+
+  @@unique([shopId, name])
+  @@index([shopId, active])
+}
+
+model SalesChannel {
+  id          String             @id @default(cuid())
+  shopId      String
+  name        String
+  slug        String
+  description String?
+  status      SalesChannelStatus @default(active)
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products ProductSalesChannel[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, status])
+}
+
+model ProductSalesChannel {
+  id             String   @id @default(cuid())
+  productId      String
+  salesChannelId String
+  createdAt      DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, salesChannelId])
+  @@index([salesChannelId])
+}
+
+model PaymentProviderConfig {
+  id        String                    @id @default(cuid())
+  shopId    String
+  code      PaymentProviderConfigCode
+  name      String
+  enabled   Boolean                   @default(false)
+  config    Json?
+  createdAt DateTime                  @default(now())
+  updatedAt DateTime                  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, code])
+  @@index([shopId, enabled])
+}
+
+model PaymentSession {
+  id                      String               @id @default(cuid())
+  shopId                  String
+  cartId                  String?
+  orderId                 String?
+  provider                PaymentProviderConfigCode @default(stripe_checkout)
+  status                  PaymentSessionStatus @default(pending)
+  amountCents             Int
+  currency                String               @default("USD")
+  providerSessionId       String?
+  providerPaymentIntentId String?
+  metadata                Json?
+  idempotencyKey          String?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+
+  shop  Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cart  Cart?  @relation(fields: [cartId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@unique([provider, providerSessionId])
+  @@unique([idempotencyKey])
+  @@index([shopId, status])
+  @@index([cartId])
+  @@index([orderId])
+}
+
+model PaymentCollection {
+  id          String                  @id @default(cuid())
+  shopId      String
+  orderId     String
+  amountCents Int
+  currency    String                  @default("USD")
+  status      PaymentCollectionStatus @default(pending)
+  metadata    Json?
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+
+  shop  Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, status])
+  @@index([orderId])
+}
+
+model StockLocation {
+  id        String   @id @default(cuid())
+  shopId    String
+  name      String
+  address   Json?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  inventoryLevels InventoryLevel[]
+  reservations InventoryReservation[]
+
+  @@unique([shopId, name])
+  @@index([shopId, active])
+}
+
+model InventoryItem {
+  id        String   @id @default(cuid())
+  shopId    String
+  sku       String
+  title     String
+  tracked   Boolean  @default(true)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  variantLinks ProductVariantInventoryItem[]
+  levels InventoryLevel[]
+  reservations InventoryReservation[]
+
+  @@unique([shopId, sku])
+  @@index([shopId, tracked])
+}
+
+model ProductVariantInventoryItem {
+  id              String   @id @default(cuid())
+  variantId       String
+  inventoryItemId String
+  requiredQuantity Int     @default(1)
+  createdAt       DateTime @default(now())
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, inventoryItemId])
+  @@index([inventoryItemId])
+}
+
+model InventoryLevel {
+  id              String   @id @default(cuid())
+  inventoryItemId String
+  stockLocationId String
+  stockedQuantity Int      @default(0)
+  reservedQuantity Int     @default(0)
+  availableQuantity Int    @default(0)
+  updatedAt       DateTime @updatedAt
+
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  stockLocation StockLocation @relation(fields: [stockLocationId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryItemId, stockLocationId])
+  @@index([stockLocationId])
+}
+
+model InventoryReservation {
+  id              String                     @id @default(cuid())
+  shopId          String
+  cartId          String?
+  orderId         String?
+  inventoryItemId String
+  stockLocationId String
+  quantity        Int
+  status          InventoryReservationStatus @default(reserved)
+  expiresAt       DateTime?
+  idempotencyKey  String?
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cart Cart? @relation(fields: [cartId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  stockLocation StockLocation @relation(fields: [stockLocationId], references: [id], onDelete: Cascade)
+
+  @@unique([idempotencyKey])
+  @@index([shopId, status])
+  @@index([cartId])
+  @@index([orderId])
+  @@index([inventoryItemId, stockLocationId])
+}
+
+model FulfillmentProvider {
+  id        String   @id @default(cuid())
+  shopId    String
+  code      String
+  name      String
+  enabled   Boolean  @default(false)
+  config    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shippingOptions ShippingOption[]
+
+  @@unique([shopId, code])
+  @@index([shopId, enabled])
+}
+
+model ShippingProfile {
+  id        String              @id @default(cuid())
+  shopId    String
+  name      String
+  type      ShippingProfileType @default(standard)
+  metadata  Json?
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, name])
+  @@index([shopId, type])
+}
+
+model ShippingOption {
+  id                    String   @id @default(cuid())
+  shopId                String
+  regionId              String?
+  fulfillmentProviderId String?
+  name                  String
+  priceCents            Int      @default(0)
+  currency              String   @default("USD")
+  rules                 Json?
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  region MarketRegion? @relation(fields: [regionId], references: [id])
+  fulfillmentProvider FulfillmentProvider? @relation(fields: [fulfillmentProviderId], references: [id])
+
+  @@index([shopId, active])
+  @@index([regionId])
+  @@index([fulfillmentProviderId])
+}
+
+model Fulfillment {
+  id             String                  @id @default(cuid())
+  shopId         String
+  orderId        String
+  provider       String
+  status         FulfillmentRecordStatus @default(pending)
+  trackingNumber String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  metadata       Json?
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items FulfillmentItem[]
+
+  @@index([shopId, status])
+  @@index([orderId])
+}
+
+model FulfillmentItem {
+  id            String   @id @default(cuid())
+  fulfillmentId String
+  orderItemId   String
+  quantity      Int
+  createdAt     DateTime @default(now())
+
+  fulfillment Fulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@unique([fulfillmentId, orderItemId])
+  @@index([orderItemId])
+}
+
+model Promotion {
+  id          String          @id @default(cuid())
+  shopId      String
+  code        String?
+  name        String
+  type        PromotionType   @default(coupon)
+  status      PromotionStatus @default(draft)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  usageLimit  Int?
+  usageCount  Int             @default(0)
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  rules PromotionRule[]
+  actions PromotionAction[]
+
+  @@unique([shopId, code])
+  @@index([shopId, status])
+  @@index([startsAt, endsAt])
+}
+
+model PromotionRule {
+  id          String   @id @default(cuid())
+  promotionId String
+  attribute   String
+  operator    String
+  value       Json
+  createdAt   DateTime @default(now())
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+}
+
+model PromotionAction {
+  id          String              @id @default(cuid())
+  promotionId String
+  type        PromotionActionType
+  value       Json
+  createdAt   DateTime            @default(now())
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+}
+
+model CommerceEvent {
+  id             String              @id @default(cuid())
+  shopId         String?
+  orderId        String?
+  type           String
+  aggregateType  String
+  aggregateId    String
+  payload        Json
+  status         CommerceEventStatus @default(pending)
+  idempotencyKey String?
+  createdAt      DateTime            @default(now())
+  processedAt    DateTime?
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@unique([idempotencyKey])
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([type])
+  @@index([aggregateType, aggregateId])
+}
+
+model IdempotencyKey {
+  id          String               @id @default(cuid())
+  key         String
+  scope       String
+  requestHash String?
+  response    Json?
+  status      IdempotencyKeyStatus @default(processing)
+  createdAt   DateTime             @default(now())
+  expiresAt   DateTime?
+
+  @@unique([scope, key])
+  @@index([status, expiresAt])
 }
 
 model ShopSetting {

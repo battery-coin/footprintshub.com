@@ -74,3 +74,18 @@ The OpenCart review adds these shop-scoped objects to the tenant model:
 - admin roles and assignments
 
 Global localization objects such as countries, zones, and currencies can be shared reference data.
+
+## Medusa-Inspired Tenant Objects
+
+The Medusa review adds these objects to the multi-tenant model:
+
+- `MarketRegion`: market/currency/country/tax behavior for a shop.
+- `SalesChannel`: product publication surfaces such as flagship store, Hero Studio marketplace, creator shops, campaign pages, and affiliate landing pages.
+- `PaymentProviderConfig`: shop-level payment provider availability.
+- `PaymentSession` and `PaymentCollection`: provider-neutral payment lifecycle.
+- `StockLocation`, `InventoryItem`, `InventoryLevel`, and `InventoryReservation`: future multi-location stock and checkout hold support.
+- `FulfillmentProvider`, `ShippingProfile`, `ShippingOption`, and `Fulfillment`: fulfillment and shipping provider foundations.
+- `Promotion`, `PromotionRule`, and `PromotionAction`: coupon, automatic, and campaign promotion system.
+- `CommerceEvent`: outbox events for Hero Studio integration.
+
+`Shop` remains the tenant boundary. `MarketRegion` and `SalesChannel` are configuration layers inside a shop, not replacement tenant roots.

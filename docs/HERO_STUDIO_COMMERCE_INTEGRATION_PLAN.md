@@ -38,6 +38,9 @@ Future signed events:
 - `fan_tier.upgraded`
 - `affiliate.commission_pending`
 - `affiliate.commission_approved`
+- `affiliate.commission_created`
+- `creator_product.sold`
+- `campaign_supporter_purchased`
 
 ## Required Hero Studio Environment Variables
 
@@ -74,3 +77,26 @@ For future Hero Studio creator shops, the OpenCart reference adds useful shop-le
 - reports for sales, products, customers, and affiliates
 
 These must remain scoped by `Shop` and `ShopDomain`; do not manually create each creator subdomain in SiteGround.
+
+## Medusa-Inspired Commerce Layer
+
+The Medusa reference adds modern architecture patterns for the Hero Studio phase:
+
+- `SalesChannel` separates product availability from shop ownership.
+- `MarketRegion` allows creator shops to inherit USD/US defaults now and expand later.
+- `PaymentSession` and `PaymentProviderConfig` keep Stripe Checkout first while leaving room for future providers.
+- `InventoryReservation` supports checkout holds before paid order deduction.
+- `Fulfillment` and `ShippingOption` support creator shop fulfillment rules and future providers.
+- `CommerceEvent` gives Hero Studio a clean signed-webhook source for purchases, digital unlocks, memberships, fan tier updates, affiliate commissions, and campaign support events.
+
+Each creator shop should eventually get:
+
+- shop and shop domain
+- default market region
+- default sales channel
+- product catalog and channel visibility
+- payment provider settings
+- shipping profile and shipping options
+- affiliate program and commission plan
+- admin staff roles
+- event/webhook configuration back to Hero Studio
