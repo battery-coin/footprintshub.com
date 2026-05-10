@@ -5,7 +5,10 @@ export type ProductType =
   | "membership"
   | "preorder"
   | "blind_box"
-  | "booster_pack";
+  | "booster_pack"
+  | "digital_unlock"
+  | "service"
+  | "donation_like_supporter_bundle";
 
 export type Franchise =
   | "footprints"
@@ -14,7 +17,9 @@ export type Franchise =
   | "battery_movement"
   | "other";
 
-export type ProductStatus = "draft" | "active" | "archived";
+export type ProductStatus = "draft" | "active" | "archived" | "hidden" | "sold_out";
+
+export type ProductVisibility = "visible" | "hidden" | "catalog_only" | "direct_link";
 
 export type CatalogProduct = {
   id: string;
@@ -27,19 +32,28 @@ export type CatalogProduct = {
   productType: ProductType;
   franchise: Franchise;
   status: ProductStatus;
+  visibility?: ProductVisibility;
   priceCents: number;
   compareAtPriceCents?: number;
   currency: string;
   sku?: string;
   inventoryQuantity: number;
   trackInventory: boolean;
+  allowBackorder?: boolean;
+  lowStockThreshold?: number;
   imageUrl?: string;
   galleryUrls: string[];
+  seoTitle?: string;
+  seoDescription?: string;
   isFeatured: boolean;
   isLimitedEdition: boolean;
   preorderStatus?: string;
+  preorderReleaseAt?: Date;
+  requiresShipping?: boolean;
   digitalUnlockIncluded: boolean;
   tokenGated: boolean;
+  isRandomized?: boolean;
+  oddsDisclosureUrl?: string;
   metadata?: Record<string, unknown>;
 };
 

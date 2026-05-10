@@ -5,11 +5,17 @@ const links = [
   ["/admin", "Overview"],
   ["/admin/products", "Products"],
   ["/admin/products/new", "New product"],
+  ["/admin/categories", "Categories"],
+  ["/admin/collections", "Collections"],
   ["/admin/orders", "Orders"],
+  ["/admin/inventory", "Inventory"],
   ["/admin/shops", "Shops"],
   ["/admin/discounts", "Discounts"],
+  ["/admin/shipping", "Shipping"],
+  ["/admin/tax", "Tax"],
   ["/admin/customers", "Customers"],
   ["/admin/affiliates", "Affiliates"],
+  ["/admin/security", "Security"],
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {

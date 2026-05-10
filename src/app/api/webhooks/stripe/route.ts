@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
+import { deductInventoryForPaidOrder } from "@/lib/inventory/inventory-service";
+import { markWebhookFailed, markWebhookProcessed, recordWebhookReceived } from "@/lib/webhooks/webhook-events";
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -30,12 +32,25 @@ export async function POST(request: Request) {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object;
       const orderId = typeof session.metadata?.orderId === "string" ? session.metadata.orderId : undefined;
+      const shopId = typeof session.metadata?.shopId === "string" ? session.metadata.shopId : undefined;
+      const recorded = await recordWebhookReceived({
+        provider: "stripe",
+        eventId: event.id,
+        eventType: event.type,
+        payload: body,
+        shopId,
+        orderId,
+      });
+
+      if (recorded.duplicate) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
 
       if (orderId && hasDatabaseUrl()) {
         const paymentIntentId =
           typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
 
-        await getPrisma().order.update({
+        const paidOrder = await getPrisma().order.update({
           where: { id: orderId },
           data: {
             status: "paid",
@@ -44,14 +59,43 @@ export async function POST(request: Request) {
             stripePaymentIntentId: paymentIntentId,
             customerEmail: session.customer_details?.email ?? session.customer_email ?? undefined,
           },
+          select: {
+            id: true,
+            shopId: true,
+          },
         });
 
+        await getPrisma().payment.upsert({
+          where: {
+            idempotencyKey: `stripe:checkout.session.completed:${session.id}`,
+          },
+          update: {
+            status: "paid",
+            stripePaymentIntentId: paymentIntentId,
+          },
+          create: {
+            shopId: paidOrder.shopId,
+            orderId,
+            provider: "stripe",
+            status: "paid",
+            amountCents: session.amount_total ?? 0,
+            currency: session.currency?.toUpperCase() ?? "USD",
+            stripeCheckoutSessionId: session.id,
+            stripePaymentIntentId: paymentIntentId,
+            idempotencyKey: `stripe:checkout.session.completed:${session.id}`,
+          },
+        });
+
+        await deductInventoryForPaidOrder(orderId);
         await calculateCommissionsForOrder(orderId);
       }
+
+      await markWebhookProcessed("stripe", event.id);
     }
 
     return NextResponse.json({ received: true });
-  } catch {
+  } catch (error) {
+    await markWebhookFailed("stripe", event.id, error);
     return NextResponse.json({ error: "Stripe webhook handler failed." }, { status: 500 });
   }
 }

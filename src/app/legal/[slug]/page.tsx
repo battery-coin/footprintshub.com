@@ -45,6 +45,14 @@ const pages: Record<string, { title: string; body: string[] }> = {
       "Digital goods and unlocks provide access, utility, or collectible features. They do not promise profit, resale value, yield, or financial return.",
     ],
   },
+  "blind-box-odds": {
+    title: "Blind Box Odds",
+    body: [
+      "Blind box and booster pack products must publish assortment details and odds before paid randomized sales begin.",
+      "Randomized collectibles should be described as merchandise, game utility, or collectible entertainment, not as gambling, investment, or resale-value products.",
+      "Each product page should identify rarity tiers, possible items, purchase limits, refund rules, and whether digital unlocks are included.",
+    ],
+  },
   "affiliate-terms": {
     title: "Affiliate Terms",
     body: [

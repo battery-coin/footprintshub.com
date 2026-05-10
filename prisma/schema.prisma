@@ -33,6 +33,9 @@ enum ProductType {
   preorder
   blind_box
   booster_pack
+  digital_unlock
+  service
+  donation_like_supporter_bundle
 }
 
 enum Franchise {
@@ -47,19 +50,132 @@ enum ProductStatus {
   draft
   active
   archived
+  hidden
+  sold_out
 }
 
 enum OrderStatus {
   pending
+  awaiting_payment
   paid
+  processing
   fulfilled
+  partially_fulfilled
   cancelled
   refunded
+  partially_refunded
+  failed
 }
 
 enum DiscountType {
   percent
   fixed
+  free_shipping
+}
+
+enum UserRole {
+  platform_owner
+  shop_owner
+  creator_admin
+  staff
+  support
+  customer
+}
+
+enum ProductVisibility {
+  visible
+  hidden
+  catalog_only
+  direct_link
+}
+
+enum RelatedProductType {
+  related
+  upsell
+  cross_sell
+}
+
+enum CartStatus {
+  active
+  converted
+  expired
+  abandoned
+}
+
+enum DiscountRuleScope {
+  cart
+  catalog
+  affiliate_coupon
+}
+
+enum OrderAddressType {
+  shipping
+  billing
+}
+
+enum PaymentProvider {
+  stripe
+  manual
+  battery_coin
+}
+
+enum PaymentStatus {
+  unpaid
+  requires_action
+  paid
+  failed
+  refunded
+  partially_refunded
+}
+
+enum FulfillmentStatus {
+  unfulfilled
+  partially_fulfilled
+  fulfilled
+  digital_fulfilled
+  not_required
+}
+
+enum RefundStatus {
+  requested
+  approved
+  processing
+  succeeded
+  failed
+  cancelled
+}
+
+enum ShipmentStatus {
+  pending
+  processing
+  shipped
+  delivered
+  cancelled
+}
+
+enum InventoryLedgerType {
+  initial_adjustment
+  reservation
+  release
+  deduction
+  restock
+  refund_adjustment
+  manual_adjustment
+}
+
+enum ShippingMethodType {
+  flat_rate
+  free_shipping
+  local_pickup
+  digital_only
+}
+
+enum WebhookEventStatus {
+  received
+  processing
+  processed
+  failed
+  ignored
 }
 
 enum AffiliateProgramStatus {
@@ -226,11 +342,22 @@ model Shop {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
+  owner          User?        @relation("ShopOwner", fields: [ownerUserId], references: [id])
   domains        ShopDomain[]
   products       Product[]
+  categories     Category[]
+  collections    Collection[]
   carts          Cart[]
   orders         Order[]
   discounts      DiscountCode[]
+  discountRules  DiscountRule[]
+  taxClasses     TaxClass[]
+  shippingMethods ShippingMethod[]
+  shopSettings   ShopSetting[]
+  inventoryLedgers InventoryLedger[]
+  adminAuditLogs AdminAuditLog[]
+  webhookEvents  WebhookEvent[]
+  customers      Customer[]
   digitalUnlocks DigitalUnlock[]
   creatorPayouts CreatorPayout[]
   affiliatePrograms AffiliateProgram[]
@@ -249,6 +376,25 @@ model Shop {
   marketingAssets MarketingAsset[]
   affiliateNotifications AffiliateNotification[]
   affiliateAuditLogs AffiliateAuditLog[]
+
+  @@index([ownerUserId])
+}
+
+model User {
+  id               String   @id @default(cuid())
+  email            String   @unique
+  name             String?
+  role             UserRole @default(customer)
+  heroStudioUserId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  ownedShops Shop[] @relation("ShopOwner")
+  customers  Customer[]
+  adminAuditLogs AdminAuditLog[]
+
+  @@index([role])
+  @@index([heroStudioUserId])
 }
 
 model ShopDomain {
@@ -268,6 +414,7 @@ model ShopDomain {
 model Product {
   id                     String        @id @default(cuid())
   shopId                 String
+  taxClassId             String?
   title                  String
   slug                   String
   subtitle               String?
@@ -276,36 +423,56 @@ model Product {
   productType            ProductType
   franchise              Franchise
   status                 ProductStatus @default(draft)
+  visibility             ProductVisibility @default(visible)
   priceCents             Int
   compareAtPriceCents    Int?
   currency               String        @default("USD")
   sku                    String?
   inventoryQuantity      Int           @default(0)
   trackInventory         Boolean       @default(true)
+  allowBackorder         Boolean       @default(false)
+  lowStockThreshold      Int?
   imageUrl               String?
   galleryUrls            String[]      @default([])
+  seoTitle               String?
+  seoDescription         String?
+  metaKeywords           String[]      @default([])
   isFeatured             Boolean       @default(false)
   isLimitedEdition       Boolean       @default(false)
   preorderStatus         String?
+  preorderReleaseAt      DateTime?
+  requiresShipping       Boolean       @default(true)
   digitalUnlockIncluded  Boolean       @default(false)
   tokenGated             Boolean       @default(false)
+  tokenGateRule          Json?
+  isRandomized           Boolean       @default(false)
+  oddsDisclosureUrl      String?
   metadata               Json?
   createdAt              DateTime      @default(now())
   updatedAt              DateTime      @updatedAt
 
   shop       Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  taxClass   TaxClass?        @relation(fields: [taxClassId], references: [id])
   variants   ProductVariant[]
+  media      ProductMedia[]
+  productCategories ProductCategory[]
+  productCollections ProductCollection[]
+  relatedProducts RelatedProduct[] @relation("ProductRelatedSource")
+  relatedTo RelatedProduct[] @relation("ProductRelatedTarget")
   cartItems  CartItem[]
   orderItems OrderItem[]
   unlocks    DigitalUnlock[]
   affiliateClicks AffiliateClick[]
   commissionRules CommissionRule[]
   affiliateCoupons AffiliateCoupon[]
+  inventoryLedgers InventoryLedger[]
 
   @@unique([shopId, slug])
   @@index([shopId])
   @@index([franchise])
   @@index([productType])
+  @@index([status, visibility])
+  @@index([taxClassId])
 }
 
 model ProductVariant {
@@ -315,32 +482,147 @@ model ProductVariant {
   sku               String?
   priceCents        Int?
   inventoryQuantity Int      @default(0)
+  trackInventory    Boolean  @default(true)
+  allowBackorder    Boolean  @default(false)
+  lowStockThreshold Int?
   attributes        Json?
+  metadata          Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems  CartItem[]
   orderItems OrderItem[]
+  inventoryLedgers InventoryLedger[]
 
   @@index([productId])
+  @@index([sku])
+}
+
+model ProductMedia {
+  id        String   @id @default(cuid())
+  productId String
+  url       String
+  altText   String?
+  mediaType String   @default("image")
+  sortOrder Int      @default(0)
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+}
+
+model Category {
+  id             String   @id @default(cuid())
+  shopId         String
+  parentId       String?
+  name           String
+  slug           String
+  description    String?
+  imageUrl       String?
+  seoTitle       String?
+  seoDescription String?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  parent Category? @relation("CategoryParent", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryParent")
+  products ProductCategory[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, parentId])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId, sortOrder])
+}
+
+model Collection {
+  id             String   @id @default(cuid())
+  shopId         String
+  name           String
+  slug           String
+  description    String?
+  imageUrl       String?
+  seoTitle       String?
+  seoDescription String?
+  sortOrder      Int      @default(0)
+  active         Boolean  @default(true)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products ProductCollection[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, active])
+}
+
+model ProductCollection {
+  productId    String
+  collectionId String
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@id([productId, collectionId])
+  @@index([collectionId, sortOrder])
+}
+
+model RelatedProduct {
+  id               String             @id @default(cuid())
+  shopId           String
+  sourceProductId  String
+  relatedProductId String
+  type             RelatedProductType @default(related)
+  sortOrder        Int                @default(0)
+  createdAt        DateTime           @default(now())
+
+  sourceProduct Product @relation("ProductRelatedSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("ProductRelatedTarget", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([sourceProductId, relatedProductId, type])
+  @@index([shopId, sourceProductId, type])
 }
 
 model Cart {
   id         String   @id @default(cuid())
   shopId     String
   customerId String?
+  appliedDiscountCodeId String?
   sessionId  String
   currency   String   @default("USD")
+  status     CartStatus @default(active)
+  expiresAt  DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer Customer?  @relation(fields: [customerId], references: [id])
+  discountCode DiscountCode? @relation(fields: [appliedDiscountCodeId], references: [id])
   items    CartItem[]
 
   @@index([shopId])
   @@index([sessionId])
+  @@index([status, expiresAt])
 }
 
 model CartItem {
@@ -350,6 +632,7 @@ model CartItem {
   variantId      String?
   quantity       Int
   unitPriceCents Int
+  metadata       Json?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -365,10 +648,12 @@ model Order {
   id                      String   @id @default(cuid())
   shopId                  String
   customerId              String?
+  cartId                  String?
+  affiliateAttributionId  String?
   orderNumber             String   @unique
   status                  OrderStatus @default(pending)
-  paymentStatus           String   @default("pending")
-  fulfillmentStatus       String   @default("unfulfilled")
+  paymentStatus           PaymentStatus @default(unpaid)
+  fulfillmentStatus       FulfillmentStatus @default(unfulfilled)
   subtotalCents           Int
   discountCents           Int      @default(0)
   taxCents                Int      @default(0)
@@ -380,6 +665,8 @@ model Order {
   customerEmail           String?
   shippingAddress         Json?
   billingAddress          Json?
+  adminNotes              String?
+  termsAcceptedAt         DateTime?
   metadata                Json?
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
@@ -387,13 +674,21 @@ model Order {
   shop     Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer Customer?   @relation(fields: [customerId], references: [id])
   items    OrderItem[]
+  addresses OrderAddress[]
+  payments Payment[]
+  refunds Refund[]
+  shipments Shipment[]
   unlocks  DigitalUnlock[]
   payouts  CreatorPayout[]
   affiliateClicks AffiliateClick[]
   affiliateCommissions AffiliateCommission[]
+  inventoryLedgers InventoryLedger[]
+  webhookEvents WebhookEvent[]
 
   @@index([shopId])
   @@index([customerId])
+  @@index([status])
+  @@index([paymentStatus])
 }
 
 model OrderItem {
@@ -405,6 +700,8 @@ model OrderItem {
   skuSnapshot    String?
   quantity       Int
   unitPriceCents Int
+  discountCents  Int      @default(0)
+  taxCents       Int      @default(0)
   totalCents     Int
   metadata       Json?
 
@@ -413,23 +710,163 @@ model OrderItem {
   variant ProductVariant? @relation(fields: [variantId], references: [id])
   unlocks DigitalUnlock[]
   affiliateCommissions AffiliateCommission[]
+  refundItems Refund[]
+  shipmentItems ShipmentItem[]
+  inventoryLedgers InventoryLedger[]
 
   @@index([orderId])
   @@index([productId])
 }
 
+model OrderAddress {
+  id          String           @id @default(cuid())
+  orderId     String
+  type        OrderAddressType
+  name        String?
+  company     String?
+  line1       String
+  line2       String?
+  city        String
+  region      String?
+  postalCode  String
+  country     String
+  phone       String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, type])
+}
+
+model Payment {
+  id                    String          @id @default(cuid())
+  shopId                String
+  orderId               String
+  provider              PaymentProvider @default(stripe)
+  status                PaymentStatus   @default(unpaid)
+  amountCents           Int
+  currency              String          @default("USD")
+  stripeCheckoutSessionId String?
+  stripePaymentIntentId String?
+  idempotencyKey        String?         @unique
+  metadata              Json?
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, status])
+  @@index([orderId])
+}
+
+model Refund {
+  id              String       @id @default(cuid())
+  shopId          String
+  orderId         String
+  orderItemId     String?
+  paymentId       String?
+  status          RefundStatus @default(requested)
+  amountCents     Int
+  reason          String?
+  stripeRefundId  String?
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+  @@index([shopId, status])
+  @@index([orderId])
+}
+
+model Shipment {
+  id             String         @id @default(cuid())
+  shopId         String
+  orderId        String
+  status         ShipmentStatus @default(pending)
+  carrier        String?
+  service        String?
+  trackingNumber String?
+  trackingUrl    String?
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items ShipmentItem[]
+
+  @@index([shopId, status])
+  @@index([orderId])
+}
+
+model ShipmentItem {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  orderItemId String
+  quantity    Int
+  createdAt   DateTime @default(now())
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@unique([shipmentId, orderItemId])
+}
+
 model Customer {
   id        String   @id @default(cuid())
-  email     String   @unique
+  shopId    String
+  userId    String?
+  email     String
   name      String?
   phone     String?
+  customerGroup String?
+  tags      String[] @default([])
+  heroStudioUserId String?
+  verifiedFanId String?
+  privacyMetadata Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  shop    Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user    User? @relation(fields: [userId], references: [id])
+  addresses CustomerAddress[]
   carts   Cart[]
   orders  Order[]
   unlocks DigitalUnlock[]
   affiliates Affiliate[]
+
+  @@unique([shopId, email])
+  @@index([userId])
+  @@index([heroStudioUserId])
+}
+
+model CustomerAddress {
+  id          String   @id @default(cuid())
+  customerId  String
+  label       String?
+  name        String?
+  company     String?
+  line1       String
+  line2       String?
+  city        String
+  region      String?
+  postalCode  String
+  country     String
+  phone       String?
+  isDefaultShipping Boolean @default(false)
+  isDefaultBilling  Boolean @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
 }
 
 model AffiliateProgram {
@@ -849,19 +1286,178 @@ model AffiliateAuditLog {
 model DiscountCode {
   id              String       @id @default(cuid())
   shopId          String
+  discountRuleId  String?
+  affiliateId     String?
   code            String
   type            DiscountType
   value           Int
+  minSubtotalCents Int?
+  maxDiscountCents Int?
+  productId       String?
+  categoryId      String?
+  collectionId    String?
+  customerGroup   String?
   startsAt        DateTime?
   endsAt          DateTime?
   maxRedemptions  Int?
+  perCustomerLimit Int?
   redemptionCount Int          @default(0)
   active          Boolean      @default(true)
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  discountRule DiscountRule? @relation(fields: [discountRuleId], references: [id])
+  carts Cart[]
+
+  @@unique([shopId, code])
+  @@index([shopId])
+  @@index([discountRuleId])
+}
+
+model DiscountRule {
+  id                 String            @id @default(cuid())
+  shopId             String
+  name               String
+  scope              DiscountRuleScope @default(cart)
+  type               DiscountType
+  value              Int
+  minSubtotalCents   Int?
+  maxDiscountCents   Int?
+  freeShipping       Boolean           @default(false)
+  startsAt           DateTime?
+  endsAt             DateTime?
+  active             Boolean           @default(true)
+  priority           Int               @default(0)
+  conditions          Json?
+  actions             Json?
+  metadata            Json?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  codes DiscountCode[]
+
+  @@index([shopId, active])
+  @@index([scope, priority])
+}
+
+model InventoryLedger {
+  id            String              @id @default(cuid())
+  shopId        String
+  productId     String
+  variantId     String?
+  orderId       String?
+  orderItemId   String?
+  type          InventoryLedgerType
+  quantityDelta Int
+  reason        String?
+  idempotencyKey String?            @unique
+  metadata      Json?
+  createdAt     DateTime            @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+
+  @@index([shopId, productId])
+  @@index([orderId])
+}
+
+model TaxClass {
+  id          String   @id @default(cuid())
+  shopId      String
+  name        String
+  code        String
+  description String?
+  taxable     Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([shopId, code])
+  @@index([shopId])
+}
+
+model ShippingMethod {
+  id                    String             @id @default(cuid())
+  shopId                String
+  name                  String
+  code                  String
+  type                  ShippingMethodType @default(flat_rate)
+  priceCents            Int                @default(0)
+  freeShippingThresholdCents Int?
+  active                Boolean            @default(true)
+  regions               String[]           @default([])
+  metadata              Json?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@unique([shopId, code])
-  @@index([shopId])
+  @@index([shopId, active])
+}
+
+model ShopSetting {
+  id        String   @id @default(cuid())
+  shopId    String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, key])
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  shopId      String?
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  before      Json?
+  after       Json?
+  ipHash      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([shopId, entityType, entityId])
+  @@index([actorUserId])
+}
+
+model WebhookEvent {
+  id          String             @id @default(cuid())
+  shopId      String?
+  orderId     String?
+  provider    String
+  eventId     String
+  eventType   String
+  status      WebhookEventStatus @default(received)
+  payloadHash String?
+  processedAt DateTime?
+  error       String?
+  metadata    Json?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@unique([provider, eventId])
+  @@index([shopId, status])
 }
 
 model DigitalUnlock {

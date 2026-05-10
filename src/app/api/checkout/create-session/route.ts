@@ -3,12 +3,17 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { cookies } from "next/headers";
 import { priceCartLines } from "@/lib/catalog/products";
+import { calculateCartTotals } from "@/lib/cart/cart-totals";
+import { getDiscountForCart } from "@/lib/discounts/discount-service";
+import { validateInventoryForCart } from "@/lib/inventory/inventory-service";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { getStripe } from "@/lib/stripe";
 import { getSiteUrl } from "@/lib/url";
 import { REFERRAL_COOKIE, SESSION_COOKIE, VISITOR_COOKIE } from "@/lib/affiliate/attribution";
 
 const checkoutSchema = z.object({
+  cartId: z.string().optional(),
+  couponCode: z.string().trim().min(1).max(80).optional(),
   items: z.array(
     z.object({
       productId: z.string().min(1),
@@ -31,6 +36,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Cart is empty or unavailable." }, { status: 400 });
   }
 
+  const inventory = validateInventoryForCart(lines);
+
+  if (!inventory.ok) {
+    return NextResponse.json({ error: "Inventory validation failed.", details: inventory.errors }, { status: 409 });
+  }
+
   let stripe;
   try {
     stripe = getStripe();
@@ -48,23 +59,34 @@ export async function POST(request: Request) {
   const referralCode = cookieStore.get(REFERRAL_COOKIE)?.value;
   const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
   const visitorId = cookieStore.get(VISITOR_COOKIE)?.value;
-  const subtotalCents = lines.reduce((total, line) => total + line.totalCents, 0);
-  const currency = lines[0]?.product.currency ?? "USD";
+  const discount = parsed.data.couponCode
+    ? await getDiscountForCart({
+        shopId: lines[0]?.product.shopId,
+        code: parsed.data.couponCode,
+        subtotalCents: lines.reduce((total, line) => total + line.totalCents, 0),
+      })
+    : undefined;
+  const totals = calculateCartTotals({ lines, discount });
   const order = await createPendingOrderIfDatabaseReady({
     lines,
-    subtotalCents,
-    currency,
+    totals,
+    cartId: parsed.data.cartId,
     referralCode,
     sessionId,
     visitorId,
+    couponCode: totals.appliedDiscountCode,
   });
-
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${siteUrl}/checkout/cancel`,
-    allow_promotion_codes: true,
-    line_items: lines.map((line) => ({
+  const stripeDiscount =
+    totals.discountCents > 0
+      ? await stripe.coupons.create({
+          amount_off: totals.discountCents,
+          currency: totals.currency.toLowerCase(),
+          duration: "once",
+          name: totals.appliedDiscountCode ? `FootprintsHub ${totals.appliedDiscountCode}` : "FootprintsHub discount",
+        })
+      : null;
+  const lineItems = [
+    ...lines.map((line) => ({
       quantity: line.quantity,
       price_data: {
         currency: line.product.currency.toLowerCase(),
@@ -80,9 +102,47 @@ export async function POST(request: Request) {
         },
       },
     })),
+    ...(totals.shippingCents > 0
+      ? [
+          {
+            quantity: 1,
+            price_data: {
+              currency: totals.currency.toLowerCase(),
+              unit_amount: totals.shippingCents,
+              product_data: {
+                name: "Shipping",
+              },
+            },
+          },
+        ]
+      : []),
+    ...(totals.taxCents > 0
+      ? [
+          {
+            quantity: 1,
+            price_data: {
+              currency: totals.currency.toLowerCase(),
+              unit_amount: totals.taxCents,
+              product_data: {
+                name: "Estimated tax",
+              },
+            },
+          },
+        ]
+      : []),
+  ];
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${siteUrl}/checkout/cancel`,
+    ...(stripeDiscount ? { discounts: [{ coupon: stripeDiscount.id }] } : { allow_promotion_codes: true }),
+    line_items: lineItems,
     metadata: {
       source: "footprintshub-commerce",
       productIds: lines.map((line) => line.product.id).join(","),
+      shopId: lines[0]?.product.shopId,
+      ...(parsed.data.cartId ? { cartId: parsed.data.cartId } : {}),
       ...(order ? { orderId: order.id, orderNumber: order.orderNumber } : {}),
       ...(referralCode ? { referralCode } : {}),
       ...(sessionId ? { sessionId } : {}),
@@ -102,18 +162,20 @@ export async function POST(request: Request) {
 
 async function createPendingOrderIfDatabaseReady({
   lines,
-  subtotalCents,
-  currency,
+  totals,
+  cartId,
   referralCode,
   sessionId,
   visitorId,
+  couponCode,
 }: {
   lines: Awaited<ReturnType<typeof priceCartLines>>;
-  subtotalCents: number;
-  currency: string;
+  totals: ReturnType<typeof calculateCartTotals>;
+  cartId?: string;
   referralCode?: string;
   sessionId?: string;
   visitorId?: string;
+  couponCode?: string;
 }) {
   if (!hasDatabaseUrl()) {
     return null;
@@ -131,14 +193,19 @@ async function createPendingOrderIfDatabaseReady({
       data: {
         shopId,
         orderNumber: makeOrderNumber(),
-        status: "pending",
-        paymentStatus: "pending",
-        fulfillmentStatus: "unfulfilled",
-        subtotalCents,
-        totalCents: subtotalCents,
-        currency,
+        cartId,
+        status: "awaiting_payment",
+        paymentStatus: "unpaid",
+        fulfillmentStatus: totals.requiresShipping ? "unfulfilled" : "not_required",
+        subtotalCents: totals.subtotalCents,
+        discountCents: totals.discountCents,
+        taxCents: totals.taxCents,
+        shippingCents: totals.shippingCents,
+        totalCents: totals.totalCents,
+        currency: totals.currency,
         metadata: {
           source: "footprintshub-commerce",
+          ...(couponCode ? { couponCode } : {}),
           ...(referralCode ? { referralCode } : {}),
           ...(sessionId ? { sessionId } : {}),
           ...(visitorId ? { visitorId } : {}),

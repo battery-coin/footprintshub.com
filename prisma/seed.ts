@@ -29,10 +29,108 @@ async function main() {
     },
   });
 
+  const taxClass = await prisma.taxClass.upsert({
+    where: {
+      shopId_code: {
+        shopId: shop.id,
+        code: "standard",
+      },
+    },
+    update: {
+      name: "Standard taxable goods",
+      taxable: true,
+    },
+    create: {
+      id: "tax_standard_footprintshub",
+      shopId: shop.id,
+      name: "Standard taxable goods",
+      code: "standard",
+      taxable: true,
+    },
+  });
+
+  await prisma.shippingMethod.upsert({
+    where: {
+      shopId_code: {
+        shopId: shop.id,
+        code: "flat_rate",
+      },
+    },
+    update: {
+      name: "Flat rate shipping",
+      priceCents: 799,
+      freeShippingThresholdCents: 10000,
+      active: true,
+    },
+    create: {
+      id: "ship_flat_rate_footprintshub",
+      shopId: shop.id,
+      name: "Flat rate shipping",
+      code: "flat_rate",
+      type: "flat_rate",
+      priceCents: 799,
+      freeShippingThresholdCents: 10000,
+      active: true,
+    },
+  });
+
+  const categories = [
+    ["cat_footprints", "Footprints", "footprints"],
+    ["cat_matrix_decoded", "Matrix Decoded", "matrix-decoded"],
+    ["cat_hero_studio", "Hero Studio", "hero-studio"],
+    ["cat_battery_movement", "Battery Movement", "battery-movement"],
+    ["cat_digital_unlocks", "Digital Unlocks", "digital-unlocks"],
+  ] as const;
+  const categoryByFranchise = new Map<string, string>();
+
+  for (const [id, name, slug] of categories) {
+    const category = await prisma.category.upsert({
+      where: {
+        shopId_slug: {
+          shopId: shop.id,
+          slug,
+        },
+      },
+      update: {
+        name,
+        active: true,
+      },
+      create: {
+        id,
+        shopId: shop.id,
+        name,
+        slug,
+        active: true,
+      },
+    });
+
+    categoryByFranchise.set(slug.replaceAll("-", "_"), category.id);
+  }
+
+  const featuredCollection = await prisma.collection.upsert({
+    where: {
+      shopId_slug: {
+        shopId: shop.id,
+        slug: "featured-drops",
+      },
+    },
+    update: {
+      name: "Featured drops",
+      active: true,
+    },
+    create: {
+      id: "collection_featured_drops",
+      shopId: shop.id,
+      name: "Featured drops",
+      slug: "featured-drops",
+      active: true,
+    },
+  });
+
   for (const product of seedProducts) {
     const metadata = product.metadata as Prisma.InputJsonValue | undefined;
 
-    await prisma.product.upsert({
+    const savedProduct = await prisma.product.upsert({
       where: {
         shopId_slug: {
           shopId: shop.id,
@@ -41,6 +139,7 @@ async function main() {
       },
       update: {
         title: product.title,
+        taxClassId: product.productType === "digital" ? null : taxClass.id,
         subtitle: product.subtitle,
         description: product.description,
         shortDescription: product.shortDescription,
@@ -53,8 +152,11 @@ async function main() {
         sku: product.sku,
         inventoryQuantity: product.inventoryQuantity,
         trackInventory: product.trackInventory,
+        requiresShipping: !["digital", "digital_unlock", "service"].includes(product.productType),
         imageUrl: product.imageUrl,
         galleryUrls: product.galleryUrls,
+        seoTitle: product.title,
+        seoDescription: product.shortDescription,
         isFeatured: product.isFeatured,
         isLimitedEdition: product.isLimitedEdition,
         preorderStatus: product.preorderStatus,
@@ -64,6 +166,7 @@ async function main() {
       },
       create: {
         shopId: shop.id,
+        taxClassId: product.productType === "digital" ? null : taxClass.id,
         title: product.title,
         slug: product.slug,
         subtitle: product.subtitle,
@@ -78,8 +181,11 @@ async function main() {
         sku: product.sku,
         inventoryQuantity: product.inventoryQuantity,
         trackInventory: product.trackInventory,
+        requiresShipping: !["digital", "digital_unlock", "service"].includes(product.productType),
         imageUrl: product.imageUrl,
         galleryUrls: product.galleryUrls,
+        seoTitle: product.title,
+        seoDescription: product.shortDescription,
         isFeatured: product.isFeatured,
         isLimitedEdition: product.isLimitedEdition,
         preorderStatus: product.preorderStatus,
@@ -88,6 +194,40 @@ async function main() {
         metadata,
       },
     });
+
+    const categoryId = categoryByFranchise.get(product.franchise);
+
+    if (categoryId) {
+      await prisma.productCategory.upsert({
+        where: {
+          productId_categoryId: {
+            productId: savedProduct.id,
+            categoryId,
+          },
+        },
+        update: {},
+        create: {
+          productId: savedProduct.id,
+          categoryId,
+        },
+      });
+    }
+
+    if (product.isFeatured) {
+      await prisma.productCollection.upsert({
+        where: {
+          productId_collectionId: {
+            productId: savedProduct.id,
+            collectionId: featuredCollection.id,
+          },
+        },
+        update: {},
+        create: {
+          productId: savedProduct.id,
+          collectionId: featuredCollection.id,
+        },
+      });
+    }
   }
 
   const affiliateProgram = await prisma.affiliateProgram.upsert({
@@ -288,6 +428,55 @@ async function main() {
       imageUrl: "/product-placeholders/founder-decoder.svg",
       width: 1200,
       height: 630,
+      active: true,
+    },
+  });
+
+  const welcomeRule = await prisma.discountRule.upsert({
+    where: { id: "discount_rule_welcome_footprintshub" },
+    update: {
+      shopId: shop.id,
+      name: "Welcome supporter discount",
+      scope: "cart",
+      type: "percent",
+      value: 1000,
+      minSubtotalCents: 2500,
+      active: true,
+    },
+    create: {
+      id: "discount_rule_welcome_footprintshub",
+      shopId: shop.id,
+      name: "Welcome supporter discount",
+      scope: "cart",
+      type: "percent",
+      value: 1000,
+      minSubtotalCents: 2500,
+      active: true,
+    },
+  });
+
+  await prisma.discountCode.upsert({
+    where: {
+      shopId_code: {
+        shopId: shop.id,
+        code: "WELCOME10",
+      },
+    },
+    update: {
+      discountRuleId: welcomeRule.id,
+      type: "percent",
+      value: 1000,
+      minSubtotalCents: 2500,
+      active: true,
+    },
+    create: {
+      id: "discount_code_welcome10",
+      shopId: shop.id,
+      discountRuleId: welcomeRule.id,
+      code: "WELCOME10",
+      type: "percent",
+      value: 1000,
+      minSubtotalCents: 2500,
       active: true,
     },
   });
