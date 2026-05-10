@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 const channels = ["FootprintsHub Online Store", "Hero Studio Marketplace", "Creator Subdomain Shops", "Campaign Pages"];
 
@@ -15,8 +16,9 @@ export default function AdminSalesChannelsPage() {
         </div>
         <div className="grid gap-3">
           {channels.map((channel) => (
-            <div key={channel} className="rounded-lg border border-black/10 bg-white p-4 text-sm font-medium">
-              {channel}
+            <div key={channel} className="flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-white p-4 text-sm font-medium">
+              <span>{channel}</span>
+              <EditRowLink href={`/admin/sales-channels?edit=${encodeURIComponent(channel.toLowerCase().replaceAll(" ", "-"))}`} />
             </div>
           ))}
         </div>

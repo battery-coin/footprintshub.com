@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminPromotionsPage() {
   return (
@@ -15,9 +16,14 @@ export default function AdminPromotionsPage() {
         <div className="rounded-lg border border-black/10 bg-white p-5">
           <h2 className="font-semibold">Promotion engine status</h2>
           <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
-            <span className="rounded-md bg-black/[0.04] p-3">Coupon rules: scaffolded</span>
-            <span className="rounded-md bg-black/[0.04] p-3">Automatic rules: scaffolded</span>
-            <span className="rounded-md bg-black/[0.04] p-3">Affiliate coupons: mapped</span>
+            {["Coupon rules", "Automatic rules", "Affiliate coupons"].map((row) => (
+              <div key={row} className="rounded-md bg-black/[0.04] p-3">
+                <p>{row}: {row === "Affiliate coupons" ? "mapped" : "scaffolded"}</p>
+                <div className="mt-3">
+                  <EditRowLink href={`/admin/promotions?edit=${encodeURIComponent(row.toLowerCase().replaceAll(" ", "-"))}`} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

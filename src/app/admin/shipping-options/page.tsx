@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminShippingOptionsPage() {
   return (
@@ -20,7 +21,10 @@ export default function AdminShippingOptionsPage() {
             <div key={name} className="rounded-lg border border-black/10 bg-white p-5">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-semibold">{name}</h2>
-                <span className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white">{price}</span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white">{price}</span>
+                  <EditRowLink href={`/admin/shipping-options?edit=${encodeURIComponent(name.toLowerCase().replaceAll(" ", "-"))}`} />
+                </div>
               </div>
               <p className="mt-3 text-sm text-black/60">{note}</p>
             </div>

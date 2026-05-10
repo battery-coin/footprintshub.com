@@ -56,3 +56,21 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 - Railway deployment has been performed from David's authenticated PowerShell session.
 - Neon `DATABASE_URL` has not been tested against a real Neon project in this pass.
 - Cloudflare nameservers and custom domain were intentionally not changed.
+
+## Affiliate Three-Structure Plan Builder - 2026-05-10
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npx prisma format` | pass | Schema formatted after adding Binary, Matrix, and Unilevel structure support. |
+| `npx prisma validate` | pass | Prisma schema is valid. Prisma emitted the non-blocking `package.json#prisma` deprecation warning. |
+| `npx prisma generate` | pass | Prisma Client generated successfully. |
+| `npm test` | pass | 54 tests passed, including percentage/bps helpers and structure template tests. |
+| `npm run lint` | pass | ESLint passed. |
+| `npm run typecheck` | pass | TypeScript check passed after aligning new structure fields with affiliate types. |
+| `npm run build` | pass | Next.js production build passed and generated 119 static pages. |
+
+### Notes
+
+- Unilevel is the functional launch payout engine.
+- Binary and Matrix are configurable, persisted, previewable, and explicitly marked scaffolded until their placement/volume engines are completed and tested.
+- Requested admin table row edit actions were added across products, categories, collections, inventory, Printful, fulfillment, shipping options, promotions, sales channels, regions, tax, and affiliates.

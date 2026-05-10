@@ -228,6 +228,9 @@ enum CommissionBase {
   product_subtotal
   item_subtotal
   direct_commission
+  leg_volume
+  weaker_leg_volume
+  matrix_level_volume
   gross_margin
 }
 
@@ -247,6 +250,11 @@ enum CommissionScope {
   coupon
   lifetime
   manual
+  ad_product
+  service
+  subscription
+  digital
+  nft
 }
 
 enum AffiliatePlanStatus {
@@ -269,6 +277,12 @@ enum AffiliatePlanType {
   hybrid
 }
 
+enum AffiliateStructureType {
+  binary
+  matrix
+  unilevel
+}
+
 enum AffiliateBusinessModelType {
   flat
   product
@@ -288,6 +302,44 @@ enum AffiliateCompressionBehavior {
   pay_zero
   skip_ineligible
   compress_to_next_qualified
+}
+
+enum AffiliateLegSide {
+  left
+  right
+}
+
+enum BinaryPayoutBasis {
+  weaker_leg_volume
+  pair_matching
+  direct_purchase_volume
+}
+
+enum BinarySpilloverMode {
+  auto_left
+  auto_right
+  weaker_leg
+  manual
+  balanced
+}
+
+enum MatrixSpilloverMode {
+  breadth_first
+  depth_first
+  manual
+  auto_fill
+}
+
+enum MatrixLevelCommissionMode {
+  per_level_percentage
+  per_member_fixed
+  level_completion
+}
+
+enum AffiliateTemplateRiskLevel {
+  low
+  medium
+  high
 }
 
 enum AffiliatePerformanceMetric {
@@ -655,6 +707,11 @@ model Shop {
   affiliatePrograms               AffiliateProgram[]
   affiliatePlans                  AffiliatePlan[]
   affiliatePlanLevels             AffiliatePlanLevel[]
+  binaryPlanConfigs               BinaryPlanConfig[]
+  binaryLegVolumes                BinaryLegVolume[]
+  matrixPlanConfigs               MatrixPlanConfig[]
+  matrixPositions                 MatrixPosition[]
+  unilevelPlanConfigs             UnilevelPlanConfig[]
   affiliatePerformanceTiers       AffiliatePerformanceTier[]
   affiliateQualificationSnapshots AffiliateQualificationSnapshot[]
   lifetimeCustomerAttributions    LifetimeCustomerAttribution[]
@@ -1424,74 +1481,85 @@ model CompareItem {
 }
 
 model AffiliateProgram {
-  id                       String                 @id @default(cuid())
+  id                       String                  @id @default(cuid())
   shopId                   String
   name                     String
-  status                   AffiliateProgramStatus @default(active)
-  attributionModel         AttributionModel       @default(last_touch)
-  cookieDays               Int                    @default(30)
-  allowMultiLevel          Boolean                @default(true)
-  maxLevels                Int                    @default(7)
-  maxCommissionPoolBps     Int                    @default(2000)
-  defaultCommissionType    CommissionType         @default(percentage)
-  defaultCommissionValue   Int                    @default(1000)
-  commissionBase           CommissionBase         @default(product_subtotal)
-  autoApproveCommissions   Boolean                @default(false)
-  autoApproveOrderStatuses String[]               @default([])
-  holdDays                 Int                    @default(30)
-  blockOwnReferrals        Boolean                @default(true)
-  blockSaleItems           Boolean                @default(false)
-  minPayoutCents           Int                    @default(5000)
+  status                   AffiliateProgramStatus  @default(active)
+  activePlanId             String?
+  defaultPlanType          AffiliateStructureType?
+  attributionModel         AttributionModel        @default(last_touch)
+  cookieDays               Int                     @default(30)
+  allowMultiLevel          Boolean                 @default(true)
+  maxLevels                Int                     @default(7)
+  maxCommissionPoolBps     Int                     @default(2000)
+  defaultCommissionType    CommissionType          @default(percentage)
+  defaultCommissionValue   Int                     @default(1000)
+  commissionBase           CommissionBase          @default(product_subtotal)
+  autoApproveCommissions   Boolean                 @default(false)
+  autoApproveOrderStatuses String[]                @default([])
+  holdDays                 Int                     @default(30)
+  blockOwnReferrals        Boolean                 @default(true)
+  blockSaleItems           Boolean                 @default(false)
+  minPayoutCents           Int                     @default(5000)
   maxPayoutCents           Int?
-  withdrawalFeeCents       Int                    @default(0)
-  allowCouponGeneration    Boolean                @default(false)
-  minCouponGenerationCents Int                    @default(2500)
-  createdAt                DateTime               @default(now())
-  updatedAt                DateTime               @updatedAt
+  withdrawalFeeCents       Int                     @default(0)
+  allowCouponGeneration    Boolean                 @default(false)
+  minCouponGenerationCents Int                     @default(2500)
+  createdAt                DateTime                @default(now())
+  updatedAt                DateTime                @updatedAt
 
   shop                      Shop                       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  activePlan                AffiliatePlan?             @relation("AffiliateProgramActivePlan", fields: [activePlanId], references: [id])
   commissionRules           CommissionRule[]
   multiLevelCommissionRules MultiLevelCommissionRule[]
-  plans                     AffiliatePlan[]
+  plans                     AffiliatePlan[]            @relation("AffiliateProgramPlans")
 
   @@index([shopId])
+  @@index([activePlanId])
 }
 
 model AffiliatePlan {
-  id                       String              @id @default(cuid())
+  id                       String                 @id @default(cuid())
   shopId                   String
   affiliateProgramId       String?
   name                     String
   description              String?
-  status                   AffiliatePlanStatus @default(draft)
+  status                   AffiliatePlanStatus    @default(draft)
   planType                 AffiliatePlanType
-  isDefault                Boolean             @default(false)
-  currency                 String              @default("USD")
-  maxActiveLevels          Int                 @default(7)
+  structureType            AffiliateStructureType @default(unilevel)
+  isDefault                Boolean                @default(false)
+  currency                 String                 @default("USD")
+  maxActiveLevels          Int                    @default(7)
   maxCommissionPoolBps     Int?
   maxCommissionPoolCents   Int?
-  allowLifetimeAttribution Boolean             @default(false)
+  allowLifetimeAttribution Boolean                @default(false)
   lifetimeAttributionDays  Int?
-  attributionModel         AttributionModel    @default(last_touch)
-  cookieDays               Int                 @default(30)
-  holdDays                 Int                 @default(14)
-  autoApproveCommissions   Boolean             @default(false)
-  blockOwnReferrals        Boolean             @default(true)
-  blockSaleItems           Boolean             @default(false)
-  allowStoreCreditPayout   Boolean             @default(true)
-  allowCashPayout          Boolean             @default(false)
-  createdAt                DateTime            @default(now())
-  updatedAt                DateTime            @updatedAt
+  attributionModel         AttributionModel       @default(last_touch)
+  cookieDays               Int                    @default(30)
+  holdDays                 Int                    @default(14)
+  autoApproveCommissions   Boolean                @default(false)
+  blockOwnReferrals        Boolean                @default(true)
+  blockSaleItems           Boolean                @default(false)
+  allowStoreCreditPayout   Boolean                @default(true)
+  allowCashPayout          Boolean                @default(false)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
 
-  shop             Shop                       @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliateProgram AffiliateProgram?          @relation(fields: [affiliateProgramId], references: [id])
-  levels           AffiliatePlanLevel[]
-  performanceTiers AffiliatePerformanceTier[]
-  commissionRules  CommissionRule[]
-  affiliates       Affiliate[]
-  commissions      AffiliateCommission[]
+  shop              Shop                       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliateProgram  AffiliateProgram?          @relation("AffiliateProgramPlans", fields: [affiliateProgramId], references: [id])
+  activeForPrograms AffiliateProgram[]         @relation("AffiliateProgramActivePlan")
+  levels            AffiliatePlanLevel[]
+  binaryConfig      BinaryPlanConfig?
+  matrixConfig      MatrixPlanConfig?
+  unilevelConfig    UnilevelPlanConfig?
+  matrixPositions   MatrixPosition[]
+  performanceTiers  AffiliatePerformanceTier[]
+  commissionRules   CommissionRule[]
+  affiliates        Affiliate[]
+  commissions       AffiliateCommission[]
 
   @@index([shopId, status])
+  @@index([shopId, structureType])
   @@index([affiliateProgramId])
 }
 
@@ -1502,6 +1570,7 @@ model AffiliatePlanLevel {
   levelDepth          Int
   label               String
   enabled             Boolean                      @default(true)
+  structureType       AffiliateStructureType       @default(unilevel)
   commissionType      CommissionType
   percentageBps       Int?
   fixedCents          Int?
@@ -1509,18 +1578,147 @@ model AffiliatePlanLevel {
   maxPerOrderCents    Int?
   maxPerMonthCents    Int?
   requiresRankId      String?
+  sortOrder           Int                          @default(0)
   compressionBehavior AffiliateCompressionBehavior @default(pay_zero)
   createdAt           DateTime                     @default(now())
   updatedAt           DateTime                     @updatedAt
 
-  shop          Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliatePlan AffiliatePlan         @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
-  requiresRank  AffiliateRank?        @relation(fields: [requiresRankId], references: [id])
-  commissions   AffiliateCommission[]
+  shop            Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan   AffiliatePlan         @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+  requiresRank    AffiliateRank?        @relation(fields: [requiresRankId], references: [id])
+  commissionRules CommissionRule[]
+  commissions     AffiliateCommission[]
 
   @@unique([affiliatePlanId, levelDepth])
   @@index([shopId, levelDepth])
+  @@index([shopId, structureType])
   @@index([requiresRankId])
+}
+
+model BinaryPlanConfig {
+  id                 String              @id @default(cuid())
+  shopId             String
+  affiliatePlanId    String              @unique
+  leftLabel          String              @default("Left Team")
+  rightLabel         String              @default("Right Team")
+  payoutBasis        BinaryPayoutBasis   @default(weaker_leg_volume)
+  pairRatioLeft      Int                 @default(1)
+  pairRatioRight     Int                 @default(1)
+  pairCommissionType CommissionType      @default(percentage)
+  pairCommissionBps  Int?
+  pairFixedCents     Int?
+  spilloverMode      BinarySpilloverMode @default(weaker_leg)
+  carryForwardVolume Boolean             @default(true)
+  flushAfterPayout   Boolean             @default(false)
+  maxPairsPerPeriod  Int?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan AffiliatePlan @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model BinaryLegVolume {
+  id                      String   @id @default(cuid())
+  shopId                  String
+  affiliateId             String
+  periodStart             DateTime
+  periodEnd               DateTime
+  leftVolumeCents         Int      @default(0)
+  rightVolumeCents        Int      @default(0)
+  weakerLegVolumeCents    Int      @default(0)
+  carriedLeftVolumeCents  Int      @default(0)
+  carriedRightVolumeCents Int      @default(0)
+  paidPairs               Int      @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+
+  @@unique([affiliateId, periodStart, periodEnd])
+  @@index([shopId, affiliateId])
+}
+
+model MatrixPlanConfig {
+  id                     String                    @id @default(cuid())
+  shopId                 String
+  affiliatePlanId        String                    @unique
+  width                  Int                       @default(3)
+  depth                  Int                       @default(7)
+  spilloverMode          MatrixSpilloverMode       @default(breadth_first)
+  completionBonusEnabled Boolean                   @default(false)
+  completionBonusCents   Int?
+  levelCommissionMode    MatrixLevelCommissionMode @default(per_level_percentage)
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
+
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan AffiliatePlan @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model MatrixPosition {
+  id                 String   @id @default(cuid())
+  shopId             String
+  affiliatePlanId    String
+  affiliateId        String
+  parentAffiliateId  String?
+  sponsorAffiliateId String?
+  levelDepth         Int
+  positionIndex      Int
+  path               String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  shop             Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan    AffiliatePlan         @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+  affiliate        Affiliate             @relation("MatrixPositionAffiliate", fields: [affiliateId], references: [id], onDelete: Cascade)
+  parentAffiliate  Affiliate?            @relation("MatrixPositionParent", fields: [parentAffiliateId], references: [id])
+  sponsorAffiliate Affiliate?            @relation("MatrixPositionSponsor", fields: [sponsorAffiliateId], references: [id])
+  commissions      AffiliateCommission[]
+
+  @@unique([affiliatePlanId, affiliateId])
+  @@unique([affiliatePlanId, path])
+  @@index([shopId, affiliatePlanId])
+  @@index([parentAffiliateId])
+  @@index([sponsorAffiliateId])
+}
+
+model UnilevelPlanConfig {
+  id                  String                       @id @default(cuid())
+  shopId              String
+  affiliatePlanId     String                       @unique
+  unlimitedFrontline  Boolean                      @default(true)
+  maxDepth            Int                          @default(7)
+  compressionBehavior AffiliateCompressionBehavior @default(pay_zero)
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan AffiliatePlan @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+
+  @@index([shopId])
+}
+
+model AffiliateStructureTemplate {
+  id            String                     @id @default(cuid())
+  key           String                     @unique
+  name          String
+  structureType AffiliateStructureType
+  description   String
+  defaultConfig Json
+  defaultLevels Json
+  riskLevel     AffiliateTemplateRiskLevel @default(low)
+  active        Boolean                    @default(true)
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  @@index([structureType])
+  @@index([active])
 }
 
 model Affiliate {
@@ -1556,6 +1754,10 @@ model Affiliate {
   rank                         AffiliateRank?                   @relation(fields: [rankId], references: [id])
   performanceTier              AffiliatePerformanceTier?        @relation(fields: [performanceTierId], references: [id])
   activePlan                   AffiliatePlan?                   @relation(fields: [activePlanId], references: [id])
+  binaryLegVolumes             BinaryLegVolume[]
+  matrixPositions              MatrixPosition[]                 @relation("MatrixPositionAffiliate")
+  matrixChildPositions         MatrixPosition[]                 @relation("MatrixPositionParent")
+  matrixSponsoredPositions     MatrixPosition[]                 @relation("MatrixPositionSponsor")
   ancestorClosures             AffiliateTreeClosure[]           @relation("AffiliateTreeAncestor")
   descendantClosures           AffiliateTreeClosure[]           @relation("AffiliateTreeDescendant")
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
@@ -1674,6 +1876,8 @@ model CommissionRule {
   shopId             String
   affiliateProgramId String
   planId             String?
+  planLevelId        String?
+  structureType      AffiliateStructureType?
   businessModelType  AffiliateBusinessModelType?
   scope              CommissionScope
   affiliateId        String?
@@ -1697,6 +1901,7 @@ model CommissionRule {
   shop             Shop                      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   affiliateProgram AffiliateProgram          @relation(fields: [affiliateProgramId], references: [id], onDelete: Cascade)
   plan             AffiliatePlan?            @relation(fields: [planId], references: [id])
+  planLevel        AffiliatePlanLevel?       @relation(fields: [planLevelId], references: [id])
   affiliate        Affiliate?                @relation(fields: [affiliateId], references: [id])
   product          Product?                  @relation(fields: [productId], references: [id])
   rank             AffiliateRank?            @relation(fields: [rankId], references: [id])
@@ -1706,6 +1911,8 @@ model CommissionRule {
   @@index([shopId, scope])
   @@index([affiliateProgramId])
   @@index([planId])
+  @@index([planLevelId])
+  @@index([structureType])
   @@index([businessModelType])
   @@index([rankId])
   @@index([performanceTierId])
@@ -1745,9 +1952,13 @@ model AffiliateCommission {
   orderId             String?
   orderItemId         String?
   sourceAffiliateId   String?
+  structureType       AffiliateStructureType      @default(unilevel)
   businessModelType   AffiliateBusinessModelType?
   type                AffiliateCommissionType
-  levelDepth          Int                         @default(0)
+  levelDepth          Int?                        @default(0)
+  legSide             AffiliateLegSide?
+  matrixPositionId    String?
+  volumeCents         Int?
   status              AffiliateCommissionStatus   @default(pending)
   amountCents         Int
   currency            String                      @default("USD")
@@ -1776,6 +1987,7 @@ model AffiliateCommission {
   order           Order?                    @relation(fields: [orderId], references: [id])
   orderItem       OrderItem?                @relation(fields: [orderItemId], references: [id])
   sourceAffiliate Affiliate?                @relation("AffiliateCommissionSource", fields: [sourceAffiliateId], references: [id])
+  matrixPosition  MatrixPosition?           @relation(fields: [matrixPositionId], references: [id])
   rule            CommissionRule?           @relation(fields: [ruleId], references: [id])
   multiLevelRule  MultiLevelCommissionRule? @relation(fields: [multiLevelRuleId], references: [id])
   walletLedgers   AffiliateWalletLedger[]
@@ -1783,6 +1995,8 @@ model AffiliateCommission {
   @@index([shopId, affiliateId])
   @@index([planId])
   @@index([planLevelId])
+  @@index([structureType])
+  @@index([matrixPositionId])
   @@index([businessModelType])
   @@index([orderId])
   @@index([status])

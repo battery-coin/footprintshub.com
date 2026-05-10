@@ -5,6 +5,7 @@ import { demoAffiliateMetrics } from "@/lib/affiliate/demo-data";
 
 const affiliateAdminLinks = [
   ["/admin/affiliates/plans", "Plans"],
+  ["/admin/affiliates/structures", "Structures"],
   ["/admin/affiliates/applications", "Applications"],
   ["/admin/affiliates/referrals", "Referrals"],
   ["/admin/affiliates/commissions", "Commissions"],

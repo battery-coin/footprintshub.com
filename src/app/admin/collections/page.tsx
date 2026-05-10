@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 const plannedCollections = [
   "Featured drops",
@@ -16,8 +17,13 @@ export default function AdminCollectionsPage() {
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         {plannedCollections.map((collection) => (
           <div key={collection} className="rounded-lg border border-black/10 bg-white p-4">
-            <p className="font-medium">{collection}</p>
-            <p className="mt-1 text-sm text-black/55">Product assignment and sort order are in the database foundation.</p>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-medium">{collection}</p>
+                <p className="mt-1 text-sm text-black/55">Product assignment and sort order are in the database foundation.</p>
+              </div>
+              <EditRowLink href={`/admin/collections?edit=${encodeURIComponent(collection.toLowerCase().replaceAll(" ", "-"))}`} />
+            </div>
           </div>
         ))}
       </div>

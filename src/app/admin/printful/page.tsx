@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 import { SetupPanel } from "@/components/ui/setup-panel";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { getPrintfulApiBaseUrl, getPrintfulSetupItems, isPrintfulConfigured } from "@/lib/printful/printful-service";
@@ -27,14 +28,22 @@ export default function AdminPrintfulPage() {
         <section className="mt-8 rounded-lg border border-black/10 bg-white p-5">
           <h2 className="text-2xl font-semibold">Operational policy</h2>
           <div className="mt-4 grid gap-3 text-sm leading-6 text-black/62">
-            <p>API base URL: {getPrintfulApiBaseUrl()}</p>
-            <p>Order submission must run after Stripe payment verification, not from client-side checkout state.</p>
-            <p>Retries must use an idempotency key tied to the order ID so duplicate webhooks cannot create duplicate Printful orders.</p>
-            <p>Unmapped products should remain in fulfillment review until a staff member maps SKU or variant data.</p>
+            {[
+              ["API base URL", getPrintfulApiBaseUrl()],
+              ["Order submission", "Runs after Stripe payment verification, not from client-side checkout state."],
+              ["Retry policy", "Uses an idempotency key tied to the order ID."],
+              ["Product mapping", "Unmapped products remain in fulfillment review until SKU or variant data is mapped."],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-3 rounded-md bg-black/[0.03] p-3">
+                <span>
+                  <strong>{label}:</strong> {value}
+                </span>
+                <EditRowLink href={`/admin/printful?edit=${encodeURIComponent(label.toLowerCase().replaceAll(" ", "-"))}`} />
+              </div>
+            ))}
           </div>
         </section>
       </div>
     </AdminShell>
   );
 }
-

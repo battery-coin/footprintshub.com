@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 const rows = [
   ["Default provider", "Manual fulfillment", "Enabled for MVP"],
@@ -20,10 +21,11 @@ export default function AdminFulfillmentPage() {
         </div>
         <div className="overflow-hidden rounded-lg border border-black/10 bg-white">
           {rows.map(([label, value, status]) => (
-            <div key={label} className="grid gap-2 border-b border-black/10 p-4 text-sm last:border-b-0 md:grid-cols-3">
+            <div key={label} className="grid gap-2 border-b border-black/10 p-4 text-sm last:border-b-0 md:grid-cols-[1fr_1fr_1fr_auto]">
               <span className="font-medium">{label}</span>
               <span className="text-black/65">{value}</span>
               <span className="text-black/50">{status}</span>
+              <EditRowLink href={`/admin/fulfillment?edit=${encodeURIComponent(label.toLowerCase().replaceAll(" ", "-"))}`} />
             </div>
           ))}
         </div>

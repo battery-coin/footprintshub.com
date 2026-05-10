@@ -4,7 +4,15 @@ export type AttributionModel = "first_touch" | "last_touch" | "coupon_priority" 
 
 export type CommissionType = "percentage" | "fixed" | "percentage_plus_fixed" | "store_credit";
 
-export type CommissionBase = "order_subtotal" | "product_subtotal" | "item_subtotal" | "direct_commission" | "gross_margin";
+export type CommissionBase =
+  | "order_subtotal"
+  | "product_subtotal"
+  | "item_subtotal"
+  | "direct_commission"
+  | "leg_volume"
+  | "weaker_leg_volume"
+  | "matrix_level_volume"
+  | "gross_margin";
 
 export type CommissionScope =
   | "global"
@@ -21,7 +29,12 @@ export type CommissionScope =
   | "performance_tier"
   | "coupon"
   | "lifetime"
-  | "manual";
+  | "manual"
+  | "ad_product"
+  | "service"
+  | "subscription"
+  | "digital"
+  | "nft";
 
 export type AffiliatePlanType =
   | "flat"
@@ -37,6 +50,18 @@ export type AffiliatePlanType =
   | "hybrid";
 
 export type AffiliateBusinessModelType = AffiliatePlanType | "manual";
+
+export type AffiliateStructureType = "binary" | "matrix" | "unilevel";
+
+export type AffiliateLegSide = "left" | "right";
+
+export type BinaryPayoutBasis = "weaker_leg_volume" | "pair_matching" | "direct_purchase_volume";
+
+export type BinarySpilloverMode = "auto_left" | "auto_right" | "weaker_leg" | "manual" | "balanced";
+
+export type MatrixSpilloverMode = "breadth_first" | "depth_first" | "manual" | "auto_fill";
+
+export type MatrixLevelCommissionMode = "per_level_percentage" | "per_member_fixed" | "level_completion";
 
 export type CompressionBehavior = "pay_zero" | "skip_ineligible" | "compress_to_next_qualified";
 
@@ -149,6 +174,7 @@ export type CommissionRuleInput = {
   id: string;
   shopId: string;
   planId?: string;
+  structureType?: AffiliateStructureType;
   businessModelType?: AffiliateBusinessModelType;
   scope: CommissionScope;
   affiliateId?: string;
@@ -202,6 +228,7 @@ export type AffiliatePlanConfig = {
   shopId: string;
   name: string;
   planType: AffiliatePlanType;
+  structureType?: AffiliateStructureType;
   isDefault: boolean;
   currency: string;
   maxActiveLevels: number;
@@ -280,8 +307,12 @@ export type AffiliateCommissionDraft = {
   rankId?: string;
   performanceTierId?: string;
   businessModelType?: AffiliateBusinessModelType;
+  structureType?: AffiliateStructureType;
   capApplied?: boolean;
   compressionApplied?: boolean;
+  legSide?: AffiliateLegSide;
+  matrixPositionId?: string;
+  volumeCents?: number;
   reason?: string;
 };
 

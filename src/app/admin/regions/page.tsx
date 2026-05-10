@@ -1,4 +1,5 @@
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminRegionsPage() {
   return (
@@ -15,7 +16,10 @@ export default function AdminRegionsPage() {
         <div className="rounded-lg border border-black/10 bg-white p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="font-semibold">United States</h2>
-            <span className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white">USD</span>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-black px-3 py-1 text-xs font-medium text-white">USD</span>
+              <EditRowLink href="/admin/regions?edit=united-states" />
+            </div>
           </div>
           <p className="mt-3 text-sm text-black/60">Tax-exclusive pricing, Stripe Checkout, flat shipping.</p>
         </div>

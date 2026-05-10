@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { EditRowLink } from "@/components/admin/edit-row-link";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatMoney, getAllProductsForAdmin } from "@/lib/catalog/products";
@@ -25,6 +26,7 @@ export default async function AdminProductsPage() {
               <th className="px-4 py-3">Type</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3 text-right">Price</th>
+              <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -42,6 +44,9 @@ export default async function AdminProductsPage() {
                   <Badge>{product.status}</Badge>
                 </td>
                 <td className="px-4 py-3 text-right">{formatMoney(product.priceCents, product.currency)}</td>
+                <td className="px-4 py-3 text-right">
+                  <EditRowLink href={`/admin/products/${product.id}`} />
+                </td>
               </tr>
             ))}
           </tbody>
