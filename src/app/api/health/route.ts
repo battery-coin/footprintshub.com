@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 
 export function GET() {
-  return NextResponse.json({ ok: true, service: "footprintshub-commerce" });
+  return NextResponse.json({
+    ok: true,
+    service: "footprintshub-commerce",
+    environment: "railway-temp-ready",
+  });
 }
