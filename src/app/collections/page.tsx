@@ -2,10 +2,17 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ProductArt } from "@/components/product/product-art";
 import { getProducts } from "@/lib/catalog/products";
+import type { CatalogProduct } from "@/lib/catalog/types";
+
+const franchiseLinks: Record<string, string> = {
+  matrix_decoded: "matrix-decoded",
+  hero_studio: "hero-studio",
+  battery_movement: "battery-movement",
+};
 
 export default async function CollectionsPage() {
   const products = await getProducts();
-  const groups = Array.from(
+  const franchiseGroups: Array<[string, CatalogProduct[]]> = Array.from(
     products.reduce((map, product) => {
       const existing = map.get(product.franchise) ?? [];
       existing.push(product);
@@ -13,6 +20,10 @@ export default async function CollectionsPage() {
       return map;
     }, new Map<string, typeof products>()),
   );
+  const featuredProducts = products.filter((product) => product.isFeatured);
+  const groups: Array<[string, CatalogProduct[]]> = featuredProducts.length
+    ? [["featured-drops", featuredProducts], ...franchiseGroups]
+    : franchiseGroups;
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -25,7 +36,11 @@ export default async function CollectionsPage() {
       </div>
       <div className="mt-10 grid gap-5 md:grid-cols-3">
         {groups.map(([slug, items]) => (
-          <Link key={slug} href={`/collections/${slug}`} className="overflow-hidden rounded-lg border border-black/10 bg-white">
+          <Link
+            key={slug}
+            href={`/collections/${franchiseLinks[slug] ?? slug}`}
+            className="overflow-hidden rounded-lg border border-black/10 bg-white"
+          >
             <div className="aspect-[4/3] bg-black">
               {items[0] ? <ProductArt product={items[0]} /> : null}
             </div>
@@ -42,4 +57,3 @@ export default async function CollectionsPage() {
     </main>
   );
 }
-

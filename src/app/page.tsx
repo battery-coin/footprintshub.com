@@ -57,7 +57,7 @@ export default async function HomePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeading kicker="Featured" title="Featured products" href="/shop" />
+        <SectionHeading kicker="Featured" title="Featured products" href="/collections/featured-drops" />
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
