@@ -8,7 +8,10 @@ const links = [
   ["/admin/categories", "Categories"],
   ["/admin/collections", "Collections"],
   ["/admin/orders", "Orders"],
+  ["/admin/refunds", "Refunds"],
+  ["/admin/returns", "Returns"],
   ["/admin/inventory", "Inventory"],
+  ["/admin/printful", "Printful"],
   ["/admin/fulfillment", "Fulfillment"],
   ["/admin/shipping-options", "Shipping options"],
   ["/admin/promotions", "Promotions"],
@@ -23,6 +26,7 @@ const links = [
   ["/admin/events", "Events"],
   ["/admin/audit-logs", "Audit logs"],
   ["/admin/security", "Security"],
+  ["/admin/settings", "Settings"],
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {

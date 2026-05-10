@@ -15,9 +15,9 @@ export const metadata: Metadata = {
 const navItems = [
   { href: "/shop", label: "Shop" },
   { href: "/products", label: "Products" },
+  { href: "/collections", label: "Collections" },
   { href: "/collections/footprints", label: "Footprints" },
-  { href: "/collections/matrix_decoded", label: "Matrix Decoded" },
-  { href: "/admin", label: "Admin" },
+  { href: "/affiliate", label: "Ambassadors" },
 ];
 
 export default function RootLayout({
@@ -50,14 +50,14 @@ export default function RootLayout({
             </header>
             {children}
             <footer className="border-t border-black/10 bg-black text-white">
-              <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-4 lg:px-8">
+              <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-5 lg:px-8">
                 <div className="md:col-span-2">
                   <p className="text-lg font-semibold">FootprintsHub</p>
                   <p className="mt-3 max-w-xl text-sm leading-6 text-white/65">
                     Standalone commerce for Footprints, Matrix Decoded, Hero Studio creator drops, collectibles, merch, and future digital unlocks.
                   </p>
                 </div>
-                <FooterLinks title="Shop" links={["/shop", "/products", "/cart"]} />
+                <FooterLinks title="Shop" links={["/shop", "/products", "/collections", "/cart"]} />
                 <FooterLinks
                   title="Legal"
                   links={[
@@ -70,6 +70,7 @@ export default function RootLayout({
                     "/legal/digital-goods",
                   ]}
                 />
+                <FooterLinks title="Support" links={["/contact", "/support", "/faq", "/affiliate", "/admin"]} />
               </div>
             </footer>
             <CartDrawer />

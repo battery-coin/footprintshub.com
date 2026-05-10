@@ -15,7 +15,11 @@ export function ProductCard({ product }: { product: CatalogProduct }) {
         <div className="flex flex-wrap gap-2">
           <Badge>{product.franchise.replaceAll("_", " ")}</Badge>
           <Badge>{product.productType.replaceAll("_", " ")}</Badge>
+          {product.isFeatured ? <Badge>Featured</Badge> : null}
           {product.isLimitedEdition ? <Badge>Limited</Badge> : null}
+          {product.preorderStatus ? <Badge>Preorder</Badge> : null}
+          {product.digitalUnlockIncluded ? <Badge>Digital</Badge> : null}
+          {product.isRandomized ? <Badge>{product.productType === "booster_pack" ? "Booster pack" : "Blind box"}</Badge> : null}
         </div>
         <div>
           <Link href={`/products/${product.slug}`} className="text-lg font-semibold hover:underline">

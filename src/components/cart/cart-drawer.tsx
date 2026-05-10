@@ -17,8 +17,6 @@ export function CartDrawer() {
     removeItem,
     clearCart,
     subtotalCents,
-    checkout,
-    isCheckingOut,
   } = useCart();
 
   return (
@@ -123,9 +121,9 @@ export function CartDrawer() {
             Taxes, shipping, discounts, and final product availability are confirmed during checkout.
           </p>
           <div className="mt-5 grid gap-3">
-            <Button type="button" onClick={checkout} disabled={!items.length || isCheckingOut}>
-              {isCheckingOut ? "Opening checkout..." : "Checkout"}
-            </Button>
+            <ButtonLink href="/checkout" onClick={closeCart}>
+              Review checkout
+            </ButtonLink>
             <div className="grid grid-cols-2 gap-3">
               <ButtonLink href="/cart" variant="secondary" onClick={closeCart}>
                 View cart

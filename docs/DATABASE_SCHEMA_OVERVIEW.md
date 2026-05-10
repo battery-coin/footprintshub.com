@@ -57,6 +57,7 @@ Money is stored in integer cents. Percent values are basis points.
 - `OrderHistory`: status/comment timeline with customer-visible flag.
 - `Payment`: Stripe/manual/future Battery Coin payment records.
 - `Refund`: refund and credit-memo foundation.
+- `RefundItem`: line-level refund quantity, amount, and restock intent.
 - `ReturnRequest`: RMA-style return, replacement, refund, and store-credit request workflow.
 - `Shipment`: fulfillment and tracking foundation.
 - `ShipmentItem`: item-level fulfillment records.
@@ -84,6 +85,7 @@ Inventory quantity remains on product/variant for fast reads, but every paid ded
 - `PaymentSession`: provider-neutral checkout/payment session with provider identifiers and idempotency key.
 - `PaymentCollection`: order-level payable/refundable amount grouping for future capture/refund workflows.
 - `FulfillmentProvider`: shop-scoped fulfillment provider configuration.
+- `PrintfulOrder`: Printful submission state, external IDs, idempotency key, request hash, and error details.
 - `ShippingProfile`: shipping behavior groups such as standard, digital, heavy, fragile, and collectible.
 - `ShippingOption`: region/provider shipping choices returned to checkout.
 - `Fulfillment` / `FulfillmentItem`: provider-neutral fulfillment records separate from shipment tracking history.

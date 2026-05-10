@@ -11,7 +11,9 @@ export default function AdminNewDiscountPage() {
         <Input placeholder="Percent in basis points, fixed cents, or free shipping flag" />
         <Input placeholder="Minimum subtotal cents" type="number" />
         <Input placeholder="Product, category, collection, or affiliate restriction" />
-        <Button type="button">Save discount placeholder</Button>
+        <Button type="button" disabled title="Enable persistent discount writes after Neon and admin auth are configured">
+          Discount write setup required
+        </Button>
       </form>
     </AdminShell>
   );

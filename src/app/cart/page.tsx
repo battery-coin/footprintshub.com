@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/catalog/products";
 import { useCart } from "@/components/cart/cart-provider";
 
 export default function CartPage() {
-  const { items, increaseItem, decreaseItem, removeItem, clearCart, subtotalCents, checkout, isCheckingOut } = useCart();
+  const { items, increaseItem, decreaseItem, removeItem, clearCart, subtotalCents } = useCart();
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8">
@@ -70,9 +70,7 @@ export default function CartPage() {
               Final totals are recalculated server-side before Stripe Checkout.
             </p>
             <div className="mt-5 grid gap-3">
-              <Button type="button" onClick={checkout} disabled={isCheckingOut}>
-                {isCheckingOut ? "Opening checkout..." : "Checkout"}
-              </Button>
+              <ButtonLink href="/checkout">Review checkout</ButtonLink>
               <Button type="button" variant="ghost" onClick={clearCart}>
                 Clear cart
               </Button>

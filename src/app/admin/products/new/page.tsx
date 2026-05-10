@@ -17,7 +17,9 @@ export default function NewProductPage() {
         <p className="text-sm leading-6 text-black/55">
           This MVP form is ready for the `/api/admin/products` route. Connect `ADMIN_SECRET` and Neon before production writes.
         </p>
-        <Button type="button">Create product placeholder</Button>
+        <Button type="button" disabled title="Enable persistent product writes after Neon and admin auth are configured">
+          Product write setup required
+        </Button>
       </form>
     </AdminShell>
   );

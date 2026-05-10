@@ -21,6 +21,8 @@ export type CartItemSnapshot = {
   unitPriceCents: number;
   currency: string;
   quantity: number;
+  productType?: string;
+  requiresShipping?: boolean;
 };
 
 type CartState = {
@@ -83,6 +85,8 @@ function reducer(state: CartState, action: CartAction): CartState {
             unitPriceCents: action.product.priceCents,
             currency: action.product.currency,
             quantity: 1,
+            productType: action.product.productType,
+            requiresShipping: action.product.requiresShipping,
           },
         ],
       };

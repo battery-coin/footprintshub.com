@@ -4,14 +4,14 @@ const pages: Record<string, { title: string; body: string[] }> = {
   terms: {
     title: "Terms of Sale",
     body: [
-      "These terms are placeholders for early commerce planning and require legal review before public launch.",
+      "These terms establish the working commerce rules for FootprintsHub and require final legal review before high-volume public launch.",
       "Products are sold as merchandise, collectibles, memberships, digital goods, or supporter bundles. No product is offered as an investment.",
     ],
   },
   privacy: {
     title: "Privacy Policy",
     body: [
-      "This placeholder explains that customer data will be used to process orders, support accounts, fulfill products, and provide service updates.",
+      "Customer data is used to process orders, support accounts, fulfill products, detect fraud, and provide service updates.",
       "Production launch requires a full privacy policy covering analytics, payments, email, cookies, data retention, and user rights.",
     ],
   },
@@ -143,6 +143,22 @@ const pages: Record<string, { title: string; body: string[] }> = {
     body: [
       "Future creator shops are responsible for accurate product descriptions, lawful marketing, fulfillment promises, refund rules, and required disclosures for their products and campaigns.",
       "The platform may suspend products, shops, affiliate activity, or payouts for fraud, policy violations, legal risk, chargebacks, or customer harm.",
+    ],
+  },
+  "printful-fulfillment": {
+    title: "Printful Fulfillment",
+    body: [
+      "Print-on-demand products may be produced by Printful or another approved fulfillment provider after verified payment and product mapping review.",
+      "Production, shipping, replacement, and cancellation timing may differ from in-stock products. Customers should review product pages and shipping policy before checkout.",
+      "If Printful is not configured or a product mapping fails, the order may require manual fulfillment review before production starts.",
+    ],
+  },
+  "crypto-payments": {
+    title: "Crypto Payment Terms",
+    body: [
+      "Crypto checkout is disabled unless the store explicitly enables a reviewed provider integration.",
+      "Any future Battery Coin or Coinbase checkout option is for approved utility payment only and is not an investment, yield, staking, resale, or profit opportunity.",
+      "Refunds, overpayments, underpayments, network fees, exchange-rate differences, and chargeback-like disputes require separate provider-specific policy before launch.",
     ],
   },
 };

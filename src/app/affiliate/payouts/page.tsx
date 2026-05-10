@@ -11,7 +11,9 @@ export default function AffiliatePayoutsPage() {
       <form className="mt-6 grid max-w-xl gap-4 rounded-lg border border-black/10 bg-white p-5">
         <Input type="number" placeholder="Amount in cents" />
         <Input placeholder="Payout note" />
-        <Button type="button">Request payout placeholder</Button>
+        <Button type="button" disabled title="Payout requests require an approved affiliate wallet balance and DATABASE_URL">
+          Payout request setup required
+        </Button>
       </form>
       <div className="mt-6 grid gap-4">
         {demoPayouts.map((payout) => (

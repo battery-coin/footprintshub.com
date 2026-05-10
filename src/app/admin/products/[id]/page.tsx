@@ -28,9 +28,11 @@ export default async function AdminProductEditPage({
           <Input name="sku" defaultValue={product.sku} />
         </div>
         <div className="flex flex-col gap-3 sm:flex-row">
-          <Button type="button">Save placeholder</Button>
-          <Button type="button" variant="secondary">
-            Archive placeholder
+          <Button type="button" disabled title="Enable persistent product writes after Neon and admin auth are configured">
+            Product write setup required
+          </Button>
+          <Button type="button" variant="secondary" disabled title="Enable persistent product writes after Neon and admin auth are configured">
+            Archive after persistence setup
           </Button>
         </div>
       </form>
