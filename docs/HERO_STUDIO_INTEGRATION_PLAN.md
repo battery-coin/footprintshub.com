@@ -59,6 +59,9 @@ FootprintsHub commerce becomes:
 - Shared creator/shop ID mapping
 - Signed purchase webhooks
 - Digital unlocks back into Hero Studio accounts
+- Creator affiliate and fan ambassador referral links
+- Purchase webhooks that unlock Hero Studio badges, fan-club access, or campaign rewards
+- Future creator payout and affiliate payout reconciliation
 
 ## Required Hero Studio Environment Variables Later
 
@@ -68,9 +71,23 @@ NEXT_PUBLIC_COMMERCE_BASE_URL=https://footprintshub.com
 COMMERCE_API_BASE_URL=https://footprintshub.com/api
 COMMERCE_WEBHOOK_SECRET=replace_me
 COMMERCE_SERVICE_TOKEN=replace_me_never_commit
+NEXT_PUBLIC_AFFILIATE_REF_PARAM=ref
 ```
 
 Never expose `COMMERCE_SERVICE_TOKEN` to frontend code.
+
+## Affiliate Bridge Later
+
+Hero Studio should link into FootprintsHub commerce instead of embedding commerce logic directly. Creator profile pages, campaigns, fan clubs, and product cards can append `?ref=CODE` to store URLs after a creator or fan ambassador is approved for the relevant shop.
+
+Future Hero Studio webhook handling should listen for:
+
+- Paid order
+- Refunded order
+- Digital unlock issued
+- Affiliate commission pending
+- Affiliate commission approved
+- Payout paid
 
 ## Current Pass
 

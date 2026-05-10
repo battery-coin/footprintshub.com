@@ -1,0 +1,36 @@
+# Affiliate Admin Guide
+
+Admin routes are scaffolded under `/admin/affiliates`.
+
+## Current Admin Pages
+
+- `/admin/affiliates`
+- `/admin/affiliates/[id]`
+- `/admin/affiliates/applications`
+- `/admin/affiliates/referrals`
+- `/admin/affiliates/commissions`
+- `/admin/affiliates/payouts`
+- `/admin/affiliates/rules`
+- `/admin/affiliates/levels`
+- `/admin/affiliates/ranks`
+- `/admin/affiliates/bonuses`
+- `/admin/affiliates/assets`
+- `/admin/affiliates/reports`
+- `/admin/affiliates/settings`
+
+## MVP Actions
+
+- Review pending applications.
+- Approve, reject, suspend, or reactivate affiliates.
+- Configure direct commission rules.
+- Configure up to seven ancestor levels.
+- Review pending commissions.
+- Approve or reject payout requests.
+- Export future CSV reports.
+- Review fraud flags and audit logs.
+
+## Admin API
+
+- `POST /api/admin/affiliates/status`: update affiliate status behind `ADMIN_SECRET`.
+
+Future admin endpoints should write `AffiliateAuditLog` records for every program, rule, status, payout, and manual commission change.

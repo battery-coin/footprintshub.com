@@ -45,6 +45,32 @@ const pages: Record<string, { title: string; body: string[] }> = {
       "Digital goods and unlocks provide access, utility, or collectible features. They do not promise profit, resale value, yield, or financial return.",
     ],
   },
+  "affiliate-terms": {
+    title: "Affiliate Terms",
+    body: [
+      "The FootprintsHub affiliate and ambassador program pays commissions only on qualified purchases of real products, memberships, campaign items, digital goods, creator shop purchases, or approved commercial transactions.",
+      "No commission is earned merely for recruiting or enrolling another affiliate. There are no guaranteed earnings, income promises, investment returns, employment relationship, or business opportunity claims.",
+      "Commissions may be held, rejected, reversed, capped, or adjusted for fraud, self-referrals, refunds, chargebacks, product exclusions, policy violations, or manual compliance review.",
+      "Affiliates are responsible for accurate payout details, taxes, lawful marketing practices, and accepting current program terms before receiving payouts.",
+    ],
+  },
+  "affiliate-disclosure": {
+    title: "Affiliate Disclosure",
+    body: [
+      "Affiliates, creators, and fan ambassadors must clearly disclose when they may receive a commission or store credit from a link, coupon, product card, post, livestream, campaign, or recommendation.",
+      "Disclosures must be easy to notice and understand. Do not hide affiliate disclosures in vague hashtags, small print, profile-only text, or long legal paragraphs.",
+      "Affiliates may describe products as collectibles, merchandise, supporter bundles, memberships, access, or digital unlocks, but must not make investment, profit, ROI, resale value, income, or lifestyle claims.",
+    ],
+  },
+  "ambassador-program-rules": {
+    title: "Ambassador Program Rules",
+    body: [
+      "The ambassador network can support up to seven configurable commission levels, but it is not a recruiting-income program. All paid commissions must be tied to qualified purchases.",
+      "Level 0 is the direct referring affiliate. Levels 1 through 7 are ancestor ambassadors in the referral network when the shop owner enables them and sets transparent commission rules.",
+      "The program blocks self-referrals by default, supports payout holds, requires refund and chargeback reversals, enforces commission caps, and keeps an audit log of commission and payout decisions.",
+      "Mandatory purchases, pay-to-join fees, starter kits, inventory loading, recruiting-only compensation, and earnings claims require separate legal review before any public launch.",
+    ],
+  },
 };
 
 export default async function LegalPage({

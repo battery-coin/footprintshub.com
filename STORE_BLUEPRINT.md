@@ -48,3 +48,12 @@ Store name: FootprintsHub
 - No gambling framing for blind boxes.
 - Publish odds before selling randomized products.
 - Use collectible, game utility, membership access, digital unlock, supporter bundle, and merchandise language.
+
+## Affiliate Program
+
+- Multi-tier affiliate and ambassador commissions are available for qualified purchases only.
+- Direct affiliate default: 10% of qualified product subtotal.
+- Ancestor levels can be configured up to seven levels with a default 20% commission pool cap.
+- No commission is paid merely for recruiting or enrolling another affiliate.
+- All commissions start pending and can be reversed for refunds, chargebacks, fraud, or policy violations.
+- Affiliates must accept terms and disclose commission relationships in public promotions.

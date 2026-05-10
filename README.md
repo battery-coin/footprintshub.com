@@ -11,6 +11,7 @@ This branch pivots away from Magento and builds a lighter open-source commerce s
 - Prisma ORM
 - Neon Postgres
 - Stripe Checkout
+- Native affiliate and ambassador commissions
 - Railway hosting
 - Cloudflare DNS, SSL, WAF, and future wildcard shop routing
 
@@ -52,3 +53,5 @@ npm run prisma:seed
 ## Safety
 
 The app never trusts client-side prices at checkout. Checkout routes recalculate line items from the server catalog/database before creating a Stripe Checkout Session.
+
+Affiliate commissions are calculated server-side after paid orders. The program is framed as a multi-tier affiliate and ambassador system tied only to qualified purchases, not recruiting-only compensation.

@@ -1,0 +1,16 @@
+import Link from "next/link";
+import { AffiliateAdminPage } from "@/components/admin/affiliate-admin-page";
+import { demoAffiliate } from "@/lib/affiliate/demo-data";
+
+export default function AdminAffiliatesPage() {
+  return (
+    <AffiliateAdminPage title="Affiliates">
+      <div className="rounded-lg border border-black/10 bg-white p-5">
+        <Link href={`/admin/affiliates/${demoAffiliate.id}`} className="text-lg font-semibold hover:underline">
+          {demoAffiliate.name}
+        </Link>
+        <p className="mt-1 text-sm text-black/55">{demoAffiliate.email} · {demoAffiliate.status}</p>
+      </div>
+    </AffiliateAdminPage>
+  );
+}

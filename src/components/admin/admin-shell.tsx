@@ -9,6 +9,7 @@ const links = [
   ["/admin/shops", "Shops"],
   ["/admin/discounts", "Discounts"],
   ["/admin/customers", "Customers"],
+  ["/admin/affiliates", "Affiliates"],
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
+import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
+import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -16,19 +18,40 @@ export async function POST(request: Request) {
 
   const body = await request.text();
 
-  try {
-    const event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
+  let event;
 
+  try {
+    event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
+  } catch {
+    return NextResponse.json({ error: "Invalid Stripe webhook signature." }, { status: 400 });
+  }
+
+  try {
     if (event.type === "checkout.session.completed") {
-      // Production persistence belongs here:
-      // 1. Find/create Order by checkout session id.
-      // 2. Mark paymentStatus/status paid.
-      // 3. Create digital unlock rows where applicable.
-      // 4. Notify Hero Studio through signed webhooks when integration is enabled.
+      const session = event.data.object;
+      const orderId = typeof session.metadata?.orderId === "string" ? session.metadata.orderId : undefined;
+
+      if (orderId && hasDatabaseUrl()) {
+        const paymentIntentId =
+          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+
+        await getPrisma().order.update({
+          where: { id: orderId },
+          data: {
+            status: "paid",
+            paymentStatus: "paid",
+            stripeCheckoutSessionId: session.id,
+            stripePaymentIntentId: paymentIntentId,
+            customerEmail: session.customer_details?.email ?? session.customer_email ?? undefined,
+          },
+        });
+
+        await calculateCommissionsForOrder(orderId);
+      }
     }
 
     return NextResponse.json({ received: true });
   } catch {
-    return NextResponse.json({ error: "Invalid Stripe webhook signature." }, { status: 400 });
+    return NextResponse.json({ error: "Stripe webhook handler failed." }, { status: 500 });
   }
 }
