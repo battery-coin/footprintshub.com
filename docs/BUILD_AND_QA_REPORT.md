@@ -45,11 +45,14 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 | `npm run build` | pass | Next.js production build passed; 115 static pages generated. |
 | `npm run lint` | pass | ESLint passed. |
 | `npm run typecheck` | pass | TypeScript check passed. |
-| `railway --version` | not installed | Railway CLI is not present locally; dashboard deployment is documented as primary. |
+| `railway --version` | pass | Railway CLI `4.57.1` was installed and used from David's interactive PowerShell session. |
 | `GET http://127.0.0.1:3001/api/health` | pass | Returned `{ "ok": true, "service": "footprintshub-commerce", "environment": "railway-temp-ready" }` from the current build. |
+| `railway up --detach --service footprintshubcom` | pass | Local project uploaded to Railway service `footprintshubcom`. |
+| `railway domain --service footprintshubcom` | pass | Created Railway-provided temporary domain `https://footprintshubcom-production-155d.up.railway.app`. |
+| `GET https://footprintshubcom-production-155d.up.railway.app/api/health` | pass | Returned `ok=true`, `service=footprintshub-commerce`, and `environment=railway-temp-ready`. |
 
 ## Remaining Railway Warnings
 
-- Railway deployment has not been performed from this machine.
+- Railway deployment has been performed from David's authenticated PowerShell session.
 - Neon `DATABASE_URL` has not been tested against a real Neon project in this pass.
 - Cloudflare nameservers and custom domain were intentionally not changed.

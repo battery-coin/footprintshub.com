@@ -2,9 +2,9 @@
 
 ## Basic
 
-- [ ] Railway deployment succeeds.
-- [ ] Temporary domain loads.
-- [ ] `/api/health` returns `railway-temp-ready`.
+- [x] Railway deployment succeeds.
+- [x] Temporary domain loads: `https://footprintshubcom-production-155d.up.railway.app`.
+- [x] `/api/health` returns `railway-temp-ready`.
 - [ ] Homepage has no 500.
 - [ ] `/shop` works.
 - [ ] A seeded `/products/[slug]` page works.
@@ -37,6 +37,5 @@
 
 - [ ] Build command passes.
 - [ ] Start command works.
-- [ ] Healthcheck passes.
+- [x] Healthcheck passes.
 - [ ] Logs are clean enough for temporary-domain testing.
-

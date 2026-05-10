@@ -40,6 +40,15 @@
 ```
 
 Verified locally at `http://127.0.0.1:3001/api/health`.
+Verified on Railway at `https://footprintshubcom-production-155d.up.railway.app/api/health`.
+
+Railway response confirmed on 2026-05-10:
+
+```txt
+ok: true
+service: footprintshub-commerce
+environment: railway-temp-ready
+```
 
 ## 7. Required Railway Variables
 
@@ -81,6 +90,10 @@ No SiteGround DNS changes were made.
 
 No Railway custom domain was added and `footprintshub.com` DNS was not changed.
 
+A Railway-provided temporary service domain was created:
+
+`https://footprintshubcom-production-155d.up.railway.app`
+
 ## 12. Files Created
 
 - `docs/RAILWAY_TEMP_DEPLOYMENT_AUDIT.md`
@@ -117,29 +130,31 @@ No Railway custom domain was added and `footprintshub.com` DNS was not changed.
 - `npm run lint`
 - `npm run typecheck`
 - `railway --version`
+- `railway init --name footprintshubcom --workspace "Battery Coin Dev's Projects"`
+- `railway add --service footprintshubcom`
+- `railway up --detach --service footprintshubcom`
+- `railway domain --service footprintshubcom`
+- `Invoke-RestMethod "https://footprintshubcom-production-155d.up.railway.app/api/health"`
 - local health check against `127.0.0.1:3001`
 
 ## 15. Remaining Manual Steps
 
 1. Create Neon project and database.
 2. Add Neon `DATABASE_URL` to Railway.
-3. Create Railway project from GitHub.
-4. Select this branch.
-5. Add Railway variables.
-6. Deploy and test the Railway temporary URL.
-7. Add Cloudflare site for review only.
-8. Do not change nameservers or custom domains until temporary URL works.
+3. Add required Railway variables for production-grade checkout and integrations.
+4. Redeploy after variables are configured.
+5. Add Cloudflare site for review only.
+6. Do not change nameservers or custom domains until the temporary URL is fully tested.
 
 ## 16. Exact Next Steps For David In Railway
 
-1. New Project.
-2. Deploy from GitHub.
-3. Pick `battery-coin/footprintshub.com`.
-4. Pick branch `railway-temp-neon-cloudflare-setup`.
-5. Do not add a custom domain.
-6. Add variables from `docs/ENVIRONMENT_VARIABLES_RAILWAY_TEMP.md`.
-7. Redeploy.
-8. Test `/api/health`, `/shop`, `/admin`, `/cart`, and `/checkout`.
+1. Open project `footprintshubcom`: `https://railway.com/project/c8c295ff-2780-4b7c-bc9a-474da48767c4`.
+2. Open service `footprintshubcom`.
+3. Add variables from `docs/ENVIRONMENT_VARIABLES_RAILWAY_TEMP.md`.
+4. Set `NEXT_PUBLIC_SITE_URL=https://footprintshubcom-production-155d.up.railway.app`.
+5. Add Neon `DATABASE_URL` after creating the Neon database.
+6. Redeploy.
+7. Test `/api/health`, `/shop`, `/admin`, `/cart`, and `/checkout`.
 
 ## 17. Exact Next Steps For David In Neon
 
@@ -160,10 +175,10 @@ No Railway custom domain was added and `footprintshub.com` DNS was not changed.
 
 ## 19. Known Blockers
 
-- Railway CLI is not installed locally.
+- Railway CLI is installed and authenticated in David's interactive PowerShell session, but not inside the Codex tool sandbox.
 - Real Neon `DATABASE_URL` was not created or tested.
 - npm install reports 2 moderate audit issues and an engine warning for `eslint-visitor-keys` with Node `22.12.0`.
 
 ## 20. Stop Rule
 
-Do not connect the real domain until the Railway temporary URL works.
+Do not connect the real domain until the Railway temporary URL is fully tested beyond the health route.
