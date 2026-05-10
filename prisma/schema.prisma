@@ -397,6 +397,97 @@ enum MarketingAssetType {
   qr
 }
 
+enum ProductOptionType {
+  select
+  radio
+  checkbox
+  text
+  textarea
+  date
+  file
+}
+
+enum ProductReviewStatus {
+  pending
+  approved
+  rejected
+}
+
+enum GiftVoucherStatus {
+  active
+  redeemed
+  expired
+  cancelled
+}
+
+enum StoreCreditLedgerType {
+  credit
+  debit
+  refund
+  manual_adjustment
+  voucher_redemption
+}
+
+enum LoyaltyPointLedgerType {
+  earn
+  redeem
+  expire
+  manual_adjustment
+  refund_reversal
+}
+
+enum ReturnRequestStatus {
+  requested
+  approved
+  rejected
+  received
+  refunded
+  closed
+}
+
+enum ReturnActionRequested {
+  refund
+  replacement
+  store_credit
+  other
+}
+
+enum DownloadAssetStatus {
+  draft
+  active
+  archived
+}
+
+enum DownloadEntitlementStatus {
+  active
+  expired
+  revoked
+  exhausted
+}
+
+enum InformationPageStatus {
+  draft
+  active
+  archived
+}
+
+enum BannerStatus {
+  draft
+  active
+  archived
+}
+
+enum TaxRateType {
+  percentage
+  fixed
+}
+
+enum TaxRuleBasedOn {
+  shipping
+  billing
+  store
+}
+
 model Shop {
   id           String       @id @default(cuid())
   name         String
@@ -413,20 +504,41 @@ model Shop {
 
   owner          User?        @relation("ShopOwner", fields: [ownerUserId], references: [id])
   domains        ShopDomain[]
+  brands         Brand[]
   products       Product[]
+  productOptions ProductOption[]
+  productReviews ProductReview[]
   categories     Category[]
   collections    Collection[]
+  wishlists      Wishlist[]
+  compareLists   CompareList[]
   carts          Cart[]
   orders         Order[]
+  orderHistories OrderHistory[]
   discounts      DiscountCode[]
   discountRules  DiscountRule[]
+  giftVouchers   GiftVoucher[]
+  storeCreditLedgers StoreCreditLedger[]
+  loyaltyPointLedgers LoyaltyPointLedger[]
+  returnRequests ReturnRequest[]
+  downloadAssets DownloadAsset[]
+  downloadEntitlements DownloadEntitlement[]
+  informationPages InformationPage[]
+  banners        Banner[]
+  geoZones       GeoZone[]
   taxClasses     TaxClass[]
+  taxRates       TaxRate[]
   shippingMethods ShippingMethod[]
+  weightClasses  WeightClass[]
+  lengthClasses  LengthClass[]
   shopSettings   ShopSetting[]
+  adminRoles     AdminRole[]
+  adminUserRoles AdminUserRole[]
   inventoryLedgers InventoryLedger[]
   adminAuditLogs AdminAuditLog[]
   webhookEvents  WebhookEvent[]
   customers      Customer[]
+  customerGroups CustomerGroup[]
   digitalUnlocks DigitalUnlock[]
   creatorPayouts CreatorPayout[]
   affiliatePrograms AffiliateProgram[]
@@ -466,6 +578,8 @@ model User {
   ownedShops Shop[] @relation("ShopOwner")
   customers  Customer[]
   adminAuditLogs AdminAuditLog[]
+  orderHistories OrderHistory[]
+  adminUserRoles AdminUserRole[]
 
   @@index([role])
   @@index([heroStudioUserId])
@@ -485,9 +599,30 @@ model ShopDomain {
   @@index([shopId])
 }
 
+model Brand {
+  id             String   @id @default(cuid())
+  shopId         String
+  name           String
+  slug           String
+  description    String?
+  imageUrl       String?
+  seoTitle       String?
+  seoDescription String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, status])
+}
+
 model Product {
   id                     String        @id @default(cuid())
   shopId                 String
+  brandId                String?
   taxClassId             String?
   title                  String
   slug                   String
@@ -526,15 +661,21 @@ model Product {
   updatedAt              DateTime      @updatedAt
 
   shop       Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  brand      Brand?           @relation(fields: [brandId], references: [id])
   taxClass   TaxClass?        @relation(fields: [taxClassId], references: [id])
   variants   ProductVariant[]
   media      ProductMedia[]
+  options    ProductOption[]
+  reviews    ProductReview[]
   productCategories ProductCategory[]
   productCollections ProductCollection[]
   relatedProducts RelatedProduct[] @relation("ProductRelatedSource")
   relatedTo RelatedProduct[] @relation("ProductRelatedTarget")
+  wishlistItems WishlistItem[]
+  compareItems CompareItem[]
   cartItems  CartItem[]
   orderItems OrderItem[]
+  downloadAssets DownloadAsset[]
   unlocks    DigitalUnlock[]
   affiliateClicks AffiliateClick[]
   commissionRules CommissionRule[]
@@ -543,10 +684,46 @@ model Product {
 
   @@unique([shopId, slug])
   @@index([shopId])
+  @@index([brandId])
   @@index([franchise])
   @@index([productType])
   @@index([status, visibility])
   @@index([taxClassId])
+}
+
+model ProductOption {
+  id        String            @id @default(cuid())
+  shopId    String
+  productId String
+  name      String
+  type      ProductOptionType
+  required  Boolean           @default(false)
+  sortOrder Int               @default(0)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values ProductOptionValue[]
+
+  @@index([shopId, productId])
+  @@index([productId, sortOrder])
+}
+
+model ProductOptionValue {
+  id                 String   @id @default(cuid())
+  optionId           String
+  label              String
+  skuSuffix          String?
+  priceDeltaCents    Int      @default(0)
+  inventoryDelta     Int?
+  sortOrder          Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  option ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([optionId, sortOrder])
 }
 
 model ProductVariant {
@@ -567,6 +744,7 @@ model ProductVariant {
   product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   cartItems  CartItem[]
   orderItems OrderItem[]
+  wishlistItems WishlistItem[]
   inventoryLedgers InventoryLedger[]
 
   @@index([productId])
@@ -752,6 +930,11 @@ model Order {
   payments Payment[]
   refunds Refund[]
   shipments Shipment[]
+  histories OrderHistory[]
+  returnRequests ReturnRequest[]
+  storeCreditLedgers StoreCreditLedger[]
+  loyaltyPointLedgers LoyaltyPointLedger[]
+  downloadEntitlements DownloadEntitlement[]
   unlocks  DigitalUnlock[]
   payouts  CreatorPayout[]
   affiliateClicks AffiliateClick[]
@@ -786,6 +969,8 @@ model OrderItem {
   unlocks DigitalUnlock[]
   affiliateCommissions AffiliateCommission[]
   refundItems Refund[]
+  returnRequests ReturnRequest[]
+  downloadEntitlements DownloadEntitlement[]
   shipmentItems ShipmentItem[]
   inventoryLedgers InventoryLedger[]
 
@@ -813,6 +998,27 @@ model OrderAddress {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, type])
+}
+
+model OrderHistory {
+  id              String      @id @default(cuid())
+  shopId          String
+  orderId         String
+  actorUserId     String?
+  status          OrderStatus?
+  paymentStatus   PaymentStatus?
+  fulfillmentStatus FulfillmentStatus?
+  comment         String?
+  customerVisible Boolean     @default(false)
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor User? @relation(fields: [actorUserId], references: [id])
+
+  @@index([shopId, orderId])
+  @@index([actorUserId])
 }
 
 model Payment {
@@ -896,6 +1102,7 @@ model Customer {
   id        String   @id @default(cuid())
   shopId    String
   userId    String?
+  customerGroupId String?
   email     String
   name      String?
   phone     String?
@@ -909,15 +1116,24 @@ model Customer {
 
   shop    Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   user    User? @relation(fields: [userId], references: [id])
+  customerGroupRef CustomerGroup? @relation(fields: [customerGroupId], references: [id])
   addresses CustomerAddress[]
   carts   Cart[]
   orders  Order[]
   unlocks DigitalUnlock[]
   affiliates Affiliate[]
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
+  reviews ProductReview[]
+  wishlists Wishlist[]
+  compareLists CompareList[]
+  storeCreditLedgers StoreCreditLedger[]
+  loyaltyPointLedgers LoyaltyPointLedger[]
+  returnRequests ReturnRequest[]
+  downloadEntitlements DownloadEntitlement[]
 
   @@unique([shopId, email])
   @@index([userId])
+  @@index([customerGroupId])
   @@index([heroStudioUserId])
 }
 
@@ -943,6 +1159,104 @@ model CustomerAddress {
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId])
+}
+
+model CustomerGroup {
+  id          String   @id @default(cuid())
+  shopId      String
+  name        String
+  code        String
+  description String?
+  active      Boolean  @default(true)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customers Customer[]
+
+  @@unique([shopId, code])
+  @@index([shopId, active])
+}
+
+model ProductReview {
+  id         String              @id @default(cuid())
+  shopId     String
+  productId  String
+  customerId String?
+  rating     Int
+  title      String
+  body       String
+  status     ProductReviewStatus @default(pending)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([shopId, status])
+  @@index([productId, status])
+  @@index([customerId])
+}
+
+model Wishlist {
+  id         String   @id @default(cuid())
+  shopId     String
+  customerId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+
+  @@unique([shopId, customerId])
+  @@index([customerId])
+}
+
+model WishlistItem {
+  id         String   @id @default(cuid())
+  wishlistId String
+  productId  String
+  variantId  String?
+  createdAt  DateTime @default(now())
+
+  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@unique([wishlistId, productId, variantId])
+  @@index([productId])
+}
+
+model CompareList {
+  id         String   @id @default(cuid())
+  shopId     String
+  sessionId  String?
+  customerId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id])
+  items CompareItem[]
+
+  @@index([shopId, sessionId])
+  @@index([customerId])
+}
+
+model CompareItem {
+  id            String   @id @default(cuid())
+  compareListId String
+  productId     String
+  createdAt     DateTime @default(now())
+
+  compareList CompareList @relation(fields: [compareListId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([compareListId, productId])
+  @@index([productId])
 }
 
 model AffiliateProgram {
@@ -1611,6 +1925,172 @@ model DiscountRule {
   @@index([scope, priority])
 }
 
+model GiftVoucher {
+  id                   String            @id @default(cuid())
+  shopId               String
+  code                 String
+  initialAmountCents   Int
+  remainingAmountCents Int
+  currency             String            @default("USD")
+  recipientEmail       String?
+  senderName           String?
+  message              String?
+  status               GiftVoucherStatus @default(active)
+  expiresAt            DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, code])
+  @@index([shopId, status])
+}
+
+model StoreCreditLedger {
+  id          String                @id @default(cuid())
+  shopId      String
+  customerId  String
+  orderId     String?
+  type        StoreCreditLedgerType
+  amountCents Int
+  currency    String                @default("USD")
+  note        String?
+  createdAt   DateTime              @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([shopId, customerId])
+  @@index([orderId])
+}
+
+model LoyaltyPointLedger {
+  id         String                 @id @default(cuid())
+  shopId     String
+  customerId String
+  orderId    String?
+  type       LoyaltyPointLedgerType
+  points     Int
+  note       String?
+  expiresAt  DateTime?
+  createdAt  DateTime               @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  order Order? @relation(fields: [orderId], references: [id])
+
+  @@index([shopId, customerId])
+  @@index([orderId])
+}
+
+model ReturnRequest {
+  id              String                @id @default(cuid())
+  shopId          String
+  orderId         String
+  orderItemId     String?
+  customerId      String?
+  status          ReturnRequestStatus   @default(requested)
+  reason          String
+  actionRequested ReturnActionRequested
+  quantity        Int                   @default(1)
+  customerComment String?
+  adminComment    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+  customer Customer? @relation(fields: [customerId], references: [id])
+
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([customerId])
+}
+
+model DownloadAsset {
+  id               String              @id @default(cuid())
+  shopId           String
+  productId        String?
+  title            String
+  fileUrl          String
+  fileName         String
+  maxDownloads     Int?
+  expiresAfterDays Int?
+  status           DownloadAssetStatus @default(draft)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  entitlements DownloadEntitlement[]
+
+  @@index([shopId, status])
+  @@index([productId])
+}
+
+model DownloadEntitlement {
+  id                 String                    @id @default(cuid())
+  shopId             String
+  customerId         String?
+  orderId            String
+  orderItemId        String
+  downloadAssetId    String
+  remainingDownloads Int?
+  expiresAt          DateTime?
+  status             DownloadEntitlementStatus @default(active)
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id])
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  downloadAsset DownloadAsset @relation(fields: [downloadAssetId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, status])
+  @@index([customerId])
+  @@index([orderId])
+}
+
+model InformationPage {
+  id             String                @id @default(cuid())
+  shopId         String
+  slug           String
+  title          String
+  body           String
+  seoTitle       String?
+  seoDescription String?
+  status         InformationPageStatus @default(draft)
+  sortOrder      Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, slug])
+  @@index([shopId, status, sortOrder])
+}
+
+model Banner {
+  id        String       @id @default(cuid())
+  shopId    String
+  title     String
+  imageUrl  String
+  targetUrl String?
+  placement String
+  status    BannerStatus @default(draft)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, placement, status])
+}
+
 model InventoryLedger {
   id            String              @id @default(cuid())
   shopId        String
@@ -1648,9 +2128,137 @@ model TaxClass {
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]
+  taxRules TaxRule[]
 
   @@unique([shopId, code])
   @@index([shopId])
+}
+
+model Currency {
+  id           String   @id @default(cuid())
+  code         String   @unique
+  name         String
+  symbol       String
+  exchangeRate Decimal  @default(1)
+  status       String   @default("active")
+  updatedAt    DateTime @updatedAt
+}
+
+model Country {
+  id       String @id @default(cuid())
+  iso2     String @unique
+  iso3     String @unique
+  name     String
+  status   String @default("active")
+
+  zones Zone[]
+  geoZoneRegions GeoZoneRegion[]
+}
+
+model Zone {
+  id        String @id @default(cuid())
+  countryId String
+  code      String
+  name      String
+  status    String @default("active")
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  geoZoneRegions GeoZoneRegion[]
+
+  @@unique([countryId, code])
+  @@index([countryId])
+}
+
+model GeoZone {
+  id          String   @id @default(cuid())
+  shopId      String
+  name        String
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  regions GeoZoneRegion[]
+  taxRates TaxRate[]
+
+  @@unique([shopId, name])
+  @@index([shopId, status])
+}
+
+model GeoZoneRegion {
+  id        String  @id @default(cuid())
+  geoZoneId String
+  countryId String
+  zoneId    String?
+
+  geoZone GeoZone @relation(fields: [geoZoneId], references: [id], onDelete: Cascade)
+  country Country @relation(fields: [countryId], references: [id])
+  zone Zone? @relation(fields: [zoneId], references: [id])
+
+  @@index([geoZoneId])
+  @@index([countryId, zoneId])
+}
+
+model TaxRate {
+  id        String      @id @default(cuid())
+  shopId    String
+  name      String
+  rateBps   Int
+  type      TaxRateType @default(percentage)
+  geoZoneId String?
+  status    String      @default("active")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  geoZone GeoZone? @relation(fields: [geoZoneId], references: [id])
+  taxRules TaxRule[]
+
+  @@index([shopId, status])
+  @@index([geoZoneId])
+}
+
+model TaxRule {
+  id         String       @id @default(cuid())
+  taxClassId String
+  taxRateId  String
+  priority   Int          @default(0)
+  basedOn    TaxRuleBasedOn @default(shipping)
+
+  taxClass TaxClass @relation(fields: [taxClassId], references: [id], onDelete: Cascade)
+  taxRate TaxRate @relation(fields: [taxRateId], references: [id], onDelete: Cascade)
+
+  @@unique([taxClassId, taxRateId, basedOn])
+  @@index([priority])
+}
+
+model WeightClass {
+  id        String   @id @default(cuid())
+  shopId    String
+  title     String
+  unit      String
+  value     Decimal  @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, unit])
+}
+
+model LengthClass {
+  id        String   @id @default(cuid())
+  shopId    String
+  title     String
+  unit      String
+  value     Decimal  @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, unit])
 }
 
 model ShippingMethod {
@@ -1684,6 +2292,36 @@ model ShopSetting {
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@unique([shopId, key])
+}
+
+model AdminRole {
+  id          String   @id @default(cuid())
+  shopId      String?
+  name        String
+  permissions Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+  users AdminUserRole[]
+
+  @@unique([shopId, name])
+  @@index([shopId])
+}
+
+model AdminUserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  roleId    String
+  shopId    String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  shop Shop? @relation(fields: [shopId], references: [id])
+
+  @@unique([userId, roleId, shopId])
+  @@index([shopId])
 }
 
 model AdminAuditLog {

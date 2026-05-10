@@ -56,3 +56,21 @@ Never expose `COMMERCE_INTERNAL_API_TOKEN` to frontend code.
 - Do not copy FootprintsHub commerce logic directly into Hero Studio.
 - Do not expose Stripe secret keys or internal commerce tokens in Hero Studio frontend bundles.
 - Do not make Battery Coin payment claims before legal and payment review.
+
+## OpenCart-Derived Creator Shop Features
+
+For future Hero Studio creator shops, the OpenCart reference adds useful shop-level foundations:
+
+- shop settings, logo, banner, contact, currency, and metadata
+- brands/manufacturers for creator collections
+- product options for merch sizes, colors, editions, and add-ons
+- reviews and moderation
+- wishlists and compare lists
+- gift vouchers, store credit, and loyalty points
+- return/RMA requests
+- download entitlements for digital goods
+- information pages and legal content per shop
+- admin staff roles and permissions
+- reports for sales, products, customers, and affiliates
+
+These must remain scoped by `Shop` and `ShopDomain`; do not manually create each creator subdomain in SiteGround.

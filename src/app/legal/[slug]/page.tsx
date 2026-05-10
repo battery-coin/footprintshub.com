@@ -88,6 +88,48 @@ const pages: Record<string, { title: string; body: string[] }> = {
       "Affiliates must not make income claims, lifestyle claims, profit claims, ROI claims, resale-value claims, or financial-return claims when promoting FootprintsHub, Hero Studio, creator shops, collectibles, memberships, or digital goods.",
     ],
   },
+  "gift-vouchers": {
+    title: "Gift Voucher Terms",
+    body: [
+      "Gift vouchers are store value for eligible purchases and are not cash, investments, or financial products.",
+      "Voucher balances, expiration, refunds, and transfer rules must be finalized before public launch.",
+    ],
+  },
+  "store-credit": {
+    title: "Store Credit Terms",
+    body: [
+      "Store credit may be issued for refunds, promotions, wallet conversion, or manual adjustments when approved.",
+      "Store credit has no cash value unless a written policy says otherwise and must be tracked through a ledger.",
+    ],
+  },
+  loyalty: {
+    title: "Loyalty Terms",
+    body: [
+      "Loyalty points are promotional rewards, not money, securities, investments, yield, or guaranteed benefits.",
+      "Points may expire, be reversed for refunds or abuse, and may be changed or discontinued by the shop.",
+    ],
+  },
+  reviews: {
+    title: "Product Review Policy",
+    body: [
+      "Reviews may be moderated for spam, fraud, abuse, private information, illegal content, or misleading claims.",
+      "Product reviews must not make investment, resale-value, medical, or guaranteed-outcome claims.",
+    ],
+  },
+  returns: {
+    title: "Returns Policy",
+    body: [
+      "Return eligibility depends on product type, fulfillment status, delivery timing, digital access, preorder status, and posted policy.",
+      "Approved returns may result in refund, replacement, or store credit depending on the final public policy.",
+    ],
+  },
+  "digital-downloads": {
+    title: "Digital Downloads Terms",
+    body: [
+      "Digital download access may have download limits, expiration, account requirements, and fraud controls.",
+      "Digital products and downloads provide access or collectible utility only and do not promise profit, ROI, yield, resale value, or appreciation.",
+    ],
+  },
 };
 
 export default async function LegalPage({

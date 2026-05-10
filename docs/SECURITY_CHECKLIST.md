@@ -39,3 +39,13 @@
 - database dumps
 - production credentials
 - Magento `auth.json`
+
+## OpenCart-Derived Additions
+
+- Validate product option payloads server-side before pricing.
+- Moderate product reviews before public display.
+- Enforce download entitlements, limits, expiration, and shop scope.
+- Validate file upload type, size, storage path, and public/private access.
+- Check admin permissions before product, order, return, payout, settings, and user actions.
+- Keep gift vouchers, store credit, and loyalty balances ledger-based.
+- Do not expose customer private data in wishlist, review, return, or download routes.

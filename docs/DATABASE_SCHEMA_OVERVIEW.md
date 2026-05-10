@@ -14,8 +14,11 @@ The FootprintsHub commerce database is a shared Neon Postgres database with expl
 ## Catalog
 
 - `Product`: shop-scoped product with type, status, visibility, SEO, inventory, preorder, token-gating, randomized-product, and digital-unlock fields.
+- `Brand`: OpenCart-inspired manufacturer/brand model for shop-scoped filtering and landing pages.
+- `ProductOption` / `ProductOptionValue`: buyer-selectable options with required flags, price deltas, and SKU suffix support.
 - `ProductVariant`: SKU-level pricing/inventory/attributes.
 - `ProductMedia`: gallery images or future video/media assets.
+- `ProductReview`: moderated product review and rating records.
 - `Category`: hierarchical navigation and filtering.
 - `ProductCategory`: many-to-many category assignment.
 - `Collection`: curated merchandising groups.
@@ -30,6 +33,15 @@ The FootprintsHub commerce database is a shared Neon Postgres database with expl
 
 Client localStorage is a convenience only. Server services recalculate prices and validate inventory.
 
+## OpenCart-Inspired Customer Commerce
+
+- `Wishlist` / `WishlistItem`: customer saved products.
+- `CompareList` / `CompareItem`: guest/customer compare lists.
+- `GiftVoucher`: voucher code and remaining balance.
+- `StoreCreditLedger`: customer store-credit movements.
+- `LoyaltyPointLedger`: customer reward point movements.
+- `CustomerGroup`: structured customer group/tier model.
+
 ## Promotions
 
 - `DiscountRule`: Magento-inspired promotion rule with scope, conditions, actions, date windows, priority, and free-shipping support.
@@ -42,10 +54,13 @@ Money is stored in integer cents. Percent values are basis points.
 - `Order`: historical checkout record with order number, statuses, totals, payment references, admin notes, and metadata.
 - `OrderItem`: immutable product snapshot for historical reporting.
 - `OrderAddress`: billing and shipping snapshots.
+- `OrderHistory`: status/comment timeline with customer-visible flag.
 - `Payment`: Stripe/manual/future Battery Coin payment records.
 - `Refund`: refund and credit-memo foundation.
+- `ReturnRequest`: RMA-style return, replacement, refund, and store-credit request workflow.
 - `Shipment`: fulfillment and tracking foundation.
 - `ShipmentItem`: item-level fulfillment records.
+- `DownloadAsset` / `DownloadEntitlement`: digital download assets and customer/order access.
 
 Order items must not be recalculated from live products after purchase.
 
@@ -84,6 +99,7 @@ Do not mutate affiliate balances without a ledger row.
 ## Admin And Security
 
 - `AdminAuditLog`: privileged admin and platform actions.
+- `AdminRole` / `AdminUserRole`: OpenCart-inspired admin permission scaffolding for platform and shop roles.
 - `AffiliateAuditLog`: affiliate-specific changes.
 - `WebhookEvent`: replay protection and incident review.
 

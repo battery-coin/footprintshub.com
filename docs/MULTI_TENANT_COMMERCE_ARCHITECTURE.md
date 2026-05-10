@@ -54,3 +54,23 @@ Platform owner views may query across shops. Shop owner views must filter by own
 6. Add creator products.
 7. Connect Hero Studio creator ID.
 8. Publish shop link to Hero Studio profile.
+
+## OpenCart-Derived Tenant Objects
+
+The OpenCart review adds these shop-scoped objects to the tenant model:
+
+- brands
+- product options
+- reviews
+- wishlists and compare lists
+- gift vouchers
+- store credit ledgers
+- loyalty point ledgers
+- return requests
+- download assets and entitlements
+- information pages
+- banners
+- geo zones, tax rates, weight classes, length classes
+- admin roles and assignments
+
+Global localization objects such as countries, zones, and currencies can be shared reference data.
