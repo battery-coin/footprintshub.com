@@ -145,6 +145,16 @@ enum RefundStatus {
   cancelled
 }
 
+enum PrintfulOrderStatus {
+  configuration_required
+  pending
+  submitted
+  accepted
+  failed
+  cancelled
+  fulfilled
+}
+
 enum ShipmentStatus {
   pending
   processing
@@ -575,93 +585,94 @@ enum IdempotencyKeyStatus {
 }
 
 model Shop {
-  id           String       @id @default(cuid())
+  id           String     @id @default(cuid())
   name         String
-  slug         String       @unique
-  subdomain    String?      @unique
-  customDomain String?      @unique
+  slug         String     @unique
+  subdomain    String?    @unique
+  customDomain String?    @unique
   description  String?
   logoUrl      String?
   bannerUrl    String?
   ownerUserId  String?
-  status       ShopStatus   @default(draft)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  status       ShopStatus @default(draft)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  owner          User?        @relation("ShopOwner", fields: [ownerUserId], references: [id])
-  domains        ShopDomain[]
-  brands         Brand[]
-  products       Product[]
-  productOptions ProductOption[]
-  productReviews ProductReview[]
-  categories     Category[]
-  collections    Collection[]
-  wishlists      Wishlist[]
-  compareLists   CompareList[]
-  carts          Cart[]
-  orders         Order[]
-  orderHistories OrderHistory[]
-  discounts      DiscountCode[]
-  discountRules  DiscountRule[]
-  giftVouchers   GiftVoucher[]
-  storeCreditLedgers StoreCreditLedger[]
-  loyaltyPointLedgers LoyaltyPointLedger[]
-  returnRequests ReturnRequest[]
-  downloadAssets DownloadAsset[]
-  downloadEntitlements DownloadEntitlement[]
-  informationPages InformationPage[]
-  banners        Banner[]
-  geoZones       GeoZone[]
-  taxClasses     TaxClass[]
-  taxRates       TaxRate[]
-  shippingMethods ShippingMethod[]
-  weightClasses  WeightClass[]
-  lengthClasses  LengthClass[]
-  marketRegions  MarketRegion[]
-  salesChannels  SalesChannel[]
-  paymentProviderConfigs PaymentProviderConfig[]
-  paymentSessions PaymentSession[]
-  paymentCollections PaymentCollection[]
-  stockLocations StockLocation[]
-  inventoryItems InventoryItem[]
-  inventoryReservations InventoryReservation[]
-  fulfillmentProviders FulfillmentProvider[]
-  shippingProfiles ShippingProfile[]
-  shippingOptions ShippingOption[]
-  fulfillments Fulfillment[]
-  promotions Promotion[]
-  commerceEvents CommerceEvent[]
-  shopSettings   ShopSetting[]
-  adminRoles     AdminRole[]
-  adminUserRoles AdminUserRole[]
-  inventoryLedgers InventoryLedger[]
-  adminAuditLogs AdminAuditLog[]
-  webhookEvents  WebhookEvent[]
-  customers      Customer[]
-  customerGroups CustomerGroup[]
-  digitalUnlocks DigitalUnlock[]
-  creatorPayouts CreatorPayout[]
-  affiliatePrograms AffiliateProgram[]
-  affiliatePlans    AffiliatePlan[]
-  affiliatePlanLevels AffiliatePlanLevel[]
-  affiliatePerformanceTiers AffiliatePerformanceTier[]
+  owner                           User?                            @relation("ShopOwner", fields: [ownerUserId], references: [id])
+  domains                         ShopDomain[]
+  brands                          Brand[]
+  products                        Product[]
+  productOptions                  ProductOption[]
+  productReviews                  ProductReview[]
+  categories                      Category[]
+  collections                     Collection[]
+  wishlists                       Wishlist[]
+  compareLists                    CompareList[]
+  carts                           Cart[]
+  orders                          Order[]
+  orderHistories                  OrderHistory[]
+  discounts                       DiscountCode[]
+  discountRules                   DiscountRule[]
+  giftVouchers                    GiftVoucher[]
+  storeCreditLedgers              StoreCreditLedger[]
+  loyaltyPointLedgers             LoyaltyPointLedger[]
+  returnRequests                  ReturnRequest[]
+  downloadAssets                  DownloadAsset[]
+  downloadEntitlements            DownloadEntitlement[]
+  informationPages                InformationPage[]
+  banners                         Banner[]
+  geoZones                        GeoZone[]
+  taxClasses                      TaxClass[]
+  taxRates                        TaxRate[]
+  shippingMethods                 ShippingMethod[]
+  weightClasses                   WeightClass[]
+  lengthClasses                   LengthClass[]
+  marketRegions                   MarketRegion[]
+  salesChannels                   SalesChannel[]
+  paymentProviderConfigs          PaymentProviderConfig[]
+  paymentSessions                 PaymentSession[]
+  paymentCollections              PaymentCollection[]
+  printfulOrders                  PrintfulOrder[]
+  stockLocations                  StockLocation[]
+  inventoryItems                  InventoryItem[]
+  inventoryReservations           InventoryReservation[]
+  fulfillmentProviders            FulfillmentProvider[]
+  shippingProfiles                ShippingProfile[]
+  shippingOptions                 ShippingOption[]
+  fulfillments                    Fulfillment[]
+  promotions                      Promotion[]
+  commerceEvents                  CommerceEvent[]
+  shopSettings                    ShopSetting[]
+  adminRoles                      AdminRole[]
+  adminUserRoles                  AdminUserRole[]
+  inventoryLedgers                InventoryLedger[]
+  adminAuditLogs                  AdminAuditLog[]
+  webhookEvents                   WebhookEvent[]
+  customers                       Customer[]
+  customerGroups                  CustomerGroup[]
+  digitalUnlocks                  DigitalUnlock[]
+  creatorPayouts                  CreatorPayout[]
+  affiliatePrograms               AffiliateProgram[]
+  affiliatePlans                  AffiliatePlan[]
+  affiliatePlanLevels             AffiliatePlanLevel[]
+  affiliatePerformanceTiers       AffiliatePerformanceTier[]
   affiliateQualificationSnapshots AffiliateQualificationSnapshot[]
-  lifetimeCustomerAttributions LifetimeCustomerAttribution[]
-  affiliates        Affiliate[]
-  affiliateTreeClosures AffiliateTreeClosure[]
-  affiliateClicks   AffiliateClick[]
-  affiliateAttributions AffiliateAttribution[]
-  commissionRules   CommissionRule[]
-  multiLevelCommissionRules MultiLevelCommissionRule[]
-  affiliateCommissions AffiliateCommission[]
-  affiliateWalletLedgers AffiliateWalletLedger[]
-  affiliatePayouts AffiliatePayout[]
-  affiliateRanks AffiliateRank[]
-  affiliateBonusRules AffiliateBonusRule[]
-  affiliateCoupons AffiliateCoupon[]
-  marketingAssets MarketingAsset[]
-  affiliateNotifications AffiliateNotification[]
-  affiliateAuditLogs AffiliateAuditLog[]
+  lifetimeCustomerAttributions    LifetimeCustomerAttribution[]
+  affiliates                      Affiliate[]
+  affiliateTreeClosures           AffiliateTreeClosure[]
+  affiliateClicks                 AffiliateClick[]
+  affiliateAttributions           AffiliateAttribution[]
+  commissionRules                 CommissionRule[]
+  multiLevelCommissionRules       MultiLevelCommissionRule[]
+  affiliateCommissions            AffiliateCommission[]
+  affiliateWalletLedgers          AffiliateWalletLedger[]
+  affiliatePayouts                AffiliatePayout[]
+  affiliateRanks                  AffiliateRank[]
+  affiliateBonusRules             AffiliateBonusRule[]
+  affiliateCoupons                AffiliateCoupon[]
+  marketingAssets                 MarketingAsset[]
+  affiliateNotifications          AffiliateNotification[]
+  affiliateAuditLogs              AffiliateAuditLog[]
 
   @@index([ownerUserId])
 }
@@ -675,8 +686,8 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  ownedShops Shop[] @relation("ShopOwner")
-  customers  Customer[]
+  ownedShops     Shop[]          @relation("ShopOwner")
+  customers      Customer[]
   adminAuditLogs AdminAuditLog[]
   orderHistories OrderHistory[]
   adminUserRoles AdminUserRole[]
@@ -712,7 +723,7 @@ model Brand {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]
 
   @@unique([shopId, slug])
@@ -720,68 +731,68 @@ model Brand {
 }
 
 model Product {
-  id                     String        @id @default(cuid())
-  shopId                 String
-  brandId                String?
-  taxClassId             String?
-  title                  String
-  slug                   String
-  subtitle               String?
-  description            String
-  shortDescription       String?
-  productType            ProductType
-  franchise              Franchise
-  status                 ProductStatus @default(draft)
-  visibility             ProductVisibility @default(visible)
-  priceCents             Int
-  compareAtPriceCents    Int?
-  currency               String        @default("USD")
-  sku                    String?
-  inventoryQuantity      Int           @default(0)
-  trackInventory         Boolean       @default(true)
-  allowBackorder         Boolean       @default(false)
-  lowStockThreshold      Int?
-  imageUrl               String?
-  galleryUrls            String[]      @default([])
-  seoTitle               String?
-  seoDescription         String?
-  metaKeywords           String[]      @default([])
-  isFeatured             Boolean       @default(false)
-  isLimitedEdition       Boolean       @default(false)
-  preorderStatus         String?
-  preorderReleaseAt      DateTime?
-  requiresShipping       Boolean       @default(true)
-  digitalUnlockIncluded  Boolean       @default(false)
-  tokenGated             Boolean       @default(false)
-  tokenGateRule          Json?
-  isRandomized           Boolean       @default(false)
-  oddsDisclosureUrl      String?
-  metadata               Json?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  id                    String            @id @default(cuid())
+  shopId                String
+  brandId               String?
+  taxClassId            String?
+  title                 String
+  slug                  String
+  subtitle              String?
+  description           String
+  shortDescription      String?
+  productType           ProductType
+  franchise             Franchise
+  status                ProductStatus     @default(draft)
+  visibility            ProductVisibility @default(visible)
+  priceCents            Int
+  compareAtPriceCents   Int?
+  currency              String            @default("USD")
+  sku                   String?
+  inventoryQuantity     Int               @default(0)
+  trackInventory        Boolean           @default(true)
+  allowBackorder        Boolean           @default(false)
+  lowStockThreshold     Int?
+  imageUrl              String?
+  galleryUrls           String[]          @default([])
+  seoTitle              String?
+  seoDescription        String?
+  metaKeywords          String[]          @default([])
+  isFeatured            Boolean           @default(false)
+  isLimitedEdition      Boolean           @default(false)
+  preorderStatus        String?
+  preorderReleaseAt     DateTime?
+  requiresShipping      Boolean           @default(true)
+  digitalUnlockIncluded Boolean           @default(false)
+  tokenGated            Boolean           @default(false)
+  tokenGateRule         Json?
+  isRandomized          Boolean           @default(false)
+  oddsDisclosureUrl     String?
+  metadata              Json?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
 
-  shop       Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  brand      Brand?           @relation(fields: [brandId], references: [id])
-  taxClass   TaxClass?        @relation(fields: [taxClassId], references: [id])
-  variants   ProductVariant[]
-  media      ProductMedia[]
-  options    ProductOption[]
-  reviews    ProductReview[]
-  productCategories ProductCategory[]
+  shop               Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  brand              Brand?                @relation(fields: [brandId], references: [id])
+  taxClass           TaxClass?             @relation(fields: [taxClassId], references: [id])
+  variants           ProductVariant[]
+  media              ProductMedia[]
+  options            ProductOption[]
+  reviews            ProductReview[]
+  productCategories  ProductCategory[]
   productCollections ProductCollection[]
-  salesChannels ProductSalesChannel[]
-  relatedProducts RelatedProduct[] @relation("ProductRelatedSource")
-  relatedTo RelatedProduct[] @relation("ProductRelatedTarget")
-  wishlistItems WishlistItem[]
-  compareItems CompareItem[]
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  downloadAssets DownloadAsset[]
-  unlocks    DigitalUnlock[]
-  affiliateClicks AffiliateClick[]
-  commissionRules CommissionRule[]
-  affiliateCoupons AffiliateCoupon[]
-  inventoryLedgers InventoryLedger[]
+  salesChannels      ProductSalesChannel[]
+  relatedProducts    RelatedProduct[]      @relation("ProductRelatedSource")
+  relatedTo          RelatedProduct[]      @relation("ProductRelatedTarget")
+  wishlistItems      WishlistItem[]
+  compareItems       CompareItem[]
+  cartItems          CartItem[]
+  orderItems         OrderItem[]
+  downloadAssets     DownloadAsset[]
+  unlocks            DigitalUnlock[]
+  affiliateClicks    AffiliateClick[]
+  commissionRules    CommissionRule[]
+  affiliateCoupons   AffiliateCoupon[]
+  inventoryLedgers   InventoryLedger[]
 
   @@unique([shopId, slug])
   @@index([shopId])
@@ -803,24 +814,24 @@ model ProductOption {
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  values ProductOptionValue[]
+  shop    Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values  ProductOptionValue[]
 
   @@index([shopId, productId])
   @@index([productId, sortOrder])
 }
 
 model ProductOptionValue {
-  id                 String   @id @default(cuid())
-  optionId           String
-  label              String
-  skuSuffix          String?
-  priceDeltaCents    Int      @default(0)
-  inventoryDelta     Int?
-  sortOrder          Int      @default(0)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id              String   @id @default(cuid())
+  optionId        String
+  label           String
+  skuSuffix       String?
+  priceDeltaCents Int      @default(0)
+  inventoryDelta  Int?
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   option ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
@@ -842,11 +853,11 @@ model ProductVariant {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  cartItems  CartItem[]
-  orderItems OrderItem[]
-  wishlistItems WishlistItem[]
-  inventoryLedgers InventoryLedger[]
+  product               Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems             CartItem[]
+  orderItems            OrderItem[]
+  wishlistItems         WishlistItem[]
+  inventoryLedgers      InventoryLedger[]
   variantInventoryItems ProductVariantInventoryItem[]
 
   @@index([productId])
@@ -884,9 +895,9 @@ model Category {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  parent Category? @relation("CategoryParent", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryParent")
+  shop     Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  parent   Category?         @relation("CategoryParent", fields: [parentId], references: [id])
+  children Category[]        @relation("CategoryParent")
   products ProductCategory[]
 
   @@unique([shopId, slug])
@@ -899,7 +910,7 @@ model ProductCategory {
   sortOrder  Int      @default(0)
   createdAt  DateTime @default(now())
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([productId, categoryId])
@@ -921,7 +932,7 @@ model Collection {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products ProductCollection[]
 
   @@unique([shopId, slug])
@@ -934,7 +945,7 @@ model ProductCollection {
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
   collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 
   @@id([productId, collectionId])
@@ -950,7 +961,7 @@ model RelatedProduct {
   sortOrder        Int                @default(0)
   createdAt        DateTime           @default(now())
 
-  sourceProduct Product @relation("ProductRelatedSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  sourceProduct  Product @relation("ProductRelatedSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
   relatedProduct Product @relation("ProductRelatedTarget", fields: [relatedProductId], references: [id], onDelete: Cascade)
 
   @@unique([sourceProductId, relatedProductId, type])
@@ -958,22 +969,22 @@ model RelatedProduct {
 }
 
 model Cart {
-  id         String   @id @default(cuid())
-  shopId     String
-  customerId String?
+  id                    String     @id @default(cuid())
+  shopId                String
+  customerId            String?
   appliedDiscountCodeId String?
-  sessionId  String
-  currency   String   @default("USD")
-  status     CartStatus @default(active)
-  expiresAt  DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  sessionId             String
+  currency              String     @default("USD")
+  status                CartStatus @default(active)
+  expiresAt             DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
-  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer?  @relation(fields: [customerId], references: [id])
-  discountCode DiscountCode? @relation(fields: [appliedDiscountCodeId], references: [id])
-  items    CartItem[]
-  paymentSessions PaymentSession[]
+  shop                  Shop                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer              Customer?              @relation(fields: [customerId], references: [id])
+  discountCode          DiscountCode?          @relation(fields: [appliedDiscountCodeId], references: [id])
+  items                 CartItem[]
+  paymentSessions       PaymentSession[]
   inventoryReservations InventoryReservation[]
 
   @@index([shopId])
@@ -1001,22 +1012,22 @@ model CartItem {
 }
 
 model Order {
-  id                      String   @id @default(cuid())
+  id                      String            @id @default(cuid())
   shopId                  String
   customerId              String?
   cartId                  String?
   affiliateAttributionId  String?
-  orderNumber             String   @unique
-  status                  OrderStatus @default(pending)
-  paymentStatus           PaymentStatus @default(unpaid)
+  orderNumber             String            @unique
+  status                  OrderStatus       @default(pending)
+  paymentStatus           PaymentStatus     @default(unpaid)
   fulfillmentStatus       FulfillmentStatus @default(unfulfilled)
   subtotalCents           Int
-  discountCents           Int      @default(0)
-  taxCents                Int      @default(0)
-  shippingCents           Int      @default(0)
+  discountCents           Int               @default(0)
+  taxCents                Int               @default(0)
+  shippingCents           Int               @default(0)
   totalCents              Int
-  currency                String   @default("USD")
-  stripeCheckoutSessionId String?  @unique
+  currency                String            @default("USD")
+  stripeCheckoutSessionId String?           @unique
   stripePaymentIntentId   String?
   customerEmail           String?
   shippingAddress         Json?
@@ -1024,33 +1035,34 @@ model Order {
   adminNotes              String?
   termsAcceptedAt         DateTime?
   metadata                Json?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
 
-  shop     Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer?   @relation(fields: [customerId], references: [id])
-  items    OrderItem[]
-  addresses OrderAddress[]
-  payments Payment[]
-  paymentSessions PaymentSession[]
-  paymentCollections PaymentCollection[]
-  refunds Refund[]
-  shipments Shipment[]
-  fulfillments Fulfillment[]
-  histories OrderHistory[]
-  returnRequests ReturnRequest[]
-  storeCreditLedgers StoreCreditLedger[]
-  loyaltyPointLedgers LoyaltyPointLedger[]
-  downloadEntitlements DownloadEntitlement[]
-  unlocks  DigitalUnlock[]
-  payouts  CreatorPayout[]
-  affiliateClicks AffiliateClick[]
-  affiliateCommissions AffiliateCommission[]
+  shop                         Shop                          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer                     Customer?                     @relation(fields: [customerId], references: [id])
+  items                        OrderItem[]
+  addresses                    OrderAddress[]
+  payments                     Payment[]
+  paymentSessions              PaymentSession[]
+  paymentCollections           PaymentCollection[]
+  refunds                      Refund[]
+  printfulOrders               PrintfulOrder[]
+  shipments                    Shipment[]
+  fulfillments                 Fulfillment[]
+  histories                    OrderHistory[]
+  returnRequests               ReturnRequest[]
+  storeCreditLedgers           StoreCreditLedger[]
+  loyaltyPointLedgers          LoyaltyPointLedger[]
+  downloadEntitlements         DownloadEntitlement[]
+  unlocks                      DigitalUnlock[]
+  payouts                      CreatorPayout[]
+  affiliateClicks              AffiliateClick[]
+  affiliateCommissions         AffiliateCommission[]
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
-  inventoryLedgers InventoryLedger[]
-  inventoryReservations InventoryReservation[]
-  commerceEvents CommerceEvent[]
-  webhookEvents WebhookEvent[]
+  inventoryLedgers             InventoryLedger[]
+  inventoryReservations        InventoryReservation[]
+  commerceEvents               CommerceEvent[]
+  webhookEvents                WebhookEvent[]
 
   @@index([shopId])
   @@index([customerId])
@@ -1059,7 +1071,7 @@ model Order {
 }
 
 model OrderItem {
-  id             String   @id @default(cuid())
+  id             String  @id @default(cuid())
   orderId        String
   productId      String
   variantId      String?
@@ -1067,43 +1079,44 @@ model OrderItem {
   skuSnapshot    String?
   quantity       Int
   unitPriceCents Int
-  discountCents  Int      @default(0)
-  taxCents       Int      @default(0)
+  discountCents  Int     @default(0)
+  taxCents       Int     @default(0)
   totalCents     Int
   metadata       Json?
 
-  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product         @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
-  unlocks DigitalUnlock[]
+  order                Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product              Product               @relation(fields: [productId], references: [id])
+  variant              ProductVariant?       @relation(fields: [variantId], references: [id])
+  unlocks              DigitalUnlock[]
   affiliateCommissions AffiliateCommission[]
-  refundItems Refund[]
-  returnRequests ReturnRequest[]
+  refunds              Refund[]
+  refundItems          RefundItem[]
+  returnRequests       ReturnRequest[]
   downloadEntitlements DownloadEntitlement[]
-  shipmentItems ShipmentItem[]
-  inventoryLedgers InventoryLedger[]
-  fulfillmentItems FulfillmentItem[]
+  shipmentItems        ShipmentItem[]
+  inventoryLedgers     InventoryLedger[]
+  fulfillmentItems     FulfillmentItem[]
 
   @@index([orderId])
   @@index([productId])
 }
 
 model OrderAddress {
-  id          String           @id @default(cuid())
-  orderId     String
-  type        OrderAddressType
-  name        String?
-  company     String?
-  line1       String
-  line2       String?
-  city        String
-  region      String?
-  postalCode  String
-  country     String
-  phone       String?
-  metadata    Json?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id         String           @id @default(cuid())
+  orderId    String
+  type       OrderAddressType
+  name       String?
+  company    String?
+  line1      String
+  line2      String?
+  city       String
+  region     String?
+  postalCode String
+  country    String
+  phone      String?
+  metadata   Json?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -1111,19 +1124,19 @@ model OrderAddress {
 }
 
 model OrderHistory {
-  id              String      @id @default(cuid())
-  shopId          String
-  orderId         String
-  actorUserId     String?
-  status          OrderStatus?
-  paymentStatus   PaymentStatus?
+  id                String             @id @default(cuid())
+  shopId            String
+  orderId           String
+  actorUserId       String?
+  status            OrderStatus?
+  paymentStatus     PaymentStatus?
   fulfillmentStatus FulfillmentStatus?
-  comment         String?
-  customerVisible Boolean     @default(false)
-  metadata        Json?
-  createdAt       DateTime    @default(now())
+  comment           String?
+  customerVisible   Boolean            @default(false)
+  metadata          Json?
+  createdAt         DateTime           @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop  Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
   actor User? @relation(fields: [actorUserId], references: [id])
 
@@ -1132,19 +1145,19 @@ model OrderHistory {
 }
 
 model Payment {
-  id                    String          @id @default(cuid())
-  shopId                String
-  orderId               String
-  provider              PaymentProvider @default(stripe)
-  status                PaymentStatus   @default(unpaid)
-  amountCents           Int
-  currency              String          @default("USD")
+  id                      String          @id @default(cuid())
+  shopId                  String
+  orderId                 String
+  provider                PaymentProvider @default(stripe)
+  status                  PaymentStatus   @default(unpaid)
+  amountCents             Int
+  currency                String          @default("USD")
   stripeCheckoutSessionId String?
-  stripePaymentIntentId String?
-  idempotencyKey        String?         @unique
-  metadata              Json?
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
+  stripePaymentIntentId   String?
+  idempotencyKey          String?         @unique
+  metadata                Json?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -1153,24 +1166,65 @@ model Payment {
 }
 
 model Refund {
-  id              String       @id @default(cuid())
-  shopId          String
-  orderId         String
-  orderItemId     String?
-  paymentId       String?
-  status          RefundStatus @default(requested)
-  amountCents     Int
-  reason          String?
-  stripeRefundId  String?
-  metadata        Json?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(cuid())
+  shopId         String
+  orderId        String
+  orderItemId    String?
+  paymentId      String?
+  status         RefundStatus @default(requested)
+  amountCents    Int
+  reason         String?
+  stripeRefundId String?
+  metadata       Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem?   @relation(fields: [orderItemId], references: [id])
+  items     RefundItem[]
 
   @@index([shopId, status])
   @@index([orderId])
+}
+
+model RefundItem {
+  id          String   @id @default(cuid())
+  refundId    String
+  orderItemId String
+  quantity    Int
+  amountCents Int
+  restock     Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  refund    Refund    @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+
+  @@index([refundId])
+  @@index([orderItemId])
+}
+
+model PrintfulOrder {
+  id              String              @id @default(cuid())
+  shopId          String
+  orderId         String
+  externalOrderId String?
+  printfulOrderId String?
+  status          PrintfulOrderStatus @default(configuration_required)
+  idempotencyKey  String?             @unique
+  requestHash     String?
+  error           String?
+  submittedAt     DateTime?
+  metadata        Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  shop  Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([printfulOrderId])
 }
 
 model Shipment {
@@ -1188,7 +1242,7 @@ model Shipment {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
   items ShipmentItem[]
 
   @@index([shopId, status])
@@ -1202,44 +1256,44 @@ model ShipmentItem {
   quantity    Int
   createdAt   DateTime @default(now())
 
-  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  shipment  Shipment  @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 
   @@unique([shipmentId, orderItemId])
 }
 
 model Customer {
-  id        String   @id @default(cuid())
-  shopId    String
-  userId    String?
-  customerGroupId String?
-  email     String
-  name      String?
-  phone     String?
-  customerGroup String?
-  tags      String[] @default([])
+  id               String   @id @default(cuid())
+  shopId           String
+  userId           String?
+  customerGroupId  String?
+  email            String
+  name             String?
+  phone            String?
+  customerGroup    String?
+  tags             String[] @default([])
   heroStudioUserId String?
-  verifiedFanId String?
-  privacyMetadata Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  verifiedFanId    String?
+  privacyMetadata  Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  shop    Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  user    User? @relation(fields: [userId], references: [id])
-  customerGroupRef CustomerGroup? @relation(fields: [customerGroupId], references: [id])
-  addresses CustomerAddress[]
-  carts   Cart[]
-  orders  Order[]
-  unlocks DigitalUnlock[]
-  affiliates Affiliate[]
+  shop                         Shop                          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user                         User?                         @relation(fields: [userId], references: [id])
+  customerGroupRef             CustomerGroup?                @relation(fields: [customerGroupId], references: [id])
+  addresses                    CustomerAddress[]
+  carts                        Cart[]
+  orders                       Order[]
+  unlocks                      DigitalUnlock[]
+  affiliates                   Affiliate[]
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
-  reviews ProductReview[]
-  wishlists Wishlist[]
-  compareLists CompareList[]
-  storeCreditLedgers StoreCreditLedger[]
-  loyaltyPointLedgers LoyaltyPointLedger[]
-  returnRequests ReturnRequest[]
-  downloadEntitlements DownloadEntitlement[]
+  reviews                      ProductReview[]
+  wishlists                    Wishlist[]
+  compareLists                 CompareList[]
+  storeCreditLedgers           StoreCreditLedger[]
+  loyaltyPointLedgers          LoyaltyPointLedger[]
+  returnRequests               ReturnRequest[]
+  downloadEntitlements         DownloadEntitlement[]
 
   @@unique([shopId, email])
   @@index([userId])
@@ -1248,23 +1302,23 @@ model Customer {
 }
 
 model CustomerAddress {
-  id          String   @id @default(cuid())
-  customerId  String
-  label       String?
-  name        String?
-  company     String?
-  line1       String
-  line2       String?
-  city        String
-  region      String?
-  postalCode  String
-  country     String
-  phone       String?
-  isDefaultShipping Boolean @default(false)
-  isDefaultBilling  Boolean @default(false)
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  customerId        String
+  label             String?
+  name              String?
+  company           String?
+  line1             String
+  line2             String?
+  city              String
+  region            String?
+  postalCode        String
+  country           String
+  phone             String?
+  isDefaultShipping Boolean  @default(false)
+  isDefaultBilling  Boolean  @default(false)
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
@@ -1282,7 +1336,7 @@ model CustomerGroup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customers Customer[]
 
   @@unique([shopId, code])
@@ -1301,8 +1355,8 @@ model ProductReview {
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product  Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
   customer Customer? @relation(fields: [customerId], references: [id])
 
   @@index([shopId, status])
@@ -1317,9 +1371,9 @@ model Wishlist {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  items WishlistItem[]
+  shop     Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  items    WishlistItem[]
 
   @@unique([shopId, customerId])
   @@index([customerId])
@@ -1332,9 +1386,9 @@ model WishlistItem {
   variantId  String?
   createdAt  DateTime @default(now())
 
-  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
+  wishlist Wishlist        @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant  ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@unique([wishlistId, productId, variantId])
   @@index([productId])
@@ -1348,9 +1402,9 @@ model CompareList {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer? @relation(fields: [customerId], references: [id])
-  items CompareItem[]
+  shop     Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?     @relation(fields: [customerId], references: [id])
+  items    CompareItem[]
 
   @@index([shopId, sessionId])
   @@index([customerId])
@@ -1363,7 +1417,7 @@ model CompareItem {
   createdAt     DateTime @default(now())
 
   compareList CompareList @relation(fields: [compareListId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([compareListId, productId])
   @@index([productId])
@@ -1395,74 +1449,74 @@ model AffiliateProgram {
   createdAt                DateTime               @default(now())
   updatedAt                DateTime               @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  commissionRules CommissionRule[]
+  shop                      Shop                       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  commissionRules           CommissionRule[]
   multiLevelCommissionRules MultiLevelCommissionRule[]
-  plans AffiliatePlan[]
+  plans                     AffiliatePlan[]
 
   @@index([shopId])
 }
 
 model AffiliatePlan {
-  id                         String              @id @default(cuid())
-  shopId                     String
-  affiliateProgramId         String?
-  name                       String
-  description                String?
-  status                     AffiliatePlanStatus @default(draft)
-  planType                   AffiliatePlanType
-  isDefault                  Boolean             @default(false)
-  currency                   String              @default("USD")
-  maxActiveLevels            Int                 @default(7)
-  maxCommissionPoolBps       Int?
-  maxCommissionPoolCents     Int?
-  allowLifetimeAttribution   Boolean             @default(false)
-  lifetimeAttributionDays    Int?
-  attributionModel           AttributionModel    @default(last_touch)
-  cookieDays                 Int                 @default(30)
-  holdDays                   Int                 @default(14)
-  autoApproveCommissions     Boolean             @default(false)
-  blockOwnReferrals          Boolean             @default(true)
-  blockSaleItems             Boolean             @default(false)
-  allowStoreCreditPayout     Boolean             @default(true)
-  allowCashPayout            Boolean             @default(false)
-  createdAt                  DateTime            @default(now())
-  updatedAt                  DateTime            @updatedAt
+  id                       String              @id @default(cuid())
+  shopId                   String
+  affiliateProgramId       String?
+  name                     String
+  description              String?
+  status                   AffiliatePlanStatus @default(draft)
+  planType                 AffiliatePlanType
+  isDefault                Boolean             @default(false)
+  currency                 String              @default("USD")
+  maxActiveLevels          Int                 @default(7)
+  maxCommissionPoolBps     Int?
+  maxCommissionPoolCents   Int?
+  allowLifetimeAttribution Boolean             @default(false)
+  lifetimeAttributionDays  Int?
+  attributionModel         AttributionModel    @default(last_touch)
+  cookieDays               Int                 @default(30)
+  holdDays                 Int                 @default(14)
+  autoApproveCommissions   Boolean             @default(false)
+  blockOwnReferrals        Boolean             @default(true)
+  blockSaleItems           Boolean             @default(false)
+  allowStoreCreditPayout   Boolean             @default(true)
+  allowCashPayout          Boolean             @default(false)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliateProgram AffiliateProgram? @relation(fields: [affiliateProgramId], references: [id])
-  levels AffiliatePlanLevel[]
+  shop             Shop                       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliateProgram AffiliateProgram?          @relation(fields: [affiliateProgramId], references: [id])
+  levels           AffiliatePlanLevel[]
   performanceTiers AffiliatePerformanceTier[]
-  commissionRules CommissionRule[]
-  affiliates Affiliate[]
-  commissions AffiliateCommission[]
+  commissionRules  CommissionRule[]
+  affiliates       Affiliate[]
+  commissions      AffiliateCommission[]
 
   @@index([shopId, status])
   @@index([affiliateProgramId])
 }
 
 model AffiliatePlanLevel {
-  id                    String                      @id @default(cuid())
-  shopId                String
-  affiliatePlanId       String
-  levelDepth            Int
-  label                 String
-  enabled               Boolean                     @default(true)
-  commissionType        CommissionType
-  percentageBps         Int?
-  fixedCents            Int?
-  commissionBase        CommissionBase              @default(product_subtotal)
-  maxPerOrderCents      Int?
-  maxPerMonthCents      Int?
-  requiresRankId        String?
-  compressionBehavior   AffiliateCompressionBehavior @default(pay_zero)
-  createdAt             DateTime                    @default(now())
-  updatedAt             DateTime                    @updatedAt
+  id                  String                       @id @default(cuid())
+  shopId              String
+  affiliatePlanId     String
+  levelDepth          Int
+  label               String
+  enabled             Boolean                      @default(true)
+  commissionType      CommissionType
+  percentageBps       Int?
+  fixedCents          Int?
+  commissionBase      CommissionBase               @default(product_subtotal)
+  maxPerOrderCents    Int?
+  maxPerMonthCents    Int?
+  requiresRankId      String?
+  compressionBehavior AffiliateCompressionBehavior @default(pay_zero)
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliatePlan AffiliatePlan @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
-  requiresRank AffiliateRank? @relation(fields: [requiresRankId], references: [id])
-  commissions AffiliateCommission[]
+  shop          Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan AffiliatePlan         @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+  requiresRank  AffiliateRank?        @relation(fields: [requiresRankId], references: [id])
+  commissions   AffiliateCommission[]
 
   @@unique([affiliatePlanId, levelDepth])
   @@index([shopId, levelDepth])
@@ -1470,52 +1524,52 @@ model AffiliatePlanLevel {
 }
 
 model Affiliate {
-  id                       String          @id @default(cuid())
-  shopId                   String
-  userId                   String?
-  customerId               String?
-  email                    String
-  name                     String
-  phone                    String?
-  referralCode             String
-  status                   AffiliateStatus @default(pending)
-  parentAffiliateId        String?
-  rankId                   String?
-  performanceTierId        String?
-  activePlanId             String?
-  levelId                  String?
-  approvedAt               DateTime?
-  rejectedAt               DateTime?
-  suspendedAt              DateTime?
-  payoutMethod             String?
-  payoutDetailsEncrypted   String?
-  termsAcceptedAt          DateTime?
-  disclosureAcceptedAt     DateTime?
-  notes                    String?
-  createdAt                DateTime        @default(now())
-  updatedAt                DateTime        @updatedAt
+  id                     String          @id @default(cuid())
+  shopId                 String
+  userId                 String?
+  customerId             String?
+  email                  String
+  name                   String
+  phone                  String?
+  referralCode           String
+  status                 AffiliateStatus @default(pending)
+  parentAffiliateId      String?
+  rankId                 String?
+  performanceTierId      String?
+  activePlanId           String?
+  levelId                String?
+  approvedAt             DateTime?
+  rejectedAt             DateTime?
+  suspendedAt            DateTime?
+  payoutMethod           String?
+  payoutDetailsEncrypted String?
+  termsAcceptedAt        DateTime?
+  disclosureAcceptedAt   DateTime?
+  notes                  String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer? @relation(fields: [customerId], references: [id])
-  parent Affiliate? @relation("AffiliateParent", fields: [parentAffiliateId], references: [id])
-  children Affiliate[] @relation("AffiliateParent")
-  rank AffiliateRank? @relation(fields: [rankId], references: [id])
-  performanceTier AffiliatePerformanceTier? @relation(fields: [performanceTierId], references: [id])
-  activePlan AffiliatePlan? @relation(fields: [activePlanId], references: [id])
-  ancestorClosures AffiliateTreeClosure[] @relation("AffiliateTreeAncestor")
-  descendantClosures AffiliateTreeClosure[] @relation("AffiliateTreeDescendant")
+  shop                         Shop                             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer                     Customer?                        @relation(fields: [customerId], references: [id])
+  parent                       Affiliate?                       @relation("AffiliateParent", fields: [parentAffiliateId], references: [id])
+  children                     Affiliate[]                      @relation("AffiliateParent")
+  rank                         AffiliateRank?                   @relation(fields: [rankId], references: [id])
+  performanceTier              AffiliatePerformanceTier?        @relation(fields: [performanceTierId], references: [id])
+  activePlan                   AffiliatePlan?                   @relation(fields: [activePlanId], references: [id])
+  ancestorClosures             AffiliateTreeClosure[]           @relation("AffiliateTreeAncestor")
+  descendantClosures           AffiliateTreeClosure[]           @relation("AffiliateTreeDescendant")
   lifetimeCustomerAttributions LifetimeCustomerAttribution[]
-  qualificationSnapshots AffiliateQualificationSnapshot[]
-  clicks AffiliateClick[]
-  attributions AffiliateAttribution[]
-  commissionRules CommissionRule[]
-  commissions AffiliateCommission[] @relation("AffiliateCommissionAffiliate")
-  sourceCommissions AffiliateCommission[] @relation("AffiliateCommissionSource")
-  walletLedgers AffiliateWalletLedger[]
-  payouts AffiliatePayout[]
-  coupons AffiliateCoupon[]
-  notifications AffiliateNotification[]
-  auditLogs AffiliateAuditLog[]
+  qualificationSnapshots       AffiliateQualificationSnapshot[]
+  clicks                       AffiliateClick[]
+  attributions                 AffiliateAttribution[]
+  commissionRules              CommissionRule[]
+  commissions                  AffiliateCommission[]            @relation("AffiliateCommissionAffiliate")
+  sourceCommissions            AffiliateCommission[]            @relation("AffiliateCommissionSource")
+  walletLedgers                AffiliateWalletLedger[]
+  payouts                      AffiliatePayout[]
+  coupons                      AffiliateCoupon[]
+  notifications                AffiliateNotification[]
+  auditLogs                    AffiliateAuditLog[]
 
   @@unique([shopId, referralCode])
   @@index([shopId])
@@ -1534,8 +1588,8 @@ model AffiliateTreeClosure {
   depth                 Int
   createdAt             DateTime @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  ancestor Affiliate @relation("AffiliateTreeAncestor", fields: [ancestorAffiliateId], references: [id], onDelete: Cascade)
+  shop       Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  ancestor   Affiliate @relation("AffiliateTreeAncestor", fields: [ancestorAffiliateId], references: [id], onDelete: Cascade)
   descendant Affiliate @relation("AffiliateTreeDescendant", fields: [descendantAffiliateId], references: [id], onDelete: Cascade)
 
   @@unique([ancestorAffiliateId, descendantAffiliateId])
@@ -1559,10 +1613,10 @@ model AffiliateClick {
   convertedOrderId String?
   createdAt        DateTime @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id])
-  convertedOrder Order? @relation(fields: [convertedOrderId], references: [id])
+  shop           Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate      Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  product        Product?  @relation(fields: [productId], references: [id])
+  convertedOrder Order?    @relation(fields: [convertedOrderId], references: [id])
 
   @@index([shopId, affiliateId])
   @@index([sessionId])
@@ -1583,7 +1637,7 @@ model AffiliateAttribution {
   createdAt       DateTime                 @default(now())
   updatedAt       DateTime                 @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([shopId, sessionId])
@@ -1605,10 +1659,10 @@ model LifetimeCustomerAttribution {
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-  sourceOrder Order? @relation(fields: [sourceOrderId], references: [id])
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  sourceOrder Order?    @relation(fields: [sourceOrderId], references: [id])
 
   @@unique([shopId, customerId, affiliateId])
   @@index([shopId, customerId, status])
@@ -1616,7 +1670,7 @@ model LifetimeCustomerAttribution {
 }
 
 model CommissionRule {
-  id                 String          @id @default(cuid())
+  id                 String                      @id @default(cuid())
   shopId             String
   affiliateProgramId String
   planId             String?
@@ -1633,21 +1687,21 @@ model CommissionRule {
   type               CommissionType
   percentageBps      Int?
   fixedCents         Int?
-  priority           Int             @default(0)
+  priority           Int                         @default(0)
   startsAt           DateTime?
   endsAt             DateTime?
-  active             Boolean         @default(true)
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  active             Boolean                     @default(true)
+  createdAt          DateTime                    @default(now())
+  updatedAt          DateTime                    @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliateProgram AffiliateProgram @relation(fields: [affiliateProgramId], references: [id], onDelete: Cascade)
-  plan AffiliatePlan? @relation(fields: [planId], references: [id])
-  affiliate Affiliate? @relation(fields: [affiliateId], references: [id])
-  product Product? @relation(fields: [productId], references: [id])
-  rank AffiliateRank? @relation(fields: [rankId], references: [id])
-  performanceTier AffiliatePerformanceTier? @relation(fields: [performanceTierId], references: [id])
-  commissions AffiliateCommission[]
+  shop             Shop                      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliateProgram AffiliateProgram          @relation(fields: [affiliateProgramId], references: [id], onDelete: Cascade)
+  plan             AffiliatePlan?            @relation(fields: [planId], references: [id])
+  affiliate        Affiliate?                @relation(fields: [affiliateId], references: [id])
+  product          Product?                  @relation(fields: [productId], references: [id])
+  rank             AffiliateRank?            @relation(fields: [rankId], references: [id])
+  performanceTier  AffiliatePerformanceTier? @relation(fields: [performanceTierId], references: [id])
+  commissions      AffiliateCommission[]
 
   @@index([shopId, scope])
   @@index([affiliateProgramId])
@@ -1672,59 +1726,59 @@ model MultiLevelCommissionRule {
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliateProgram AffiliateProgram @relation(fields: [affiliateProgramId], references: [id], onDelete: Cascade)
-  commissions AffiliateCommission[]
+  shop             Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliateProgram AffiliateProgram      @relation(fields: [affiliateProgramId], references: [id], onDelete: Cascade)
+  commissions      AffiliateCommission[]
 
   @@unique([affiliateProgramId, levelDepth])
   @@index([shopId])
 }
 
 model AffiliateCommission {
-  id                   String                    @id @default(cuid())
-  shopId               String
-  affiliateId          String
-  planId               String?
-  planLevelId          String?
-  rankId               String?
-  performanceTierId    String?
-  orderId              String?
-  orderItemId          String?
-  sourceAffiliateId    String?
-  businessModelType    AffiliateBusinessModelType?
-  type                 AffiliateCommissionType
-  levelDepth           Int                       @default(0)
-  status               AffiliateCommissionStatus @default(pending)
-  amountCents          Int
-  currency             String                    @default("USD")
-  commissionBaseCents  Int
-  ruleId               String?
-  multiLevelRuleId     String?
-  capApplied           Boolean                   @default(false)
-  compressionApplied   Boolean                   @default(false)
-  reason               String?
-  batchId              String?
-  idempotencyKey       String?                   @unique
-  availableAt          DateTime?
-  approvedAt           DateTime?
-  paidAt               DateTime?
-  reversedAt           DateTime?
-  metadata             Json?
-  createdAt            DateTime                  @default(now())
-  updatedAt            DateTime                  @updatedAt
+  id                  String                      @id @default(cuid())
+  shopId              String
+  affiliateId         String
+  planId              String?
+  planLevelId         String?
+  rankId              String?
+  performanceTierId   String?
+  orderId             String?
+  orderItemId         String?
+  sourceAffiliateId   String?
+  businessModelType   AffiliateBusinessModelType?
+  type                AffiliateCommissionType
+  levelDepth          Int                         @default(0)
+  status              AffiliateCommissionStatus   @default(pending)
+  amountCents         Int
+  currency            String                      @default("USD")
+  commissionBaseCents Int
+  ruleId              String?
+  multiLevelRuleId    String?
+  capApplied          Boolean                     @default(false)
+  compressionApplied  Boolean                     @default(false)
+  reason              String?
+  batchId             String?
+  idempotencyKey      String?                     @unique
+  availableAt         DateTime?
+  approvedAt          DateTime?
+  paidAt              DateTime?
+  reversedAt          DateTime?
+  metadata            Json?
+  createdAt           DateTime                    @default(now())
+  updatedAt           DateTime                    @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation("AffiliateCommissionAffiliate", fields: [affiliateId], references: [id], onDelete: Cascade)
-  plan AffiliatePlan? @relation(fields: [planId], references: [id])
-  planLevel AffiliatePlanLevel? @relation(fields: [planLevelId], references: [id])
-  rank AffiliateRank? @relation(fields: [rankId], references: [id])
+  shop            Shop                      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate       Affiliate                 @relation("AffiliateCommissionAffiliate", fields: [affiliateId], references: [id], onDelete: Cascade)
+  plan            AffiliatePlan?            @relation(fields: [planId], references: [id])
+  planLevel       AffiliatePlanLevel?       @relation(fields: [planLevelId], references: [id])
+  rank            AffiliateRank?            @relation(fields: [rankId], references: [id])
   performanceTier AffiliatePerformanceTier? @relation(fields: [performanceTierId], references: [id])
-  order Order? @relation(fields: [orderId], references: [id])
-  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
-  sourceAffiliate Affiliate? @relation("AffiliateCommissionSource", fields: [sourceAffiliateId], references: [id])
-  rule CommissionRule? @relation(fields: [ruleId], references: [id])
-  multiLevelRule MultiLevelCommissionRule? @relation(fields: [multiLevelRuleId], references: [id])
-  walletLedgers AffiliateWalletLedger[]
+  order           Order?                    @relation(fields: [orderId], references: [id])
+  orderItem       OrderItem?                @relation(fields: [orderItemId], references: [id])
+  sourceAffiliate Affiliate?                @relation("AffiliateCommissionSource", fields: [sourceAffiliateId], references: [id])
+  rule            CommissionRule?           @relation(fields: [ruleId], references: [id])
+  multiLevelRule  MultiLevelCommissionRule? @relation(fields: [multiLevelRuleId], references: [id])
+  walletLedgers   AffiliateWalletLedger[]
 
   @@index([shopId, affiliateId])
   @@index([planId])
@@ -1735,22 +1789,22 @@ model AffiliateCommission {
 }
 
 model AffiliateWalletLedger {
-  id            String                    @id @default(cuid())
-  shopId        String
-  affiliateId   String
-  commissionId  String?
-  payoutId      String?
-  type          AffiliateWalletLedgerType
-  amountCents   Int
-  currency      String                    @default("USD")
-  balanceType   AffiliateWalletBalanceType
-  note          String?
-  createdAt     DateTime                  @default(now())
+  id           String                     @id @default(cuid())
+  shopId       String
+  affiliateId  String
+  commissionId String?
+  payoutId     String?
+  type         AffiliateWalletLedgerType
+  amountCents  Int
+  currency     String                     @default("USD")
+  balanceType  AffiliateWalletBalanceType
+  note         String?
+  createdAt    DateTime                   @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  shop       Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate  Affiliate            @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
   commission AffiliateCommission? @relation(fields: [commissionId], references: [id])
-  payout AffiliatePayout? @relation(fields: [payoutId], references: [id])
+  payout     AffiliatePayout?     @relation(fields: [payoutId], references: [id])
 
   @@index([shopId, affiliateId])
   @@index([commissionId])
@@ -1778,8 +1832,8 @@ model AffiliatePayout {
   createdAt                      DateTime              @default(now())
   updatedAt                      DateTime              @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  shop          Shop                    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate     Affiliate               @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
   walletLedgers AffiliateWalletLedger[]
 
   @@index([shopId, affiliateId])
@@ -1787,54 +1841,54 @@ model AffiliatePayout {
 }
 
 model AffiliateRank {
-  id                           String   @id @default(cuid())
-  shopId                       String
-  name                         String
-  priority                     Int
-  maxPaidLevels                Int      @default(0)
-  commissionBonusBps           Int?
-  directCommissionBonusBps     Int?
-  monthlySalesRequiredCents    Int?
-  directReferralRequiredCount  Int?
-  qualifiedOrderRequiredCount  Int?
-  description                  String?
-  active                       Boolean  @default(true)
-  createdAt                    DateTime @default(now())
-  updatedAt                    DateTime @updatedAt
+  id                          String   @id @default(cuid())
+  shopId                      String
+  name                        String
+  priority                    Int
+  maxPaidLevels               Int      @default(0)
+  commissionBonusBps          Int?
+  directCommissionBonusBps    Int?
+  monthlySalesRequiredCents   Int?
+  directReferralRequiredCount Int?
+  qualifiedOrderRequiredCount Int?
+  description                 String?
+  active                      Boolean  @default(true)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliates Affiliate[]
-  planLevels AffiliatePlanLevel[]
-  commissionRules CommissionRule[]
-  commissions AffiliateCommission[]
+  shop                   Shop                             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliates             Affiliate[]
+  planLevels             AffiliatePlanLevel[]
+  commissionRules        CommissionRule[]
+  commissions            AffiliateCommission[]
   qualificationSnapshots AffiliateQualificationSnapshot[]
-  requirements AffiliateRankRequirement[]
+  requirements           AffiliateRankRequirement[]
 
   @@unique([shopId, name])
   @@index([shopId, priority])
 }
 
 model AffiliatePerformanceTier {
-  id                    String                     @id @default(cuid())
-  shopId                String
-  affiliatePlanId       String
-  name                  String
-  priority              Int
-  metric                AffiliatePerformanceMetric
-  minValue              Int
-  maxValue              Int?
-  directCommissionBps   Int?
-  maxPaidLevels         Int?
-  bonusCents            Int?
-  active                Boolean                    @default(true)
-  createdAt             DateTime                   @default(now())
-  updatedAt             DateTime                   @updatedAt
+  id                  String                     @id @default(cuid())
+  shopId              String
+  affiliatePlanId     String
+  name                String
+  priority            Int
+  metric              AffiliatePerformanceMetric
+  minValue            Int
+  maxValue            Int?
+  directCommissionBps Int?
+  maxPaidLevels       Int?
+  bonusCents          Int?
+  active              Boolean                    @default(true)
+  createdAt           DateTime                   @default(now())
+  updatedAt           DateTime                   @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliatePlan AffiliatePlan @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
-  affiliates Affiliate[]
-  commissionRules CommissionRule[]
-  commissions AffiliateCommission[]
+  shop                   Shop                             @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliatePlan          AffiliatePlan                    @relation(fields: [affiliatePlanId], references: [id], onDelete: Cascade)
+  affiliates             Affiliate[]
+  commissionRules        CommissionRule[]
+  commissions            AffiliateCommission[]
   qualificationSnapshots AffiliateQualificationSnapshot[]
 
   @@unique([affiliatePlanId, name])
@@ -1843,24 +1897,24 @@ model AffiliatePerformanceTier {
 }
 
 model AffiliateQualificationSnapshot {
-  id                       String   @id @default(cuid())
-  shopId                   String
-  affiliateId              String
-  periodStart              DateTime
-  periodEnd                DateTime
-  monthlySalesCents        Int      @default(0)
-  monthlyOrderCount        Int      @default(0)
-  directReferralCount      Int      @default(0)
-  qualifiedOrderCount      Int      @default(0)
-  approvedCommissionCents  Int      @default(0)
-  calculatedRankId         String?
-  calculatedTierId         String?
-  maxPaidLevels            Int      @default(0)
-  createdAt                DateTime @default(now())
+  id                      String   @id @default(cuid())
+  shopId                  String
+  affiliateId             String
+  periodStart             DateTime
+  periodEnd               DateTime
+  monthlySalesCents       Int      @default(0)
+  monthlyOrderCount       Int      @default(0)
+  directReferralCount     Int      @default(0)
+  qualifiedOrderCount     Int      @default(0)
+  approvedCommissionCents Int      @default(0)
+  calculatedRankId        String?
+  calculatedTierId        String?
+  maxPaidLevels           Int      @default(0)
+  createdAt               DateTime @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-  calculatedRank AffiliateRank? @relation(fields: [calculatedRankId], references: [id])
+  shop           Shop                      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  affiliate      Affiliate                 @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  calculatedRank AffiliateRank?            @relation(fields: [calculatedRankId], references: [id])
   calculatedTier AffiliatePerformanceTier? @relation(fields: [calculatedTierId], references: [id])
 
   @@unique([affiliateId, periodStart, periodEnd])
@@ -1912,9 +1966,9 @@ model AffiliateCoupon {
   createdAt     DateTime                    @default(now())
   updatedAt     DateTime                    @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   affiliate Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id])
+  product   Product?  @relation(fields: [productId], references: [id])
 
   @@unique([shopId, code])
   @@index([shopId, affiliateId])
@@ -1949,7 +2003,7 @@ model AffiliateNotification {
   metadata    Json?
   createdAt   DateTime  @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   affiliate Affiliate? @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
 
   @@index([shopId, affiliateId])
@@ -1968,7 +2022,7 @@ model AffiliateAuditLog {
   ipHash      String?
   createdAt   DateTime @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
   affiliate Affiliate? @relation(fields: [affiliateId], references: [id])
 
   @@index([shopId, entityType, entityId])
@@ -1976,32 +2030,32 @@ model AffiliateAuditLog {
 }
 
 model DiscountCode {
-  id              String       @id @default(cuid())
-  shopId          String
-  discountRuleId  String?
-  affiliateId     String?
-  code            String
-  type            DiscountType
-  value           Int
+  id               String       @id @default(cuid())
+  shopId           String
+  discountRuleId   String?
+  affiliateId      String?
+  code             String
+  type             DiscountType
+  value            Int
   minSubtotalCents Int?
   maxDiscountCents Int?
-  productId       String?
-  categoryId      String?
-  collectionId    String?
-  customerGroup   String?
-  startsAt        DateTime?
-  endsAt          DateTime?
-  maxRedemptions  Int?
+  productId        String?
+  categoryId       String?
+  collectionId     String?
+  customerGroup    String?
+  startsAt         DateTime?
+  endsAt           DateTime?
+  maxRedemptions   Int?
   perCustomerLimit Int?
-  redemptionCount Int          @default(0)
-  active          Boolean      @default(true)
-  metadata        Json?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  redemptionCount  Int          @default(0)
+  active           Boolean      @default(true)
+  metadata         Json?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
   discountRule DiscountRule? @relation(fields: [discountRuleId], references: [id])
-  carts Cart[]
+  carts        Cart[]
 
   @@unique([shopId, code])
   @@index([shopId])
@@ -2009,26 +2063,26 @@ model DiscountCode {
 }
 
 model DiscountRule {
-  id                 String            @id @default(cuid())
-  shopId             String
-  name               String
-  scope              DiscountRuleScope @default(cart)
-  type               DiscountType
-  value              Int
-  minSubtotalCents   Int?
-  maxDiscountCents   Int?
-  freeShipping       Boolean           @default(false)
-  startsAt           DateTime?
-  endsAt             DateTime?
-  active             Boolean           @default(true)
-  priority           Int               @default(0)
-  conditions          Json?
-  actions             Json?
-  metadata            Json?
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
+  id               String            @id @default(cuid())
+  shopId           String
+  name             String
+  scope            DiscountRuleScope @default(cart)
+  type             DiscountType
+  value            Int
+  minSubtotalCents Int?
+  maxDiscountCents Int?
+  freeShipping     Boolean           @default(false)
+  startsAt         DateTime?
+  endsAt           DateTime?
+  active           Boolean           @default(true)
+  priority         Int               @default(0)
+  conditions       Json?
+  actions          Json?
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop  Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
   codes DiscountCode[]
 
   @@index([shopId, active])
@@ -2067,9 +2121,9 @@ model StoreCreditLedger {
   note        String?
   createdAt   DateTime              @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  order Order? @relation(fields: [orderId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
 
   @@index([shopId, customerId])
   @@index([orderId])
@@ -2086,9 +2140,9 @@ model LoyaltyPointLedger {
   expiresAt  DateTime?
   createdAt  DateTime               @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  order Order? @relation(fields: [orderId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
 
   @@index([shopId, customerId])
   @@index([orderId])
@@ -2109,10 +2163,10 @@ model ReturnRequest {
   createdAt       DateTime              @default(now())
   updatedAt       DateTime              @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
-  customer Customer? @relation(fields: [customerId], references: [id])
+  customer  Customer?  @relation(fields: [customerId], references: [id])
 
   @@index([shopId, status])
   @@index([orderId])
@@ -2132,8 +2186,8 @@ model DownloadAsset {
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id])
+  shop         Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product      Product?              @relation(fields: [productId], references: [id])
   entitlements DownloadEntitlement[]
 
   @@index([shopId, status])
@@ -2153,10 +2207,10 @@ model DownloadEntitlement {
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer Customer? @relation(fields: [customerId], references: [id])
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
   downloadAsset DownloadAsset @relation(fields: [downloadAssetId], references: [id], onDelete: Cascade)
 
   @@index([shopId, status])
@@ -2202,24 +2256,24 @@ model Banner {
 }
 
 model InventoryLedger {
-  id            String              @id @default(cuid())
-  shopId        String
-  productId     String
-  variantId     String?
-  orderId       String?
-  orderItemId   String?
-  type          InventoryLedgerType
-  quantityDelta Int
-  reason        String?
-  idempotencyKey String?            @unique
-  metadata      Json?
-  createdAt     DateTime            @default(now())
+  id             String              @id @default(cuid())
+  shopId         String
+  productId      String
+  variantId      String?
+  orderId        String?
+  orderItemId    String?
+  type           InventoryLedgerType
+  quantityDelta  Int
+  reason         String?
+  idempotencyKey String?             @unique
+  metadata       Json?
+  createdAt      DateTime            @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
-  variant ProductVariant? @relation(fields: [variantId], references: [id])
-  order Order? @relation(fields: [orderId], references: [id])
-  orderItem OrderItem? @relation(fields: [orderItemId], references: [id])
+  shop      Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product   Product         @relation(fields: [productId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  order     Order?          @relation(fields: [orderId], references: [id])
+  orderItem OrderItem?      @relation(fields: [orderItemId], references: [id])
 
   @@index([shopId, productId])
   @@index([orderId])
@@ -2236,7 +2290,7 @@ model TaxClass {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]
   taxRules TaxRule[]
 
@@ -2255,13 +2309,13 @@ model Currency {
 }
 
 model Country {
-  id       String @id @default(cuid())
-  iso2     String @unique
-  iso3     String @unique
-  name     String
-  status   String @default("active")
+  id     String @id @default(cuid())
+  iso2   String @unique
+  iso3   String @unique
+  name   String
+  status String @default("active")
 
-  zones Zone[]
+  zones          Zone[]
   geoZoneRegions GeoZoneRegion[]
 }
 
@@ -2272,7 +2326,7 @@ model Zone {
   name      String
   status    String @default("active")
 
-  country Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  country        Country         @relation(fields: [countryId], references: [id], onDelete: Cascade)
   geoZoneRegions GeoZoneRegion[]
 
   @@unique([countryId, code])
@@ -2288,8 +2342,8 @@ model GeoZone {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  regions GeoZoneRegion[]
+  shop     Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  regions  GeoZoneRegion[]
   taxRates TaxRate[]
 
   @@unique([shopId, name])
@@ -2304,7 +2358,7 @@ model GeoZoneRegion {
 
   geoZone GeoZone @relation(fields: [geoZoneId], references: [id], onDelete: Cascade)
   country Country @relation(fields: [countryId], references: [id])
-  zone Zone? @relation(fields: [zoneId], references: [id])
+  zone    Zone?   @relation(fields: [zoneId], references: [id])
 
   @@index([geoZoneId])
   @@index([countryId, zoneId])
@@ -2321,8 +2375,8 @@ model TaxRate {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  geoZone GeoZone? @relation(fields: [geoZoneId], references: [id])
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  geoZone  GeoZone?  @relation(fields: [geoZoneId], references: [id])
   taxRules TaxRule[]
 
   @@index([shopId, status])
@@ -2330,14 +2384,14 @@ model TaxRate {
 }
 
 model TaxRule {
-  id         String       @id @default(cuid())
+  id         String         @id @default(cuid())
   taxClassId String
   taxRateId  String
-  priority   Int          @default(0)
+  priority   Int            @default(0)
   basedOn    TaxRuleBasedOn @default(shipping)
 
   taxClass TaxClass @relation(fields: [taxClassId], references: [id], onDelete: Cascade)
-  taxRate TaxRate @relation(fields: [taxRateId], references: [id], onDelete: Cascade)
+  taxRate  TaxRate  @relation(fields: [taxRateId], references: [id], onDelete: Cascade)
 
   @@unique([taxClassId, taxRateId, basedOn])
   @@index([priority])
@@ -2372,18 +2426,18 @@ model LengthClass {
 }
 
 model ShippingMethod {
-  id                    String             @id @default(cuid())
-  shopId                String
-  name                  String
-  code                  String
-  type                  ShippingMethodType @default(flat_rate)
-  priceCents            Int                @default(0)
+  id                         String             @id @default(cuid())
+  shopId                     String
+  name                       String
+  code                       String
+  type                       ShippingMethodType @default(flat_rate)
+  priceCents                 Int                @default(0)
   freeShippingThresholdCents Int?
-  active                Boolean            @default(true)
-  regions               String[]           @default([])
-  metadata              Json?
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
+  active                     Boolean            @default(true)
+  regions                    String[]           @default([])
+  metadata                   Json?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
@@ -2395,15 +2449,15 @@ model MarketRegion {
   id           String   @id @default(cuid())
   shopId       String
   name         String
-  currencyCode String  @default("USD")
+  currencyCode String   @default("USD")
   countries    String[] @default([])
-  taxInclusive Boolean @default(false)
-  active       Boolean @default(true)
+  taxInclusive Boolean  @default(false)
+  active       Boolean  @default(true)
   metadata     Json?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop            Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shippingOptions ShippingOption[]
 
   @@unique([shopId, name])
@@ -2421,7 +2475,7 @@ model SalesChannel {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop     Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products ProductSalesChannel[]
 
   @@unique([shopId, slug])
@@ -2434,7 +2488,7 @@ model ProductSalesChannel {
   salesChannelId String
   createdAt      DateTime @default(now())
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   salesChannel SalesChannel @relation(fields: [salesChannelId], references: [id], onDelete: Cascade)
 
   @@unique([productId, salesChannelId])
@@ -2458,20 +2512,20 @@ model PaymentProviderConfig {
 }
 
 model PaymentSession {
-  id                      String               @id @default(cuid())
+  id                      String                    @id @default(cuid())
   shopId                  String
   cartId                  String?
   orderId                 String?
   provider                PaymentProviderConfigCode @default(stripe_checkout)
-  status                  PaymentSessionStatus @default(pending)
+  status                  PaymentSessionStatus      @default(pending)
   amountCents             Int
-  currency                String               @default("USD")
+  currency                String                    @default("USD")
   providerSessionId       String?
   providerPaymentIntentId String?
   metadata                Json?
   idempotencyKey          String?
-  createdAt               DateTime             @default(now())
-  updatedAt               DateTime             @updatedAt
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
 
   shop  Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
   cart  Cart?  @relation(fields: [cartId], references: [id])
@@ -2511,9 +2565,9 @@ model StockLocation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop            Shop                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
   inventoryLevels InventoryLevel[]
-  reservations InventoryReservation[]
+  reservations    InventoryReservation[]
 
   @@unique([shopId, name])
   @@index([shopId, active])
@@ -2529,9 +2583,9 @@ model InventoryItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop         Shop                          @relation(fields: [shopId], references: [id], onDelete: Cascade)
   variantLinks ProductVariantInventoryItem[]
-  levels InventoryLevel[]
+  levels       InventoryLevel[]
   reservations InventoryReservation[]
 
   @@unique([shopId, sku])
@@ -2539,27 +2593,27 @@ model InventoryItem {
 }
 
 model ProductVariantInventoryItem {
-  id              String   @id @default(cuid())
-  variantId       String
-  inventoryItemId String
-  requiredQuantity Int     @default(1)
-  createdAt       DateTime @default(now())
+  id               String   @id @default(cuid())
+  variantId        String
+  inventoryItemId  String
+  requiredQuantity Int      @default(1)
+  createdAt        DateTime @default(now())
 
-  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  variant       ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem  @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
 
   @@unique([variantId, inventoryItemId])
   @@index([inventoryItemId])
 }
 
 model InventoryLevel {
-  id              String   @id @default(cuid())
-  inventoryItemId String
-  stockLocationId String
-  stockedQuantity Int      @default(0)
-  reservedQuantity Int     @default(0)
-  availableQuantity Int    @default(0)
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  inventoryItemId   String
+  stockLocationId   String
+  stockedQuantity   Int      @default(0)
+  reservedQuantity  Int      @default(0)
+  availableQuantity Int      @default(0)
+  updatedAt         DateTime @updatedAt
 
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
   stockLocation StockLocation @relation(fields: [stockLocationId], references: [id], onDelete: Cascade)
@@ -2582,9 +2636,9 @@ model InventoryReservation {
   createdAt       DateTime                   @default(now())
   updatedAt       DateTime                   @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  cart Cart? @relation(fields: [cartId], references: [id])
-  order Order? @relation(fields: [orderId], references: [id])
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cart          Cart?         @relation(fields: [cartId], references: [id])
+  order         Order?        @relation(fields: [orderId], references: [id])
   inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
   stockLocation StockLocation @relation(fields: [stockLocationId], references: [id], onDelete: Cascade)
 
@@ -2605,7 +2659,7 @@ model FulfillmentProvider {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shop            Shop             @relation(fields: [shopId], references: [id], onDelete: Cascade)
   shippingOptions ShippingOption[]
 
   @@unique([shopId, code])
@@ -2640,8 +2694,8 @@ model ShippingOption {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  region MarketRegion? @relation(fields: [regionId], references: [id])
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  region              MarketRegion?        @relation(fields: [regionId], references: [id])
   fulfillmentProvider FulfillmentProvider? @relation(fields: [fulfillmentProviderId], references: [id])
 
   @@index([shopId, active])
@@ -2663,8 +2717,8 @@ model Fulfillment {
   createdAt      DateTime                @default(now())
   updatedAt      DateTime                @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shop  Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
   items FulfillmentItem[]
 
   @@index([shopId, status])
@@ -2679,29 +2733,29 @@ model FulfillmentItem {
   createdAt     DateTime @default(now())
 
   fulfillment Fulfillment @relation(fields: [fulfillmentId], references: [id], onDelete: Cascade)
-  orderItem OrderItem @relation(fields: [orderItemId], references: [id])
+  orderItem   OrderItem   @relation(fields: [orderItemId], references: [id])
 
   @@unique([fulfillmentId, orderItemId])
   @@index([orderItemId])
 }
 
 model Promotion {
-  id          String          @id @default(cuid())
-  shopId      String
-  code        String?
-  name        String
-  type        PromotionType   @default(coupon)
-  status      PromotionStatus @default(draft)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  usageLimit  Int?
-  usageCount  Int             @default(0)
-  metadata    Json?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id         String          @id @default(cuid())
+  shopId     String
+  code       String?
+  name       String
+  type       PromotionType   @default(coupon)
+  status     PromotionStatus @default(draft)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  usageLimit Int?
+  usageCount Int             @default(0)
+  metadata   Json?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
 
-  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  rules PromotionRule[]
+  shop    Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  rules   PromotionRule[]
   actions PromotionAction[]
 
   @@unique([shopId, code])
@@ -2747,7 +2801,7 @@ model CommerceEvent {
   createdAt      DateTime            @default(now())
   processedAt    DateTime?
 
-  shop Shop? @relation(fields: [shopId], references: [id])
+  shop  Shop?  @relation(fields: [shopId], references: [id])
   order Order? @relation(fields: [orderId], references: [id])
 
   @@unique([idempotencyKey])
@@ -2792,7 +2846,7 @@ model AdminRole {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  shop Shop? @relation(fields: [shopId], references: [id])
+  shop  Shop?           @relation(fields: [shopId], references: [id])
   users AdminUserRole[]
 
   @@unique([shopId, name])
@@ -2806,9 +2860,9 @@ model AdminUserRole {
   shopId    String?
   createdAt DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   role AdminRole @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  shop Shop? @relation(fields: [shopId], references: [id])
+  shop Shop?     @relation(fields: [shopId], references: [id])
 
   @@unique([userId, roleId, shopId])
   @@index([shopId])
@@ -2827,7 +2881,7 @@ model AdminAuditLog {
   metadata    Json?
   createdAt   DateTime @default(now())
 
-  shop Shop? @relation(fields: [shopId], references: [id])
+  shop  Shop? @relation(fields: [shopId], references: [id])
   actor User? @relation(fields: [actorUserId], references: [id])
 
   @@index([shopId, entityType, entityId])
@@ -2849,7 +2903,7 @@ model WebhookEvent {
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
 
-  shop Shop? @relation(fields: [shopId], references: [id])
+  shop  Shop?  @relation(fields: [shopId], references: [id])
   order Order? @relation(fields: [orderId], references: [id])
 
   @@unique([provider, eventId])
