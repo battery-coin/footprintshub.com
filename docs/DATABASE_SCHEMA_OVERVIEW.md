@@ -71,6 +71,16 @@ Affiliate money is ledger-based:
 
 Do not mutate affiliate balances without a ledger row.
 
+## Affiliate Plan Layer
+
+- `AffiliatePlan`: business model, attribution, active depth, caps, hold days, payout mode, lifetime attribution, and fraud defaults.
+- `AffiliatePlanLevel`: level 0 through level 7 rates, bases, caps, rank requirements, and compression behavior.
+- `AffiliatePerformanceTier`: monthly sales/order/commission tiers.
+- `AffiliateQualificationSnapshot`: period metrics for rank/tier decisions.
+- `LifetimeCustomerAttribution`: optional customer-to-affiliate assignment.
+
+`AffiliateCommission` records plan, plan level, rank, tier, business model, cap, and compression metadata so reports can explain every amount created.
+
 ## Admin And Security
 
 - `AdminAuditLog`: privileged admin and platform actions.

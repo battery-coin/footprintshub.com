@@ -45,6 +45,14 @@ Commissions may be created only from qualified purchases or approved transaction
 
 Do not commission affiliate signup alone, recruitment alone, mandatory starter kits, pay-to-join fees, or inventory loading without legal review.
 
+## 7-Level Language
+
+Use "7-level ambassador commission system", "multi-tier affiliate program", "referral network", and "qualified purchase commission".
+
+Avoid "MLM", "downline", "recruiting income", "passive income guarantee", "business opportunity", "ROI", and "financial freedom" in customer-facing copy.
+
+The system may support levels 0 through 7 only when every paid commission is tied to a qualified product, membership, campaign, digital goods, creator-shop, or approved commercial transaction.
+
 ## Disclosure Requirements
 
 Affiliates, creators, and fan ambassadors must disclose when they may receive a commission or store credit. Disclosures should be clear, easy to notice, and close to the link, coupon, product card, post, video, or livestream recommendation.

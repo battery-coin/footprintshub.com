@@ -37,6 +37,10 @@ export function shouldReplaceAttribution({
     return true;
   }
 
+  if (model === "lifetime") {
+    return !hasFirstTouch;
+  }
+
   if (model === "first_touch") {
     return !hasFirstTouch;
   }
@@ -46,4 +50,40 @@ export function shouldReplaceAttribution({
   }
 
   return !hasLastTouch;
+}
+
+export function calculateLifetimeAttributionExpiry({
+  startsAt = new Date(),
+  lifetimeAttributionDays,
+}: {
+  startsAt?: Date;
+  lifetimeAttributionDays?: number;
+}) {
+  if (!lifetimeAttributionDays || lifetimeAttributionDays <= 0) {
+    return null;
+  }
+
+  return new Date(startsAt.getTime() + lifetimeAttributionDays * 24 * 60 * 60 * 1000);
+}
+
+export function shouldUseLifetimeAttribution({
+  enabled,
+  attributionExpired,
+  couponOverride,
+  hasCouponAttribution,
+}: {
+  enabled: boolean;
+  attributionExpired: boolean;
+  couponOverride: boolean;
+  hasCouponAttribution: boolean;
+}) {
+  if (!enabled || attributionExpired) {
+    return false;
+  }
+
+  if (couponOverride && hasCouponAttribution) {
+    return false;
+  }
+
+  return true;
 }

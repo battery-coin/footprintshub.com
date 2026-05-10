@@ -6,6 +6,10 @@ Admin routes are scaffolded under `/admin/affiliates`.
 
 - `/admin/affiliates`
 - `/admin/affiliates/[id]`
+- `/admin/affiliates/plans`
+- `/admin/affiliates/plans/new`
+- `/admin/affiliates/plans/[id]`
+- `/admin/affiliates/plans/[id]/levels`
 - `/admin/affiliates/applications`
 - `/admin/affiliates/referrals`
 - `/admin/affiliates/commissions`
@@ -13,6 +17,7 @@ Admin routes are scaffolded under `/admin/affiliates`.
 - `/admin/affiliates/rules`
 - `/admin/affiliates/levels`
 - `/admin/affiliates/ranks`
+- `/admin/affiliates/performance-tiers`
 - `/admin/affiliates/bonuses`
 - `/admin/affiliates/assets`
 - `/admin/affiliates/reports`
@@ -34,3 +39,9 @@ Admin routes are scaffolded under `/admin/affiliates`.
 - `POST /api/admin/affiliates/status`: update affiliate status behind `ADMIN_SECRET`.
 
 Future admin endpoints should write `AffiliateAuditLog` records for every program, rule, status, payout, and manual commission change.
+
+## Plan Controls
+
+Use `AffiliateProgram` as the shop-level container and `AffiliatePlan` as the compensation plan. Use `AffiliatePlanLevel` for level 0 through level 7, `AffiliateRank` for max paid depth, `AffiliatePerformanceTier` for monthly thresholds, and `AffiliateQualificationSnapshot` for auditable qualification periods.
+
+Cash payouts should remain disabled until payout compliance, tax form collection, and provider integrations are reviewed. Store credit is the recommended MVP payout mode.

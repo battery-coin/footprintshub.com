@@ -38,3 +38,53 @@ export function isLikelyDuplicateClick({
 
   return now.getTime() - previousClickAt.getTime() < minimumSeconds * 1000;
 }
+
+export function isOwnReferral({
+  affiliateEmail,
+  affiliateCustomerId,
+  orderCustomerEmail,
+  orderCustomerId,
+}: {
+  affiliateEmail?: string | null;
+  affiliateCustomerId?: string | null;
+  orderCustomerEmail?: string | null;
+  orderCustomerId?: string | null;
+}) {
+  const sameEmail =
+    affiliateEmail &&
+    orderCustomerEmail &&
+    affiliateEmail.trim().toLowerCase() === orderCustomerEmail.trim().toLowerCase();
+  const sameCustomer = affiliateCustomerId && orderCustomerId && affiliateCustomerId === orderCustomerId;
+
+  return Boolean(sameEmail || sameCustomer);
+}
+
+export function shouldFlagSuspiciousConversionVelocity({
+  conversionsInWindow,
+  windowMinutes,
+  maxConversions,
+}: {
+  conversionsInWindow: number;
+  windowMinutes: number;
+  maxConversions: number;
+}) {
+  if (windowMinutes <= 0 || maxConversions <= 0) {
+    return false;
+  }
+
+  return conversionsInWindow > maxConversions;
+}
+
+export function isProductExcluded({
+  productId,
+  categoryIds = [],
+  excludedProductIds = [],
+  excludedCategoryIds = [],
+}: {
+  productId: string;
+  categoryIds?: string[];
+  excludedProductIds?: string[];
+  excludedCategoryIds?: string[];
+}) {
+  return excludedProductIds.includes(productId) || categoryIds.some((categoryId) => excludedCategoryIds.includes(categoryId));
+}

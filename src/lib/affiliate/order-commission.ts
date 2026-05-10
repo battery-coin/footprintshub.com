@@ -1,7 +1,9 @@
 import type { Affiliate, AffiliateProgram, CommissionRule, MultiLevelCommissionRule, Prisma } from "@prisma/client";
 import { hasDatabaseUrl, getPrisma } from "@/lib/db/prisma";
 import { calculateCommissionsForOrderInput } from "./commission-engine";
+import { mapPlanLevelsToMultiLevelRules, mapPlanToProgramConfig } from "./level-commission";
 import type {
+  AffiliatePlanConfig,
   AffiliateAncestor,
   AffiliateProgramConfig,
   AffiliateRecord,
@@ -17,6 +19,12 @@ type OrderWithProducts = Prisma.OrderGetPayload<{
         product: true;
       };
     };
+  };
+}>;
+
+type AffiliatePlanWithLevels = Prisma.AffiliatePlanGetPayload<{
+  include: {
+    levels: true;
   };
 }>;
 
@@ -60,12 +68,18 @@ export async function calculateCommissionsForOrder(orderId: string) {
     return { created: false, reason: "No attributed affiliate found for order." };
   }
 
+  const activePlan = await resolveActivePlan(order.shopId, program.id, directAffiliate.activePlanId ?? null);
+  const mappedPlan = activePlan ? mapAffiliatePlan(activePlan) : undefined;
+  const mappedProgram = mappedPlan
+    ? mapPlanToProgramConfig({ plan: mappedPlan, fallbackProgram: mapProgram(program) })
+    : mapProgram(program);
+
   const [ancestors, commissionRules, multiLevelRules] = await Promise.all([
     prisma.affiliateTreeClosure.findMany({
       where: {
         shopId: order.shopId,
         descendantAffiliateId: directAffiliate.id,
-        depth: { gt: 0, lte: Math.min(program.maxLevels, 7) },
+        depth: { gt: 0, lte: Math.min(mappedProgram.maxLevels, 7) },
       },
       include: { ancestor: true },
       orderBy: { depth: "asc" },
@@ -88,14 +102,14 @@ export async function calculateCommissionsForOrder(orderId: string) {
 
   const calculation = calculateCommissionsForOrderInput({
     order: mapOrder(order),
-    program: mapProgram(program),
+    program: mappedProgram,
     directAffiliate: mapAffiliate(directAffiliate),
     ancestors: ancestors.map((ancestor): AffiliateAncestor => ({
       depth: ancestor.depth,
       affiliate: mapAffiliate(ancestor.ancestor),
     })),
     commissionRules: commissionRules.map(mapCommissionRule),
-    multiLevelRules: multiLevelRules.map(mapMultiLevelRule),
+    multiLevelRules: mappedPlan ? mapPlanLevelsToMultiLevelRules(mappedPlan) : multiLevelRules.map(mapMultiLevelRule),
   });
 
   if (!calculation.commissions.length) {
@@ -110,6 +124,11 @@ export async function calculateCommissionsForOrder(orderId: string) {
         orderId: commission.orderId,
         orderItemId: commission.orderItemId,
         sourceAffiliateId: commission.sourceAffiliateId,
+        planId: commission.planId ?? activePlan?.id,
+        planLevelId: commission.planLevelId,
+        rankId: commission.rankId,
+        performanceTierId: commission.performanceTierId,
+        businessModelType: commission.businessModelType ?? activePlan?.planType,
         type: commission.type,
         levelDepth: commission.levelDepth,
         status: commission.status,
@@ -118,6 +137,8 @@ export async function calculateCommissionsForOrder(orderId: string) {
         commissionBaseCents: commission.commissionBaseCents,
         ruleId: commission.ruleId,
         multiLevelRuleId: commission.multiLevelRuleId,
+        capApplied: commission.capApplied ?? false,
+        compressionApplied: commission.compressionApplied ?? false,
         reason: commission.reason,
         idempotencyKey: commission.idempotencyKey,
         availableAt: new Date(Date.now() + program.holdDays * 24 * 60 * 60 * 1000),
@@ -238,6 +259,71 @@ function mapProgram(program: AffiliateProgram): AffiliateProgramConfig {
   };
 }
 
+async function resolveActivePlan(shopId: string, affiliateProgramId: string, affiliateActivePlanId: string | null) {
+  const prisma = getPrisma();
+
+  if (affiliateActivePlanId) {
+    const plan = await prisma.affiliatePlan.findFirst({
+      where: { id: affiliateActivePlanId, shopId, status: "active" },
+      include: { levels: true },
+    });
+
+    if (plan) {
+      return plan;
+    }
+  }
+
+  return prisma.affiliatePlan.findFirst({
+    where: {
+      shopId,
+      status: "active",
+      OR: [{ isDefault: true }, { affiliateProgramId }],
+    },
+    include: { levels: true },
+    orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+  });
+}
+
+function mapAffiliatePlan(plan: AffiliatePlanWithLevels): AffiliatePlanConfig {
+  return {
+    id: plan.id,
+    shopId: plan.shopId,
+    name: plan.name,
+    planType: plan.planType,
+    isDefault: plan.isDefault,
+    currency: plan.currency,
+    maxActiveLevels: plan.maxActiveLevels,
+    maxCommissionPoolBps: plan.maxCommissionPoolBps ?? undefined,
+    maxCommissionPoolCents: plan.maxCommissionPoolCents ?? undefined,
+    allowLifetimeAttribution: plan.allowLifetimeAttribution,
+    lifetimeAttributionDays: plan.lifetimeAttributionDays ?? undefined,
+    attributionModel: plan.attributionModel,
+    cookieDays: plan.cookieDays,
+    holdDays: plan.holdDays,
+    autoApproveCommissions: plan.autoApproveCommissions,
+    blockOwnReferrals: plan.blockOwnReferrals,
+    blockSaleItems: plan.blockSaleItems,
+    allowStoreCreditPayout: plan.allowStoreCreditPayout,
+    allowCashPayout: plan.allowCashPayout,
+    levels: plan.levels.map((level) => ({
+      id: level.id,
+      shopId: level.shopId,
+      affiliatePlanId: level.affiliatePlanId,
+      levelDepth: level.levelDepth,
+      label: level.label,
+      enabled: level.enabled,
+      commissionType: level.commissionType,
+      percentageBps: level.percentageBps ?? undefined,
+      fixedCents: level.fixedCents ?? undefined,
+      commissionBase: level.commissionBase,
+      maxPerOrderCents: level.maxPerOrderCents ?? undefined,
+      maxPerMonthCents: level.maxPerMonthCents ?? undefined,
+      requiresRankId: level.requiresRankId ?? undefined,
+      compressionBehavior: level.compressionBehavior,
+    })),
+  };
+}
+
 function mapAffiliate(affiliate: Affiliate): AffiliateRecord {
   return {
     id: affiliate.id,
@@ -248,6 +334,8 @@ function mapAffiliate(affiliate: Affiliate): AffiliateRecord {
     status: affiliate.status,
     parentAffiliateId: affiliate.parentAffiliateId ?? undefined,
     rankId: affiliate.rankId ?? undefined,
+    performanceTierId: affiliate.performanceTierId ?? undefined,
+    activePlanId: affiliate.activePlanId ?? undefined,
   };
 }
 
@@ -255,12 +343,17 @@ function mapCommissionRule(rule: CommissionRule): CommissionRuleInput {
   return {
     id: rule.id,
     shopId: rule.shopId,
+    planId: rule.planId ?? undefined,
+    businessModelType: rule.businessModelType ?? undefined,
     scope: rule.scope,
     affiliateId: rule.affiliateId ?? undefined,
     productId: rule.productId ?? undefined,
     categoryId: rule.categoryId ?? undefined,
     collectionId: rule.collectionId ?? undefined,
     campaignId: rule.campaignId ?? undefined,
+    creatorShopId: rule.creatorShopId ?? undefined,
+    rankId: rule.rankId ?? undefined,
+    performanceTierId: rule.performanceTierId ?? undefined,
     type: rule.type,
     percentageBps: rule.percentageBps ?? undefined,
     fixedCents: rule.fixedCents ?? undefined,

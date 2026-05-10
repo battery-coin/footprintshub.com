@@ -1,17 +1,24 @@
 import { AffiliateAdminPage } from "@/components/admin/affiliate-admin-page";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
 export default function AdminAffiliateSettingsPage() {
   return (
     <AffiliateAdminPage title="Affiliate program settings">
-      <form className="grid max-w-2xl gap-4 rounded-lg border border-black/10 bg-white p-5">
-        <Input defaultValue="30" type="number" placeholder="Cookie days" />
-        <Input defaultValue="7" type="number" placeholder="Max active levels" />
-        <Input defaultValue="2000" type="number" placeholder="Max commission pool bps" />
-        <Input defaultValue="5000" type="number" placeholder="Minimum payout cents" />
-        <Button type="button">Save settings placeholder</Button>
-      </form>
+      <div className="grid max-w-4xl gap-4 rounded-lg border border-black/10 bg-white p-5 sm:grid-cols-2">
+        {[
+          ["Cookie window", "30 days"],
+          ["Max active levels", "7"],
+          ["Default commission pool", "20% of qualified product subtotal"],
+          ["Payout hold", "14 days"],
+          ["Cash payouts", "Disabled until compliance review"],
+          ["Store credit payouts", "Enabled"],
+          ["Own-referral blocking", "Enabled"],
+          ["Default compression", "pay_zero"],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-md bg-black/[0.03] p-4">
+            <p className="text-xs text-black/55">{label}</p>
+            <p className="mt-1 font-semibold">{value}</p>
+          </div>
+        ))}
+      </div>
     </AffiliateAdminPage>
   );
 }

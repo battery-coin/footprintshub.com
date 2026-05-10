@@ -1,21 +1,46 @@
 export type AffiliateStatus = "pending" | "approved" | "rejected" | "suspended";
 
-export type AttributionModel = "first_touch" | "last_touch" | "coupon_priority" | "manual_override";
+export type AttributionModel = "first_touch" | "last_touch" | "coupon_priority" | "lifetime" | "manual_override";
 
-export type CommissionType = "percentage" | "fixed" | "percentage_plus_fixed";
+export type CommissionType = "percentage" | "fixed" | "percentage_plus_fixed" | "store_credit";
 
-export type CommissionBase = "order_subtotal" | "product_subtotal" | "direct_commission";
+export type CommissionBase = "order_subtotal" | "product_subtotal" | "item_subtotal" | "direct_commission" | "gross_margin";
 
 export type CommissionScope =
   | "global"
   | "product"
   | "category"
   | "collection"
+  | "creator_shop"
   | "affiliate"
   | "affiliate_product"
   | "affiliate_category"
   | "campaign"
-  | "membership";
+  | "membership"
+  | "rank"
+  | "performance_tier"
+  | "coupon"
+  | "lifetime"
+  | "manual";
+
+export type AffiliatePlanType =
+  | "flat"
+  | "product"
+  | "category"
+  | "campaign"
+  | "creator_shop"
+  | "rank_based"
+  | "performance_tier"
+  | "seven_level"
+  | "lifetime"
+  | "coupon"
+  | "hybrid";
+
+export type AffiliateBusinessModelType = AffiliatePlanType | "manual";
+
+export type CompressionBehavior = "pay_zero" | "skip_ineligible" | "compress_to_next_qualified";
+
+export type PerformanceMetric = "monthly_sales" | "monthly_orders" | "lifetime_sales" | "approved_commissions";
 
 export type AffiliateCommissionKind =
   | "direct"
@@ -28,7 +53,15 @@ export type AffiliateCommissionKind =
   | "rank"
   | "coupon";
 
-export type AffiliateCommissionStatus = "pending" | "approved" | "rejected" | "paid" | "reversed" | "capped";
+export type AffiliateCommissionStatus =
+  | "pending"
+  | "held"
+  | "approved"
+  | "rejected"
+  | "paid"
+  | "reversed"
+  | "partially_reversed"
+  | "capped";
 
 export type WalletLedgerType =
   | "pending_credit"
@@ -42,7 +75,7 @@ export type WalletLedgerType =
 
 export type WalletBalanceType = "pending" | "approved" | "available" | "paid" | "rejected";
 
-export type PayoutMethod = "manual_bank" | "paypal" | "stripe_connect" | "store_credit";
+export type PayoutMethod = "manual_bank" | "paypal" | "paypal_placeholder" | "stripe_connect" | "stripe_connect_placeholder" | "store_credit";
 
 export type PayoutStatus = "requested" | "approved" | "processing" | "paid" | "rejected" | "cancelled";
 
@@ -75,6 +108,8 @@ export type AffiliateRecord = {
   status: AffiliateStatus;
   parentAffiliateId?: string;
   rankId?: string;
+  performanceTierId?: string;
+  activePlanId?: string;
 };
 
 export type AffiliateAncestor = {
@@ -88,6 +123,9 @@ export type OrderItemForCommission = {
   categoryIds?: string[];
   collectionIds?: string[];
   campaignId?: string;
+  creatorShopId?: string;
+  rankId?: string;
+  performanceTierId?: string;
   productType?: string;
   subtotalCents: number;
   isSaleItem?: boolean;
@@ -110,12 +148,17 @@ export type OrderForCommission = {
 export type CommissionRuleInput = {
   id: string;
   shopId: string;
+  planId?: string;
+  businessModelType?: AffiliateBusinessModelType;
   scope: CommissionScope;
   affiliateId?: string;
   productId?: string;
   categoryId?: string;
   collectionId?: string;
   campaignId?: string;
+  creatorShopId?: string;
+  rankId?: string;
+  performanceTierId?: string;
   type: CommissionType;
   percentageBps?: number;
   fixedCents?: number;
@@ -125,6 +168,7 @@ export type CommissionRuleInput = {
 
 export type MultiLevelCommissionRuleInput = {
   id: string;
+  planLevelId?: string;
   shopId: string;
   levelDepth: number;
   type: CommissionType;
@@ -134,6 +178,86 @@ export type MultiLevelCommissionRuleInput = {
   maxPerOrderCents?: number;
   maxPerMonthCents?: number;
   active: boolean;
+};
+
+export type AffiliatePlanLevelInput = {
+  id: string;
+  shopId: string;
+  affiliatePlanId: string;
+  levelDepth: number;
+  label: string;
+  enabled: boolean;
+  commissionType: CommissionType;
+  percentageBps?: number;
+  fixedCents?: number;
+  commissionBase: CommissionBase;
+  maxPerOrderCents?: number;
+  maxPerMonthCents?: number;
+  requiresRankId?: string;
+  compressionBehavior: CompressionBehavior;
+};
+
+export type AffiliatePlanConfig = {
+  id: string;
+  shopId: string;
+  name: string;
+  planType: AffiliatePlanType;
+  isDefault: boolean;
+  currency: string;
+  maxActiveLevels: number;
+  maxCommissionPoolBps?: number;
+  maxCommissionPoolCents?: number;
+  allowLifetimeAttribution: boolean;
+  lifetimeAttributionDays?: number;
+  attributionModel: AttributionModel;
+  cookieDays: number;
+  holdDays: number;
+  autoApproveCommissions: boolean;
+  blockOwnReferrals: boolean;
+  blockSaleItems: boolean;
+  allowStoreCreditPayout: boolean;
+  allowCashPayout: boolean;
+  levels: AffiliatePlanLevelInput[];
+};
+
+export type AffiliateRankInput = {
+  id: string;
+  shopId: string;
+  name: string;
+  priority: number;
+  maxPaidLevels: number;
+  directCommissionBonusBps?: number;
+  monthlySalesRequiredCents?: number;
+  directReferralRequiredCount?: number;
+  qualifiedOrderRequiredCount?: number;
+  active: boolean;
+};
+
+export type AffiliatePerformanceTierInput = {
+  id: string;
+  shopId: string;
+  affiliatePlanId: string;
+  name: string;
+  priority: number;
+  metric: PerformanceMetric;
+  minValue: number;
+  maxValue?: number;
+  directCommissionBps?: number;
+  maxPaidLevels?: number;
+  bonusCents?: number;
+  active: boolean;
+};
+
+export type AffiliateQualificationSnapshotInput = {
+  affiliateId: string;
+  monthlySalesCents: number;
+  monthlyOrderCount: number;
+  directReferralCount: number;
+  qualifiedOrderCount: number;
+  approvedCommissionCents: number;
+  calculatedRankId?: string;
+  calculatedTierId?: string;
+  maxPaidLevels: number;
 };
 
 export type AffiliateCommissionDraft = {
@@ -151,6 +275,13 @@ export type AffiliateCommissionDraft = {
   commissionBaseCents: number;
   ruleId?: string;
   multiLevelRuleId?: string;
+  planId?: string;
+  planLevelId?: string;
+  rankId?: string;
+  performanceTierId?: string;
+  businessModelType?: AffiliateBusinessModelType;
+  capApplied?: boolean;
+  compressionApplied?: boolean;
   reason?: string;
 };
 

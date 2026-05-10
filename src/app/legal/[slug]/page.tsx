@@ -79,6 +79,15 @@ const pages: Record<string, { title: string; body: string[] }> = {
       "Mandatory purchases, pay-to-join fees, starter kits, inventory loading, recruiting-only compensation, and earnings claims require separate legal review before any public launch.",
     ],
   },
+  "income-disclaimer": {
+    title: "Income Disclaimer",
+    body: [
+      "FootprintsHub does not guarantee affiliate, ambassador, creator, fan, store credit, or payout earnings.",
+      "Commissions are available only on qualified purchases and remain subject to eligibility, approval, hold periods, caps, fraud review, refund reversal, chargeback reversal, and program changes.",
+      "The ambassador program is not an investment, employment relationship, franchise, business opportunity, passive income promise, or recruiting-income plan.",
+      "Affiliates must not make income claims, lifestyle claims, profit claims, ROI claims, resale-value claims, or financial-return claims when promoting FootprintsHub, Hero Studio, creator shops, collectibles, memberships, or digital goods.",
+    ],
+  },
 };
 
 export default async function LegalPage({

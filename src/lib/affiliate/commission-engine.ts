@@ -20,10 +20,16 @@ const scopePrecedence: Record<CommissionRuleInput["scope"], number> = {
   product: 4,
   category: 5,
   collection: 5,
+  creator_shop: 6,
   campaign: 6,
   membership: 6,
+  rank: 7,
+  performance_tier: 7,
   affiliate: 7,
-  global: 8,
+  coupon: 8,
+  lifetime: 8,
+  manual: 9,
+  global: 10,
 };
 
 export function calculateCommissionsForOrderInput(input: CommissionCalculationInput): CommissionCalculationResult {
@@ -204,7 +210,8 @@ export function calculateMultiLevelCommissions({
       amountCents: clampMoney(amountCents, 0, order.subtotalCents),
       currency: order.currency,
       commissionBaseCents: baseCents,
-      multiLevelRuleId: rule.id,
+      multiLevelRuleId: rule.planLevelId ? undefined : rule.id,
+      planLevelId: rule.planLevelId,
     });
   }
 
@@ -289,12 +296,21 @@ function ruleMatches(rule: CommissionRuleInput, affiliateId: string, item: Order
       return Boolean(rule.categoryId && item.categoryIds?.includes(rule.categoryId));
     case "collection":
       return Boolean(rule.collectionId && item.collectionIds?.includes(rule.collectionId));
+    case "creator_shop":
+      return Boolean(rule.creatorShopId && rule.creatorShopId === item.creatorShopId);
     case "campaign":
       return Boolean(rule.campaignId && rule.campaignId === item.campaignId);
     case "membership":
       return item.productType === "membership";
+    case "rank":
+      return Boolean(rule.rankId);
+    case "performance_tier":
+      return Boolean(rule.performanceTierId);
     case "affiliate":
       return rule.affiliateId === affiliateId;
+    case "coupon":
+    case "lifetime":
+    case "manual":
     case "global":
       return true;
   }
@@ -307,7 +323,7 @@ function calculateAmount(
   const percentageAmount = rule.percentageBps ? Math.floor((baseCents * rule.percentageBps) / 10000) : 0;
   const fixedAmount = rule.fixedCents ?? 0;
 
-  if (rule.type === "percentage") {
+  if (rule.type === "percentage" || rule.type === "store_credit") {
     return percentageAmount;
   }
 
@@ -367,6 +383,7 @@ function enforceOrderPoolCap(
       return {
         ...commission,
         amountCents,
+        capApplied: amountCents < commission.amountCents ? true : commission.capApplied,
         status: amountCents < commission.amountCents ? "capped" : commission.status,
         reason: amountCents < commission.amountCents ? "Order commission pool cap applied." : commission.reason,
       } satisfies AffiliateCommissionDraft;

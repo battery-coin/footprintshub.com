@@ -4,6 +4,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { demoAffiliateMetrics } from "@/lib/affiliate/demo-data";
 
 const affiliateAdminLinks = [
+  ["/admin/affiliates/plans", "Plans"],
   ["/admin/affiliates/applications", "Applications"],
   ["/admin/affiliates/referrals", "Referrals"],
   ["/admin/affiliates/commissions", "Commissions"],
@@ -11,6 +12,7 @@ const affiliateAdminLinks = [
   ["/admin/affiliates/rules", "Rules"],
   ["/admin/affiliates/levels", "7-level settings"],
   ["/admin/affiliates/ranks", "Ranks"],
+  ["/admin/affiliates/performance-tiers", "Performance tiers"],
   ["/admin/affiliates/bonuses", "Bonuses"],
   ["/admin/affiliates/assets", "Assets"],
   ["/admin/affiliates/reports", "Reports"],

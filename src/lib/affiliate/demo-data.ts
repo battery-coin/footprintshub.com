@@ -22,10 +22,10 @@ export const demoAffiliateProgram = {
 export const defaultSevenLevelPlan = [
   { depth: 0, label: "Direct affiliate", rate: "10%" },
   { depth: 1, label: "Parent ambassador", rate: "2%" },
-  { depth: 2, label: "Grandparent ambassador", rate: "1%" },
-  { depth: 3, label: "Third-level ambassador", rate: "0.75%" },
-  { depth: 4, label: "Fourth-level ambassador", rate: "0.50%" },
-  { depth: 5, label: "Fifth-level ambassador", rate: "0.25%" },
+  { depth: 2, label: "Grandparent ambassador", rate: "1.5%" },
+  { depth: 3, label: "Third-level ambassador", rate: "1%" },
+  { depth: 4, label: "Fourth-level ambassador", rate: "0.75%" },
+  { depth: 5, label: "Fifth-level ambassador", rate: "0.50%" },
   { depth: 6, label: "Sixth-level ambassador", rate: "0.25%" },
   { depth: 7, label: "Seventh-level ambassador", rate: "0.25%" },
 ];

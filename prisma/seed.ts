@@ -276,11 +276,64 @@ async function main() {
     },
   });
 
+  const affiliatePlan = await prisma.affiliatePlan.upsert({
+    where: { id: "affiliate_plan_footprintshub_7_level" },
+    update: {
+      shopId: shop.id,
+      affiliateProgramId: affiliateProgram.id,
+      name: "FootprintsHub 7-Level Ambassador Plan",
+      description:
+        "Purchase-only ambassador commission plan with capped direct and ancestor commissions. No commission is paid for recruitment alone.",
+      status: "active",
+      planType: "seven_level",
+      isDefault: true,
+      currency: "USD",
+      maxActiveLevels: 7,
+      maxCommissionPoolBps: 2000,
+      maxCommissionPoolCents: null,
+      allowLifetimeAttribution: true,
+      lifetimeAttributionDays: null,
+      attributionModel: "coupon_priority",
+      cookieDays: 30,
+      holdDays: 14,
+      autoApproveCommissions: false,
+      blockOwnReferrals: true,
+      blockSaleItems: false,
+      allowStoreCreditPayout: true,
+      allowCashPayout: false,
+    },
+    create: {
+      id: "affiliate_plan_footprintshub_7_level",
+      shopId: shop.id,
+      affiliateProgramId: affiliateProgram.id,
+      name: "FootprintsHub 7-Level Ambassador Plan",
+      description:
+        "Purchase-only ambassador commission plan with capped direct and ancestor commissions. No commission is paid for recruitment alone.",
+      status: "active",
+      planType: "seven_level",
+      isDefault: true,
+      currency: "USD",
+      maxActiveLevels: 7,
+      maxCommissionPoolBps: 2000,
+      allowLifetimeAttribution: true,
+      attributionModel: "coupon_priority",
+      cookieDays: 30,
+      holdDays: 14,
+      autoApproveCommissions: false,
+      blockOwnReferrals: true,
+      blockSaleItems: false,
+      allowStoreCreditPayout: true,
+      allowCashPayout: false,
+    },
+  });
+
   await prisma.commissionRule.upsert({
     where: { id: "commission_rule_footprintshub_direct_default" },
     update: {
       shopId: shop.id,
       affiliateProgramId: affiliateProgram.id,
+      planId: affiliatePlan.id,
+      businessModelType: "seven_level",
       scope: "global",
       type: "percentage",
       percentageBps: 1000,
@@ -292,6 +345,8 @@ async function main() {
       id: "commission_rule_footprintshub_direct_default",
       shopId: shop.id,
       affiliateProgramId: affiliateProgram.id,
+      planId: affiliatePlan.id,
+      businessModelType: "seven_level",
       scope: "global",
       type: "percentage",
       percentageBps: 1000,
@@ -301,16 +356,59 @@ async function main() {
   });
 
   const levelRates = [
-    { depth: 1, bps: 200 },
-    { depth: 2, bps: 100 },
-    { depth: 3, bps: 75 },
-    { depth: 4, bps: 50 },
-    { depth: 5, bps: 25 },
+    { depth: 0, bps: 1000, label: "Direct referring affiliate" },
+    { depth: 1, bps: 200, label: "Parent ambassador" },
+    { depth: 2, bps: 150, label: "Grandparent ambassador" },
+    { depth: 3, bps: 100, label: "Third-level ambassador" },
+    { depth: 4, bps: 75, label: "Fourth-level ambassador" },
+    { depth: 5, bps: 50, label: "Fifth-level ambassador" },
     { depth: 6, bps: 25 },
     { depth: 7, bps: 25 },
   ];
 
   for (const level of levelRates) {
+    await prisma.affiliatePlanLevel.upsert({
+      where: {
+        affiliatePlanId_levelDepth: {
+          affiliatePlanId: affiliatePlan.id,
+          levelDepth: level.depth,
+        },
+      },
+      update: {
+        shopId: shop.id,
+        label:
+          level.label ??
+          (level.depth === 6 ? "Sixth-level ambassador" : level.depth === 7 ? "Seventh-level ambassador" : `Level ${level.depth}`),
+        enabled: true,
+        commissionType: "percentage",
+        percentageBps: level.bps,
+        fixedCents: null,
+        commissionBase: "product_subtotal",
+        maxPerOrderCents: null,
+        maxPerMonthCents: null,
+        requiresRankId: null,
+        compressionBehavior: "pay_zero",
+      },
+      create: {
+        id: `affiliate_plan_level_footprintshub_${level.depth}`,
+        shopId: shop.id,
+        affiliatePlanId: affiliatePlan.id,
+        levelDepth: level.depth,
+        label:
+          level.label ??
+          (level.depth === 6 ? "Sixth-level ambassador" : level.depth === 7 ? "Seventh-level ambassador" : `Level ${level.depth}`),
+        enabled: true,
+        commissionType: "percentage",
+        percentageBps: level.bps,
+        commissionBase: "product_subtotal",
+        compressionBehavior: "pay_zero",
+      },
+    });
+
+    if (level.depth === 0) {
+      continue;
+    }
+
     await prisma.multiLevelCommissionRule.upsert({
       where: {
         affiliateProgramId_levelDepth: {
@@ -342,15 +440,15 @@ async function main() {
   }
 
   const ranks = [
-    ["rank_bronze", "Bronze", 10, 0],
-    ["rank_silver", "Silver", 20, 100],
-    ["rank_gold", "Gold", 30, 200],
-    ["rank_platinum", "Platinum", 40, 300],
-    ["rank_founder_ambassador", "Founder Ambassador", 50, 500],
-    ["rank_creator_partner", "Creator Partner", 60, 500],
+    ["rank_bronze", "Bronze", 10, 0, 0, 0],
+    ["rank_silver", "Silver", 20, 1, 100, 50000],
+    ["rank_gold", "Gold", 30, 3, 200, 150000],
+    ["rank_platinum", "Platinum", 40, 5, 300, 500000],
+    ["rank_founder_ambassador", "Founder Ambassador", 50, 7, 500, 0],
+    ["rank_creator_partner", "Creator Partner", 60, 7, 500, 0],
   ] as const;
 
-  for (const [id, name, priority, commissionBonusBps] of ranks) {
+  for (const [id, name, priority, maxPaidLevels, commissionBonusBps, monthlySalesRequiredCents] of ranks) {
     await prisma.affiliateRank.upsert({
       where: {
         shopId_name: {
@@ -360,7 +458,10 @@ async function main() {
       },
       update: {
         priority,
+        maxPaidLevels,
         commissionBonusBps,
+        directCommissionBonusBps: commissionBonusBps,
+        monthlySalesRequiredCents,
         active: true,
       },
       create: {
@@ -368,9 +469,52 @@ async function main() {
         shopId: shop.id,
         name,
         priority,
+        maxPaidLevels,
         commissionBonusBps,
+        directCommissionBonusBps: commissionBonusBps,
+        monthlySalesRequiredCents,
         active: true,
         description: `${name} affiliate rank for qualified purchase commissions.`,
+      },
+    });
+  }
+
+  const performanceTiers = [
+    ["tier_starter", "Starter", 10, 0, 99999, 800, 0],
+    ["tier_builder", "Builder", 20, 100000, 499999, 1000, 3],
+    ["tier_leader", "Leader", 30, 500000, null, 1200, 7],
+  ] as const;
+
+  for (const [id, name, priority, minValue, maxValue, directCommissionBps, maxPaidLevels] of performanceTiers) {
+    await prisma.affiliatePerformanceTier.upsert({
+      where: {
+        affiliatePlanId_name: {
+          affiliatePlanId: affiliatePlan.id,
+          name,
+        },
+      },
+      update: {
+        shopId: shop.id,
+        priority,
+        metric: "monthly_sales",
+        minValue,
+        maxValue,
+        directCommissionBps,
+        maxPaidLevels,
+        active: true,
+      },
+      create: {
+        id,
+        shopId: shop.id,
+        affiliatePlanId: affiliatePlan.id,
+        name,
+        priority,
+        metric: "monthly_sales",
+        minValue,
+        maxValue,
+        directCommissionBps,
+        maxPaidLevels,
+        active: true,
       },
     });
   }
@@ -389,6 +533,7 @@ async function main() {
       approvedAt: new Date(),
       termsAcceptedAt: new Date(),
       disclosureAcceptedAt: new Date(),
+      activePlanId: affiliatePlan.id,
       payoutMethod: "store_credit",
       notes: "Seed affiliate for local referral and attribution testing.",
     },
@@ -402,6 +547,7 @@ async function main() {
       approvedAt: new Date(),
       termsAcceptedAt: new Date(),
       disclosureAcceptedAt: new Date(),
+      activePlanId: affiliatePlan.id,
       payoutMethod: "store_credit",
       notes: "Seed affiliate for local referral and attribution testing.",
     },

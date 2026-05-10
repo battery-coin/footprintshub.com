@@ -9,6 +9,7 @@ const links = [
   ["/affiliate/wallet", "Wallet"],
   ["/affiliate/coupons", "Coupons"],
   ["/affiliate/assets", "Assets"],
+  ["/affiliate/resources", "Resources"],
   ["/affiliate/reports", "Reports"],
   ["/affiliate/team", "Network"],
   ["/affiliate/settings", "Settings"],
