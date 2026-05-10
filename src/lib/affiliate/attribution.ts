@@ -13,9 +13,23 @@ export function buildReferralUrl({
   code: string;
   path?: string;
 }) {
-  const url = new URL(path, baseUrl);
+  const url = new URL(path, normalizeReferralBaseUrl(baseUrl));
   url.searchParams.set("ref", code);
   return url.toString();
+}
+
+function normalizeReferralBaseUrl(baseUrl: string) {
+  const trimmed = baseUrl.trim();
+
+  if (!trimmed) {
+    return "https://footprintshub.com";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/$/, "");
+  }
+
+  return `https://${trimmed.replace(/\/$/, "")}`;
 }
 
 export function shouldReplaceAttribution({
