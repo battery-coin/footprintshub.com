@@ -1,55 +1,53 @@
-export type CurrentUser = {
-  id?: string;
-  email?: string;
-  role?: string;
-};
+import { getCurrentUser, type CurrentUser } from "./current-user";
+import { getPermissions, hasPermission } from "./permissions";
 
-function splitEmails(value?: string) {
-  return new Set(
-    (value ?? "")
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter(Boolean),
-  );
-}
-
-export function getCurrentUser(): CurrentUser | null {
-  const email = process.env.PLATFORM_OWNER_EMAIL ?? splitEmails(process.env.ADMIN_EMAILS).values().next().value;
-  return email ? { email, role: "platform_owner" } : null;
-}
+export { getCurrentUser, type CurrentUser };
 
 export function isPlatformOwner(user: CurrentUser | null | undefined) {
-  if (!user?.email) {
+  if (!user) {
     return false;
   }
 
-  return user.email.toLowerCase() === (process.env.PLATFORM_OWNER_EMAIL ?? "").toLowerCase();
+  return user.roles.includes("owner");
 }
 
 export function isAdmin(user: CurrentUser | null | undefined) {
-  if (!user?.email) {
+  if (!user) {
     return false;
   }
 
-  return isPlatformOwner(user) || splitEmails(process.env.ADMIN_EMAILS).has(user.email.toLowerCase());
+  return hasPermission({ userId: user.id, email: user.email, roles: user.roles }, "canViewAdmin");
 }
 
 export function isShopOwner(user: CurrentUser | null | undefined, shopOwnerEmail?: string | null) {
   return Boolean(user?.email && shopOwnerEmail && user.email.toLowerCase() === shopOwnerEmail.toLowerCase());
 }
 
-export function requireAdmin(user = getCurrentUser()) {
-  return isAdmin(user) ? { ok: true as const, user } : { ok: false as const, reason: "Admin access required." };
+export async function requireAdmin(user?: CurrentUser | null) {
+  const resolvedUser = user ?? (await getCurrentUser());
+  return isAdmin(resolvedUser)
+    ? { ok: true as const, user: resolvedUser }
+    : { ok: false as const, reason: "Admin access required." };
 }
 
-export function requirePlatformOwner(user = getCurrentUser()) {
-  return isPlatformOwner(user)
-    ? { ok: true as const, user }
+export async function requirePlatformOwner(user?: CurrentUser | null) {
+  const resolvedUser = user ?? (await getCurrentUser());
+  return isPlatformOwner(resolvedUser)
+    ? { ok: true as const, user: resolvedUser }
     : { ok: false as const, reason: "Platform owner access required." };
 }
 
-export function requireShopOwnerOrPlatformOwner(shopOwnerEmail?: string | null, user = getCurrentUser()) {
-  return isPlatformOwner(user) || isShopOwner(user, shopOwnerEmail)
-    ? { ok: true as const, user }
+export async function requireShopOwnerOrPlatformOwner(shopOwnerEmail?: string | null, user?: CurrentUser | null) {
+  const resolvedUser = user ?? (await getCurrentUser());
+  return isPlatformOwner(resolvedUser) || isShopOwner(resolvedUser, shopOwnerEmail)
+    ? { ok: true as const, user: resolvedUser }
     : { ok: false as const, reason: "Shop owner or platform owner access required." };
+}
+
+export function getRoleSummary(user: CurrentUser | null | undefined) {
+  if (!user) {
+    return { roles: [], permissions: getPermissions({ roles: [] }) };
+  }
+
+  return { roles: user.roles, permissions: getPermissions({ userId: user.id, email: user.email, roles: user.roles }) };
 }

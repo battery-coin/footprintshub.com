@@ -12,6 +12,18 @@ FootprintsHub currently uses a temporary admin gate for owner/admin API routes:
 
 The helper file is `src/lib/auth/roles.ts`.
 
+## 2026-05-11 RBAC Upgrade
+
+The broad admin concept has been replaced with owner-controlled role assignments:
+
+- `src/lib/auth/permissions.ts` defines the permission matrix.
+- `src/lib/auth/current-user.ts` resolves the current MVP owner/role context.
+- `src/lib/auth/require-permission.ts` enforces server-side API permissions.
+- `UserAppRole` stores role assignments.
+- `AuditLog` records sensitive actions.
+
+`ADMIN_EMAILS` is now only a narrow fallback for temporary operational access. It is not owner access and does not grant finance, payout, role-management, refund, security, tax, Stripe, Coinbase, or Printful secret-management power.
+
 ## Role Helpers
 
 - `getCurrentUser()`

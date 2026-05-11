@@ -82,6 +82,38 @@ enum UserRole {
   customer
 }
 
+enum AppRole {
+  owner
+  admin_products
+  catalog_manager
+  order_manager
+  refund_manager
+  finance_manager
+  payout_approver
+  affiliate_manager
+  affiliate_analyst
+  ads_manager
+  sponsor_manager
+  printful_manager
+  fulfillment_manager
+  inventory_manager
+  tax_manager
+  subscription_manager
+  digital_asset_manager
+  nft_manager
+  customer_manager
+  support_agent
+  content_moderator
+  security_manager
+  analyst
+  shop_owner
+  creator
+  affiliate
+  customer
+  fan
+  suspended
+}
+
 enum ProductVisibility {
   visible
   hidden
@@ -774,6 +806,7 @@ model Shop {
   affiliateAuditLogs              AffiliateAuditLog[]
   discountSchedules               DiscountSchedule[]
   importJobs                      ImportJob[]
+  userAppRoles                    UserAppRole[]
 
   @@index([ownerUserId])
 }
@@ -792,6 +825,7 @@ model User {
   adminAuditLogs AdminAuditLog[]
   orderHistories OrderHistory[]
   adminUserRoles AdminUserRole[]
+  appRoles       UserAppRole[]
 
   @@index([role])
   @@index([heroStudioUserId])
@@ -3225,6 +3259,48 @@ model PlatformSetting {
   updatedAt       DateTime @updatedAt
 
   @@index([category])
+}
+
+model UserAppRole {
+  id         String    @id @default(cuid())
+  userId     String
+  role       AppRole
+  shopId     String?
+  assignedBy String?
+  assignedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role, shopId])
+  @@index([userId])
+  @@index([shopId])
+  @@index([role])
+  @@index([revokedAt])
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorId      String?
+  action       String
+  targetUserId String?
+  targetType   String?
+  targetId     String?
+  category     String?
+  severity     String?
+  metadata     Json?
+  ipHash       String?
+  createdAt    DateTime @default(now())
+
+  @@index([actorId])
+  @@index([targetUserId])
+  @@index([targetType, targetId])
+  @@index([category])
+  @@index([createdAt])
 }
 
 model AdminRole {

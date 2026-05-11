@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
+import { logAffiliatePlanChanged } from "@/lib/audit/audit-log";
+import { requireRequestPermission } from "@/lib/auth/require-permission";
 import { createPlanFromTemplate } from "@/lib/affiliate/plan-builder";
 
 const schema = z.object({ templateKey: z.string().min(2) });
 
 export async function POST(request: Request) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canManageAffiliatePlans");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
@@ -21,6 +23,13 @@ export async function POST(request: Request) {
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
   }
+
+  await logAffiliatePlanChanged({
+    actorId: allowed.user?.id,
+    targetType: "affiliate_plan",
+    targetId: result.planId,
+    metadata: { templateKey: parsed.data.templateKey },
+  });
 
   return NextResponse.json(result);
 }

@@ -14,7 +14,7 @@ const settingsSections = [
 
 export default function AdminSettingsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageShopSettings">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Settings</p>
         <h1 className="mt-3 text-4xl font-semibold">Store settings</h1>
@@ -41,4 +41,5 @@ export default function AdminSettingsPage() {
     </AdminShell>
   );
 }
+
 

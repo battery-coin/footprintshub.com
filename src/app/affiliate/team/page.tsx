@@ -8,7 +8,7 @@ import { formatBpsAsPercent } from "@/lib/money/percentage-bps";
 
 export default async function AffiliateTeamPage() {
   const activePlan = await getActiveAdminAffiliatePlan();
-  const showAdminTools = isAdmin(getCurrentUser());
+  const showAdminTools = isAdmin(await getCurrentUser());
 
   return (
     <AffiliateShell>

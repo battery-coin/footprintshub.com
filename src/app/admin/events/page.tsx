@@ -11,7 +11,7 @@ const events = [
 
 export default function AdminEventsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageSecurity">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">System</p>
@@ -32,3 +32,4 @@ export default function AdminEventsPage() {
     </AdminShell>
   );
 }
+

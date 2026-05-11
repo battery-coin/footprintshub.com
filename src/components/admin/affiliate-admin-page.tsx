@@ -2,6 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { MetricCard } from "@/components/affiliate/metric-card";
 import { ButtonLink } from "@/components/ui/button";
 import { demoAffiliateMetrics } from "@/lib/affiliate/demo-data";
+import type { PermissionKey } from "@/lib/auth/permissions";
 
 const affiliateAdminLinks = [
   ["/admin/affiliates/plans", "Plans"],
@@ -20,9 +21,17 @@ const affiliateAdminLinks = [
   ["/admin/affiliates/settings", "Settings"],
 ];
 
-export function AffiliateAdminPage({ title, children }: { title: string; children?: React.ReactNode }) {
+export function AffiliateAdminPage({
+  title,
+  children,
+  requiredPermission = "canManageAffiliatePlans",
+}: {
+  title: string;
+  children?: React.ReactNode;
+  requiredPermission?: PermissionKey;
+}) {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission={requiredPermission}>
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Affiliate admin</p>
         <h1 className="mt-3 text-3xl font-semibold">{title}</h1>

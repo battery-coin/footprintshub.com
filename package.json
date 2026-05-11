@@ -12,7 +12,8 @@
     "test": "tsx --test src/**/*.test.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "tsx prisma/seed.ts",
+    "role:bootstrap-owner": "tsx scripts/bootstrap-owner.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

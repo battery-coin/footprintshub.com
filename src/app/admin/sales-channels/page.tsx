@@ -5,7 +5,7 @@ const channels = ["FootprintsHub Online Store", "Hero Studio Marketplace", "Crea
 
 export default function AdminSalesChannelsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageShopSettings">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Catalog</p>
@@ -26,3 +26,4 @@ export default function AdminSalesChannelsPage() {
     </AdminShell>
   );
 }
+

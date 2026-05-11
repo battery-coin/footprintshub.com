@@ -11,7 +11,7 @@ const plannedCollections = [
 
 export default function AdminCollectionsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageCatalog">
       <h1 className="text-3xl font-semibold">Collections</h1>
       <p className="mt-2 text-sm text-black/55">Collections support merchandising, landing pages, and campaign embeds.</p>
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -30,3 +30,4 @@ export default function AdminCollectionsPage() {
     </AdminShell>
   );
 }
+

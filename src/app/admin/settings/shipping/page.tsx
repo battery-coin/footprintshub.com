@@ -3,7 +3,7 @@ import { SetupPanel } from "@/components/ui/setup-panel";
 
 export default function AdminShippingSettingsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageFulfillment">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Shipping</p>
         <h1 className="mt-3 text-4xl font-semibold">Shipping settings</h1>
@@ -25,4 +25,5 @@ export default function AdminShippingSettingsPage() {
     </AdminShell>
   );
 }
+
 

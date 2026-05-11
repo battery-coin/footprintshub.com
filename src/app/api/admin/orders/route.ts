@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
+import { requireRequestPermission } from "@/lib/auth/require-permission";
 
 export async function GET(request: Request) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canViewOrders");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   return NextResponse.json({ orders: [] });

@@ -9,7 +9,7 @@ const rows = [
 
 export default function AdminFulfillmentPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageFulfillment">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Operations</p>
@@ -33,3 +33,4 @@ export default function AdminFulfillmentPage() {
     </AdminShell>
   );
 }
+

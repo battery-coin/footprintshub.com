@@ -8,7 +8,7 @@ export default async function AdminDiscountDetailPage({
   const { id } = await params;
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManagePricing">
       <h1 className="text-3xl font-semibold">Discount {id}</h1>
       <div className="mt-6 rounded-lg border border-black/10 bg-white p-6">
         <p className="text-sm leading-6 text-black/60">
@@ -19,3 +19,4 @@ export default async function AdminDiscountDetailPage({
     </AdminShell>
   );
 }
+

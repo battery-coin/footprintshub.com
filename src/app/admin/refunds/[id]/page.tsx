@@ -6,7 +6,7 @@ export default async function AdminRefundDetailPage({ params }: { params: Promis
   const { id } = await params;
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageRefunds">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Refund detail</p>
         <h1 className="mt-3 text-3xl font-semibold">Refund {id}</h1>
@@ -45,3 +45,4 @@ export default async function AdminRefundDetailPage({ params }: { params: Promis
     </AdminShell>
   );
 }
+

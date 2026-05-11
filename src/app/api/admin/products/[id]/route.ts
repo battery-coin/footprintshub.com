@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
+import { logProductChanged, logPriceChanged } from "@/lib/audit/audit-log";
+import { requireRequestPermission } from "@/lib/auth/require-permission";
 import { getProductForEditor, saveProduct } from "@/lib/products/product-service";
 import { productEditorSchema } from "@/lib/products/product-validation";
 
@@ -11,8 +12,9 @@ export async function GET(
     params: Promise<{ id: string }>;
   },
 ) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canManageProducts");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   const { id } = await params;
@@ -33,8 +35,9 @@ export async function PUT(
     params: Promise<{ id: string }>;
   },
 ) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canManageProducts");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   const parsed = productEditorSchema.safeParse(await request.json().catch(() => null));
@@ -45,5 +48,7 @@ export async function PUT(
 
   const { id } = await params;
   const result = await saveProduct(parsed.data, id);
+  await logProductChanged({ actorId: allowed.user?.id, targetType: "product", targetId: id, metadata: { title: parsed.data.title } });
+  await logPriceChanged({ actorId: allowed.user?.id, targetType: "product", targetId: id, metadata: { priceCents: parsed.data.priceCents } });
   return NextResponse.json(result, { status: result.stored ? 200 : 202 });
 }

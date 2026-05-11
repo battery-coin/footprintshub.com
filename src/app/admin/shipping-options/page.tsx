@@ -3,7 +3,7 @@ import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminShippingOptionsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageFulfillment">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Regions</p>
@@ -34,3 +34,4 @@ export default function AdminShippingOptionsPage() {
     </AdminShell>
   );
 }
+

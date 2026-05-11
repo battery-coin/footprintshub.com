@@ -2,7 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 
 export default function AdminAuditLogsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canViewAuditLogs">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Security</p>
@@ -20,3 +20,4 @@ export default function AdminAuditLogsPage() {
     </AdminShell>
   );
 }
+

@@ -10,7 +10,7 @@ const items = [
 
 export default function AdminSecurityPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageSecurity">
       <h1 className="text-3xl font-semibold">Security</h1>
       <div className="mt-6 grid gap-3">
         {items.map((item) => (
@@ -22,3 +22,4 @@ export default function AdminSecurityPage() {
     </AdminShell>
   );
 }
+

@@ -8,7 +8,7 @@ export default function AdminPrintfulPage() {
   const configured = isPrintfulConfigured();
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManagePrintful">
       <div>
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
@@ -47,3 +47,4 @@ export default function AdminPrintfulPage() {
     </AdminShell>
   );
 }
+

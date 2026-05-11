@@ -9,7 +9,7 @@ export default async function AdminProductsPage() {
   const products = await getAllProductsForAdmin();
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageProducts">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Products</h1>
@@ -60,3 +60,4 @@ export default async function AdminProductsPage() {
     </AdminShell>
   );
 }
+

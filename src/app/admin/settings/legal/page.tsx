@@ -21,7 +21,7 @@ const legalRoutes = [
 
 export default function AdminLegalSettingsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageShopSettings">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Legal</p>
         <h1 className="mt-3 text-4xl font-semibold">Legal page readiness</h1>
@@ -40,4 +40,5 @@ export default function AdminLegalSettingsPage() {
     </AdminShell>
   );
 }
+
 

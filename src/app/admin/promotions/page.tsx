@@ -3,7 +3,7 @@ import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminPromotionsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManagePricing">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Revenue</p>
@@ -30,3 +30,4 @@ export default function AdminPromotionsPage() {
     </AdminShell>
   );
 }
+

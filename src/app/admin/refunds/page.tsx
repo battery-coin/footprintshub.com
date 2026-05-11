@@ -4,7 +4,7 @@ import { Timeline } from "@/components/ui/timeline";
 
 export default function AdminRefundsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageRefunds">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Refunds</p>
         <h1 className="mt-3 text-4xl font-semibold">Refund review</h1>
@@ -36,4 +36,5 @@ export default function AdminRefundsPage() {
     </AdminShell>
   );
 }
+
 

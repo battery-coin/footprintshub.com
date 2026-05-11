@@ -3,7 +3,7 @@ import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminTaxPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageTax">
       <h1 className="text-3xl font-semibold">Tax</h1>
       <div className="mt-6 rounded-lg border border-black/10 bg-white p-6">
         <p className="text-sm leading-6 text-black/60">
@@ -22,3 +22,4 @@ export default function AdminTaxPage() {
     </AdminShell>
   );
 }
+

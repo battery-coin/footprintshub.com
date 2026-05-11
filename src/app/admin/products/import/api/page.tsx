@@ -4,7 +4,7 @@ import { ProductEditor } from "@/components/admin/products/ProductEditor";
 
 export default function ProductApiImportPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageProducts">
       <div className="mb-6">
         <Link href="/admin/products/import" className="text-sm font-medium underline">
           Back to import
@@ -14,3 +14,4 @@ export default function ProductApiImportPage() {
     </AdminShell>
   );
 }
+

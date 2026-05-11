@@ -3,7 +3,7 @@ import { EditRowLink } from "@/components/admin/edit-row-link";
 
 export default function AdminRegionsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageTax">
       <div className="grid gap-6">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Markets</p>
@@ -27,3 +27,4 @@ export default function AdminRegionsPage() {
     </AdminShell>
   );
 }
+

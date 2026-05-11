@@ -16,8 +16,9 @@ export default async function AdminProductEditPage({
   }
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageProducts">
       <ProductEditor mode="edit" product={product} />
     </AdminShell>
   );
 }
+

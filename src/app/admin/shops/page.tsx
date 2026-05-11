@@ -2,7 +2,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 
 export default function AdminShopsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageRoles">
       <h1 className="text-3xl font-semibold">Shops</h1>
       <div className="mt-6 rounded-lg border border-black/10 bg-white p-6">
         <p className="font-medium">FootprintsHub</p>
@@ -11,3 +11,4 @@ export default function AdminShopsPage() {
     </AdminShell>
   );
 }
+

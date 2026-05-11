@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AdminNewDiscountPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManagePricing">
       <h1 className="text-3xl font-semibold">New discount</h1>
       <form className="mt-6 grid max-w-2xl gap-4 rounded-lg border border-black/10 bg-white p-5">
         <Input placeholder="Code" />
@@ -18,3 +18,4 @@ export default function AdminNewDiscountPage() {
     </AdminShell>
   );
 }
+

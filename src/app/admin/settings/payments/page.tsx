@@ -3,7 +3,7 @@ import { SetupPanel } from "@/components/ui/setup-panel";
 
 export default function AdminPaymentSettingsPage() {
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canViewFunds">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Payments</p>
         <h1 className="mt-3 text-4xl font-semibold">Payment settings</h1>
@@ -26,4 +26,5 @@ export default function AdminPaymentSettingsPage() {
     </AdminShell>
   );
 }
+
 

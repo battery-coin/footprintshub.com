@@ -6,7 +6,7 @@ export default async function AdminCustomerDetailPage({ params }: { params: Prom
   const { id } = await params;
 
   return (
-    <AdminShell>
+    <AdminShell requiredPermission="canManageCustomers">
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Customer detail</p>
         <h1 className="mt-3 text-3xl font-semibold">Customer {id}</h1>
@@ -46,3 +46,4 @@ export default async function AdminCustomerDetailPage({ params }: { params: Prom
     </AdminShell>
   );
 }
+

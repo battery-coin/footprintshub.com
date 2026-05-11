@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
+import { logSecuritySettingChanged } from "@/lib/audit/audit-log";
+import { requireRequestPermission } from "@/lib/auth/require-permission";
 import { getDefaultShopId, getSettingsByCategory, setShopSetting } from "@/lib/settings/settings-service";
 
 const settingSchema = z.object({
@@ -11,8 +12,9 @@ const settingSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canManageShopSettings");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   const url = new URL(request.url);
@@ -24,8 +26,9 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  const allowed = await requireRequestPermission(request, "canManageShopSettings");
+  if (!allowed.ok) {
+    return allowed.response;
   }
 
   const parsed = settingSchema.safeParse(await request.json().catch(() => null));
@@ -41,6 +44,15 @@ export async function PUT(request: Request) {
     value: parsed.data.value as Prisma.InputJsonValue,
     category: parsed.data.category,
   });
+
+  if (parsed.data.category === "security") {
+    await logSecuritySettingChanged({
+      actorId: allowed.user?.id,
+      targetType: "shop_setting",
+      targetId: parsed.data.key,
+      metadata: { shopId, key: parsed.data.key },
+    });
+  }
 
   return NextResponse.json({ ok: true, shopId, ...result });
 }
