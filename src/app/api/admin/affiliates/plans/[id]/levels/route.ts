@@ -1,22 +1,7 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
 import { getAdminAffiliatePlan, updatePlanLevels } from "@/lib/affiliate/plan-builder";
-
-const levelSchema = z.object({
-  levelDepth: z.coerce.number().int().min(0).max(20),
-  label: z.string().min(1).max(80),
-  enabled: z.boolean(),
-  commissionType: z.enum(["percentage", "fixed", "percentage_plus_fixed", "store_credit"]),
-  percentageBps: z.coerce.number().int().min(0).max(10000).optional(),
-  fixedCents: z.coerce.number().int().min(0).optional(),
-  commissionBase: z.enum(["order_subtotal", "product_subtotal", "item_subtotal", "direct_commission", "leg_volume", "weaker_leg_volume", "matrix_level_volume", "gross_margin"]),
-  maxPerOrderCents: z.coerce.number().int().min(0).optional(),
-  maxPerMonthCents: z.coerce.number().int().min(0).optional(),
-  sortOrder: z.coerce.number().int().default(0),
-});
-
-const schema = z.object({ levels: z.array(levelSchema).min(1).max(25) });
+import { levelsPayloadSchema } from "@/lib/affiliate/plan-level-validation";
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
@@ -33,7 +18,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const parsed = levelsPayloadSchema.safeParse(await request.json().catch(() => null));
 
   if (!parsed.success) {
     return NextResponse.json({ error: "Invalid level editor payload." }, { status: 400 });

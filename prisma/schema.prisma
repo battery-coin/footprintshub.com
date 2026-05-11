@@ -3200,16 +3200,31 @@ model IdempotencyKey {
 }
 
 model ShopSetting {
-  id        String   @id @default(cuid())
-  shopId    String
-  key       String
-  value     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String   @id @default(cuid())
+  shopId          String
+  key             String
+  value           Json
+  category        String   @default("general")
+  updatedByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@unique([shopId, key])
+  @@index([shopId, category])
+}
+
+model PlatformSetting {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  value           Json
+  category        String   @default("general")
+  updatedByUserId String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
 }
 
 model AdminRole {

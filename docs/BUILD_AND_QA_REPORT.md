@@ -115,3 +115,22 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 - `/admin/products/new` and `/admin/products/[id]` can upload image files to R2 when Railway has the `CLOUDFLARE_R2_*` variables configured.
 - SVG uploads are intentionally blocked.
 - Product media URL fallback remains available.
+
+## Admin Affiliate Control Pass - 2026-05-11
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npx prisma format` | pass | Formatted schema after settings model changes. |
+| `npx prisma validate` | pass | Prisma schema is valid. Initial parallel run timed out, standalone rerun passed. |
+| `npx prisma generate` | pass | Prisma Client generated. |
+| `npm test` | pass | 63 tests passed. |
+| `npm run lint` | pass | ESLint passed. |
+| `npm run typecheck` | pass | TypeScript check passed after tightening JSON settings validation. |
+| `npm run build` | pass | Next.js production build passed and generated 130 routes/pages. |
+
+### Notes
+
+- Added active affiliate plan API aliases.
+- Repaired `/admin/affiliates/levels` to edit the active plan.
+- Added missing `/admin/refunds/[id]` and `/admin/customers/[id]` routes.
+- Added `ShopSetting` category/updater fields and `PlatformSetting`; Neon needs a reviewed migration before these DB changes are live.

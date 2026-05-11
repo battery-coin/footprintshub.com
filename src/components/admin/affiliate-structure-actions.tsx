@@ -49,7 +49,7 @@ export function UseStructureTemplateButton({ templateKey }: { templateKey: strin
   );
 }
 
-export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
+export function PlanLevelsEditor({ plan, endpoint }: { plan: AdminAffiliatePlanView; endpoint?: string }) {
   const [levels, setLevels] = useState<LevelRow[]>(plan.levels);
   const [message, setMessage] = useState("");
 
@@ -59,7 +59,7 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
 
   async function saveLevels() {
     setMessage("Saving level labels and percentages...");
-    const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/levels`, {
+    const response = await fetch(endpoint ?? `/api/admin/affiliates/plans/${plan.id}/levels`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ levels }),

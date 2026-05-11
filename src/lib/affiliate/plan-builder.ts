@@ -92,6 +92,24 @@ export async function getAdminAffiliatePlan(id: string): Promise<AdminAffiliateP
   }
 }
 
+export async function getActiveAdminAffiliatePlan(): Promise<AdminAffiliatePlanView> {
+  if (!hasDatabaseUrl()) {
+    return getFallbackPlan("unilevel", "footprintshub-7-level");
+  }
+
+  try {
+    const plan = await getPrisma().affiliatePlan.findFirst({
+      where: { status: "active" },
+      include: { levels: { orderBy: [{ sortOrder: "asc" }, { levelDepth: "asc" }] } },
+      orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+    });
+
+    return plan ? mapPlan(plan) : getFallbackPlan("unilevel", "footprintshub-7-level");
+  } catch {
+    return getFallbackPlan("unilevel", "footprintshub-7-level");
+  }
+}
+
 export async function createPlanFromTemplate(templateKey: string) {
   const template = getAffiliateStructureTemplateByKey(templateKey);
 

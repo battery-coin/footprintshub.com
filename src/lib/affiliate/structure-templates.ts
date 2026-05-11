@@ -66,14 +66,14 @@ export type AffiliateStructureTemplate = {
 };
 
 export const unilevelDefaultLevels: StructureLevelTemplate[] = [
-  { levelDepth: 0, label: "Direct Affiliate", enabled: true, commissionType: "percentage", percentageBps: 1000, commissionBase: "product_subtotal", sortOrder: 0 },
-  { levelDepth: 1, label: "Parent Ambassador", enabled: true, commissionType: "percentage", percentageBps: 200, commissionBase: "product_subtotal", sortOrder: 1 },
-  { levelDepth: 2, label: "Grandparent Ambassador", enabled: true, commissionType: "percentage", percentageBps: 150, commissionBase: "product_subtotal", sortOrder: 2 },
-  { levelDepth: 3, label: "Third-Level Ambassador", enabled: true, commissionType: "percentage", percentageBps: 100, commissionBase: "product_subtotal", sortOrder: 3 },
-  { levelDepth: 4, label: "Fourth-Level Ambassador", enabled: true, commissionType: "percentage", percentageBps: 75, commissionBase: "product_subtotal", sortOrder: 4 },
-  { levelDepth: 5, label: "Fifth-Level Ambassador", enabled: true, commissionType: "percentage", percentageBps: 50, commissionBase: "product_subtotal", sortOrder: 5 },
-  { levelDepth: 6, label: "Sixth-Level Ambassador", enabled: true, commissionType: "percentage", percentageBps: 25, commissionBase: "product_subtotal", sortOrder: 6 },
-  { levelDepth: 7, label: "Seventh-Level Ambassador", enabled: true, commissionType: "percentage", percentageBps: 25, commissionBase: "product_subtotal", sortOrder: 7 },
+  { levelDepth: 0, label: "Direct affiliate", enabled: true, commissionType: "percentage", percentageBps: 1000, commissionBase: "product_subtotal", sortOrder: 0 },
+  { levelDepth: 1, label: "Parent ambassador", enabled: true, commissionType: "percentage", percentageBps: 200, commissionBase: "product_subtotal", sortOrder: 1 },
+  { levelDepth: 2, label: "Grandparent ambassador", enabled: true, commissionType: "percentage", percentageBps: 150, commissionBase: "product_subtotal", sortOrder: 2 },
+  { levelDepth: 3, label: "Third-level ambassador", enabled: true, commissionType: "percentage", percentageBps: 100, commissionBase: "product_subtotal", sortOrder: 3 },
+  { levelDepth: 4, label: "Fourth-level ambassador", enabled: true, commissionType: "percentage", percentageBps: 75, commissionBase: "product_subtotal", sortOrder: 4 },
+  { levelDepth: 5, label: "Fifth-level ambassador", enabled: true, commissionType: "percentage", percentageBps: 50, commissionBase: "product_subtotal", sortOrder: 5 },
+  { levelDepth: 6, label: "Sixth-level ambassador", enabled: true, commissionType: "percentage", percentageBps: 25, commissionBase: "product_subtotal", sortOrder: 6 },
+  { levelDepth: 7, label: "Seventh-level ambassador", enabled: true, commissionType: "percentage", percentageBps: 25, commissionBase: "product_subtotal", sortOrder: 7 },
 ];
 
 export const matrixDefaultLevels: StructureLevelTemplate[] = [

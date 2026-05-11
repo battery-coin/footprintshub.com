@@ -2,12 +2,12 @@ import { AffiliateShell } from "@/components/affiliate/affiliate-shell";
 import { ButtonLink } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getCurrentUser, isAdmin } from "@/lib/auth/roles";
-import { getFallbackPlan } from "@/lib/affiliate/plan-builder";
+import { getActiveAdminAffiliatePlan } from "@/lib/affiliate/plan-builder";
 import { getStructureEngineNotice } from "@/lib/affiliate/structure-templates";
 import { formatBpsAsPercent } from "@/lib/money/percentage-bps";
 
-export default function AffiliateTeamPage() {
-  const activePlan = getFallbackPlan("unilevel", "footprintshub-7-level");
+export default async function AffiliateTeamPage() {
+  const activePlan = await getActiveAdminAffiliatePlan();
   const showAdminTools = isAdmin(getCurrentUser());
 
   return (
@@ -33,8 +33,8 @@ export default function AffiliateTeamPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <ButtonLink href="/admin/affiliates/plans" variant="secondary">Manage Plans</ButtonLink>
             <ButtonLink href="/admin/affiliates/structures" variant="secondary">Choose Structure</ButtonLink>
-            <ButtonLink href="/admin/affiliates/plans/footprintshub-7-level/levels" variant="secondary">Edit Active Plan Levels</ButtonLink>
-            <ButtonLink href="/admin/affiliates/plans/footprintshub-7-level/preview" variant="secondary">Active Plan Preview</ButtonLink>
+            <ButtonLink href={`/admin/affiliates/plans/${activePlan.id}/levels`} variant="secondary">Edit Active Plan Levels</ButtonLink>
+            <ButtonLink href={`/admin/affiliates/plans/${activePlan.id}/preview`} variant="secondary">Active Plan Preview</ButtonLink>
           </div>
         </section>
       ) : null}
