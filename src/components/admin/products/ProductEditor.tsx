@@ -245,7 +245,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     formData.append("productSlug", draft.slug || slugifyProductTitle(draft.title || "product"));
     formData.append("altText", draft.title || mediaFile.name);
 
-    const response = await fetch(`/api/admin/products/media/upload${adminQuery}`, {
+    const response = await fetch(`/api/admin/product-media/upload${adminQuery}`, {
       method: "POST",
       body: formData,
     });

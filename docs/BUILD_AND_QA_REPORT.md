@@ -106,10 +106,12 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 | `npm run lint` | pass | ESLint passed. |
 | `npm run typecheck` | pass | TypeScript check passed. |
 | `npm run build` | pass | Next.js production build passed and generated 126 static pages. |
+| Live `/api/admin/products/media/upload` check | issue | Railway returned 404 for this path after deploy, likely because it sits under the dynamic products route group. |
+| Upload endpoint path update | fixed | Added `/api/admin/product-media/upload` and updated the editor/docs to use the non-conflicting route. |
 
 ### R2 Notes
 
-- `/api/admin/products/media/upload` is available as the server-side product media upload endpoint.
+- `/api/admin/product-media/upload` is available as the server-side product media upload endpoint.
 - `/admin/products/new` and `/admin/products/[id]` can upload image files to R2 when Railway has the `CLOUDFLARE_R2_*` variables configured.
 - SVG uploads are intentionally blocked.
 - Product media URL fallback remains available.

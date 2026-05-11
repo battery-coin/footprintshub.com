@@ -10,7 +10,7 @@ The product editor supports Cloudflare R2 image uploads, image/media URLs, alt t
 
 Direct binary upload is now implemented through a server-only Cloudflare R2 route:
 
-- `POST /api/admin/products/media/upload`
+- `POST /api/admin/product-media/upload`
 - Uses the existing `ADMIN_SECRET` gate.
 - Accepts multipart form data with an image file.
 - Uploads to R2 using the S3-compatible API.

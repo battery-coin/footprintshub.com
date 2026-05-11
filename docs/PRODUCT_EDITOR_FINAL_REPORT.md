@@ -34,7 +34,7 @@ Extended Product, ProductVariant, ProductMedia, TaxClass, Shop, Category, and Co
 - `GET /api/admin/products/import/jobs`
 - `GET /api/admin/products/import/jobs/[id]`
 - `GET /api/admin/products/export`
-- `GET/POST /api/admin/products/media/upload`
+- `GET/POST /api/admin/product-media/upload`
 
 ## Scaffolded Items
 

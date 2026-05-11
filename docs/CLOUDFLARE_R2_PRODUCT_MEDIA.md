@@ -9,8 +9,8 @@ Cloudflare R2 product image upload is implemented for the admin product editor.
 Implemented pieces:
 
 - Server-only R2 client in `src/lib/storage/r2.ts`
-- Admin upload route at `POST /api/admin/products/media/upload`
-- Setup/status route at `GET /api/admin/products/media/upload`
+- Admin upload route at `POST /api/admin/product-media/upload`
+- Setup/status route at `GET /api/admin/product-media/upload`
 - Image type and file-size validation
 - Product-scoped object keys under `products/{slug}/{year}/{month}/...`
 - Product editor upload control in `/admin/products/new` and `/admin/products/[id]`
