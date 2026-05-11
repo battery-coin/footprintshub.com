@@ -18,6 +18,7 @@ Date: 2026-05-10
 - Added organization, badges, category, collection, vendor, tags, and SEO.
 - Added CSV import, API import, CSV template, and CSV export.
 - Added server-side validation and persistence service.
+- Added Cloudflare R2 image upload support for product media.
 
 ## Schema Changes
 
@@ -33,10 +34,10 @@ Extended Product, ProductVariant, ProductMedia, TaxClass, Shop, Category, and Co
 - `GET /api/admin/products/import/jobs`
 - `GET /api/admin/products/import/jobs/[id]`
 - `GET /api/admin/products/export`
+- `GET/POST /api/admin/products/media/upload`
 
 ## Scaffolded Items
 
-- Direct Cloudflare R2 upload is not implemented.
 - Complex custom API field-mapping UI is not implemented.
 - Full production tax calculation is not implemented.
 - Advanced bulk variant editing is not implemented.
@@ -46,6 +47,7 @@ Extended Product, ProductVariant, ProductMedia, TaxClass, Shop, Category, and Co
 - Generate and review a Prisma migration.
 - Apply migration to Neon only after review.
 - Use `ADMIN_SECRET` or future auth/session for write-capable admin routes.
+- Add Cloudflare R2 variables to Railway before product image uploads.
 - Configure Printful before enabling Printful fulfillment.
 
 ## QA

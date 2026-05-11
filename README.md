@@ -13,7 +13,7 @@ This branch pivots away from Magento and builds a lighter open-source commerce s
 - Stripe Checkout
 - Native affiliate and ambassador commissions
 - Railway hosting
-- Cloudflare DNS, SSL, WAF, and future wildcard shop routing
+- Cloudflare DNS, SSL, WAF, R2 product media, and future wildcard shop routing
 
 ## Current Scope
 
@@ -58,6 +58,8 @@ Affiliate commissions are calculated server-side after paid orders. The program 
 
 ## Product Management
 
-The admin product editor at `/admin/products/new` and `/admin/products/[id]` supports Shopify-style product setup: media URLs, variants/options, pricing, cost and margin, inventory, tax/shipping/fulfillment settings, Printful mapping fields, scheduled discounts, SEO, CSV import, API import preview/import, and CSV export.
+The admin product editor at `/admin/products/new` and `/admin/products/[id]` supports Shopify-style product setup: Cloudflare R2 image upload, media URLs, variants/options, pricing, cost and margin, inventory, tax/shipping/fulfillment settings, Printful mapping fields, scheduled discounts, SEO, CSV import, API import preview/import, and CSV export.
 
 Before using the editor against Neon, generate and review a Prisma migration for the product schema additions, then apply it to the target database.
+
+For product media uploads, configure the `CLOUDFLARE_R2_*` Railway variables described in `docs/CLOUDFLARE_R2_PRODUCT_MEDIA.md`.

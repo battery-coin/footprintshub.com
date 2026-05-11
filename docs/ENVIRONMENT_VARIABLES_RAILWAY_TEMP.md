@@ -56,6 +56,13 @@ PRINTFUL_API_KEY=
 PRINTFUL_STORE_ID=
 PRINTFUL_API_BASE_URL=https://api.printful.com
 PRINTFUL_WEBHOOK_SECRET=
+CLOUDFLARE_R2_ACCOUNT_ID=
+CLOUDFLARE_R2_ACCESS_KEY_ID=
+CLOUDFLARE_R2_SECRET_ACCESS_KEY=
+CLOUDFLARE_R2_BUCKET=
+CLOUDFLARE_R2_PUBLIC_URL=
+CLOUDFLARE_R2_ENDPOINT=
+CLOUDFLARE_R2_MAX_UPLOAD_MB=8
 COINBASE_BUSINESS_API_KEY=
 COINBASE_WEBHOOK_SECRET=
 RESEND_API_KEY=
@@ -68,4 +75,3 @@ SMTP_URL=
 - Never commit `.env`.
 - Never prefix server secrets with `NEXT_PUBLIC_`.
 - `DATABASE_URL`, Stripe secrets, Printful keys, Coinbase keys, email keys, Railway tokens, Cloudflare tokens, and private keys must stay server-side.
-

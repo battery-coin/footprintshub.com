@@ -83,6 +83,9 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
   const [apiUrl, setApiUrl] = useState("");
   const [importResult, setImportResult] = useState("");
   const [dirty, setDirty] = useState(false);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaUploadState, setMediaUploadState] = useState<SaveState>("idle");
+  const [mediaUploadMessage, setMediaUploadMessage] = useState("");
 
   const productId = product?.id ?? createdId;
   const profitCents = calculateProfitCents(draft.priceCents, draft.costCents);
@@ -227,6 +230,62 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     setImportResult(response.ok ? `${commit ? "Imported" : "Previewed"} ${json.total ?? 0} API products. ${json.imported ?? 0} saved.` : json.error);
   }
 
+  async function uploadMediaFile() {
+    if (!mediaFile) {
+      setMediaUploadState("error");
+      setMediaUploadMessage("Choose an image first.");
+      return;
+    }
+
+    setMediaUploadState("saving");
+    setMediaUploadMessage("");
+
+    const formData = new FormData();
+    formData.append("file", mediaFile);
+    formData.append("productSlug", draft.slug || slugifyProductTitle(draft.title || "product"));
+    formData.append("altText", draft.title || mediaFile.name);
+
+    const response = await fetch(`/api/admin/products/media/upload${adminQuery}`, {
+      method: "POST",
+      body: formData,
+    });
+    const json = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setMediaUploadState("error");
+      setMediaUploadMessage(json.missing?.length ? `${json.error} Missing: ${json.missing.join(", ")}` : json.error ?? "Image upload failed.");
+      return;
+    }
+
+    const uploadedUrl = json.media?.url as string | undefined;
+
+    if (!uploadedUrl) {
+      setMediaUploadState("error");
+      setMediaUploadMessage("Upload finished without a usable public URL.");
+      return;
+    }
+
+    setDraft((current) => ({
+      ...current,
+      imageUrl: current.imageUrl || uploadedUrl,
+      media: [
+        ...current.media,
+        {
+          url: uploadedUrl,
+          altText: json.media?.altText || current.title || mediaFile.name,
+          mediaType: "image",
+          variantSku: "",
+          isPrimary: current.media.length === 0,
+          sortOrder: current.media.length,
+        },
+      ],
+    }));
+    setMediaUploadState("saved");
+    setMediaFile(null);
+    setMediaUploadMessage("Image uploaded to Cloudflare R2.");
+    setDirty(true);
+  }
+
   return (
     <div className="pb-24">
       <div className="sticky top-0 z-20 -mx-4 border-b border-black/10 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
@@ -293,8 +352,25 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
             </div>
           </Section>
 
-          <Section title="Media" detail="Use URL-based media now; connect Cloudflare R2 later for direct uploads.">
+          <Section title="Media" detail="Upload product images to Cloudflare R2 when configured, or add a public image URL as a fallback.">
             <div className="grid gap-4">
+              <div className="rounded-lg border border-dashed border-black/15 bg-black/[0.02] p-4">
+                <div className="grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
+                  <Field label="Cloudflare R2 image upload">
+                    <Input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                      onChange={(event) => setMediaFile(event.target.files?.[0] ?? null)}
+                    />
+                  </Field>
+                  <Button type="button" variant="secondary" onClick={uploadMediaFile} disabled={mediaUploadState === "saving"}>
+                    <Upload size={16} /> Upload to R2
+                  </Button>
+                </div>
+                <p className={`mt-2 text-sm ${mediaUploadState === "error" ? "text-red-700" : "text-black/55"}`}>
+                  {mediaUploadMessage || "Allowed: JPG, PNG, WebP, GIF, AVIF. Configure R2 variables in Railway before production uploads."}
+                </p>
+              </div>
               <Field label="Primary image URL">
                 <Input value={draft.imageUrl} onChange={(event) => update("imageUrl", event.target.value)} placeholder="https://..." />
               </Field>

@@ -20,6 +20,13 @@
 - `PRINTFUL_STORE_ID`
 - `PRINTFUL_API_BASE_URL`
 - `PRINTFUL_WEBHOOK_SECRET`
+- `CLOUDFLARE_R2_ACCOUNT_ID`
+- `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `CLOUDFLARE_R2_BUCKET`
+- `CLOUDFLARE_R2_PUBLIC_URL`
+- `CLOUDFLARE_R2_ENDPOINT`
+- `CLOUDFLARE_R2_MAX_UPLOAD_MB`
 - `COINBASE_BUSINESS_API_KEY`
 - `COINBASE_WEBHOOK_SECRET`
 - `NEXT_PUBLIC_ENABLE_CRYPTO_CHECKOUT`
@@ -44,6 +51,6 @@ npm run start
 - Do not commit `.env` or production credentials.
 - Configure Neon before enabling persistent writes.
 - Configure Stripe webhook endpoint to Railway production URL.
+- Configure Cloudflare R2 before using product image uploads in admin.
 - Configure Cloudflare DNS, SSL, WAF, and caching in front of Railway.
 - Use wildcard DNS later for Hero Studio creator subdomains.
-
