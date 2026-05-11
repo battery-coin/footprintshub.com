@@ -74,3 +74,21 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 - Unilevel is the functional launch payout engine.
 - Binary and Matrix are configurable, persisted, previewable, and explicitly marked scaffolded until their placement/volume engines are completed and tested.
 - Requested admin table row edit actions were added across products, categories, collections, inventory, Printful, fulfillment, shipping options, promotions, sales channels, regions, tax, and affiliates.
+
+## Shopify-Like Product Editor - 2026-05-10
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npx prisma format` | pass | Product editor schema additions formatted. |
+| `npx prisma validate` | pass | Prisma schema is valid. |
+| `npx prisma generate` | pass | Prisma Client generated successfully. |
+| `npm test` | pass | 58 tests passed, including product import, margin, and scheduled discount helpers. |
+| `npm run lint` | pass | ESLint passed. |
+| `npm run typecheck` | pass | TypeScript check passed. |
+| `npm run build` | pass | Next.js production build passed and generated 125 static pages. |
+
+### Notes
+
+- `/admin/products/new` and `/admin/products/[id]` now use the reusable `ProductEditor`.
+- Product persistence works when `DATABASE_URL` and the reviewed Prisma migration are applied.
+- Direct Cloudflare R2 image upload remains future work; the MVP editor supports image URLs and ProductMedia records.

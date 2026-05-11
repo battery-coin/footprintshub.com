@@ -89,6 +89,48 @@ enum ProductVisibility {
   direct_link
 }
 
+enum ProductFulfillmentType {
+  manual
+  printful
+  digital
+  internal
+  mixed
+}
+
+enum ProductMediaType {
+  image
+  video
+  model
+}
+
+enum DiscountScheduleType {
+  percentage
+  fixed
+  sale_price
+}
+
+enum ImportJobType {
+  csv
+  api
+  manual
+}
+
+enum ImportJobStatus {
+  uploaded
+  mapping
+  processing
+  completed
+  failed
+  partially_completed
+}
+
+enum ImportJobRowStatus {
+  pending
+  imported
+  failed
+  skipped
+}
+
 enum RelatedProductType {
   related
   upsell
@@ -730,6 +772,8 @@ model Shop {
   marketingAssets                 MarketingAsset[]
   affiliateNotifications          AffiliateNotification[]
   affiliateAuditLogs              AffiliateAuditLog[]
+  discountSchedules               DiscountSchedule[]
+  importJobs                      ImportJob[]
 
   @@index([ownerUserId])
 }
@@ -788,7 +832,7 @@ model Brand {
 }
 
 model Product {
-  id                    String            @id @default(cuid())
+  id                    String                 @id @default(cuid())
   shopId                String
   brandId               String?
   taxClassId            String?
@@ -799,34 +843,54 @@ model Product {
   shortDescription      String?
   productType           ProductType
   franchise             Franchise
-  status                ProductStatus     @default(draft)
-  visibility            ProductVisibility @default(visible)
+  status                ProductStatus          @default(draft)
+  visibility            ProductVisibility      @default(visible)
   priceCents            Int
   compareAtPriceCents   Int?
-  currency              String            @default("USD")
+  costCents             Int?
+  barcode               String?
+  currency              String                 @default("USD")
   sku                   String?
-  inventoryQuantity     Int               @default(0)
-  trackInventory        Boolean           @default(true)
-  allowBackorder        Boolean           @default(false)
+  vendor                String?
+  tags                  String[]               @default([])
+  inventoryQuantity     Int                    @default(0)
+  trackInventory        Boolean                @default(true)
+  allowBackorder        Boolean                @default(false)
   lowStockThreshold     Int?
   imageUrl              String?
-  galleryUrls           String[]          @default([])
+  galleryUrls           String[]               @default([])
   seoTitle              String?
   seoDescription        String?
-  metaKeywords          String[]          @default([])
-  isFeatured            Boolean           @default(false)
-  isLimitedEdition      Boolean           @default(false)
+  canonicalUrl          String?
+  metaKeywords          String[]               @default([])
+  isFeatured            Boolean                @default(false)
+  isLimitedEdition      Boolean                @default(false)
   preorderStatus        String?
   preorderReleaseAt     DateTime?
-  requiresShipping      Boolean           @default(true)
-  digitalUnlockIncluded Boolean           @default(false)
-  tokenGated            Boolean           @default(false)
+  requiresShipping      Boolean                @default(true)
+  weightValue           Decimal?
+  weightUnit            String?
+  lengthValue           Decimal?
+  widthValue            Decimal?
+  heightValue           Decimal?
+  dimensionUnit         String?
+  taxable               Boolean                @default(true)
+  fulfillmentType       ProductFulfillmentType @default(manual)
+  printfulProductId     String?
+  printfulSyncProductId String?
+  digitalUnlockIncluded Boolean                @default(false)
+  tokenGated            Boolean                @default(false)
   tokenGateRule         Json?
-  isRandomized          Boolean           @default(false)
+  isRandomized          Boolean                @default(false)
+  blindBoxEligible      Boolean                @default(false)
+  boosterPackEligible   Boolean                @default(false)
+  affiliateEligible     Boolean                @default(true)
   oddsDisclosureUrl     String?
+  publishedAt           DateTime?
+  scheduledPublishAt    DateTime?
   metadata              Json?
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
 
   shop               Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
   brand              Brand?                @relation(fields: [brandId], references: [id])
@@ -850,6 +914,8 @@ model Product {
   commissionRules    CommissionRule[]
   affiliateCoupons   AffiliateCoupon[]
   inventoryLedgers   InventoryLedger[]
+  discountSchedules  DiscountSchedule[]
+  importRows         ImportJobRow[]
 
   @@unique([shopId, slug])
   @@index([shopId])
@@ -896,21 +962,35 @@ model ProductOptionValue {
 }
 
 model ProductVariant {
-  id                String   @id @default(cuid())
-  productId         String
-  title             String
-  sku               String?
-  priceCents        Int?
-  inventoryQuantity Int      @default(0)
-  trackInventory    Boolean  @default(true)
-  allowBackorder    Boolean  @default(false)
-  lowStockThreshold Int?
-  attributes        Json?
-  metadata          Json?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  productId             String
+  title                 String
+  sku                   String?
+  barcode               String?
+  optionValues          Json?
+  priceCents            Int?
+  compareAtPriceCents   Int?
+  costCents             Int?
+  inventoryQuantity     Int      @default(0)
+  trackInventory        Boolean  @default(true)
+  allowBackorder        Boolean  @default(false)
+  lowStockThreshold     Int?
+  weightValue           Decimal?
+  weightUnit            String?
+  taxable               Boolean?
+  imageUrl              String?
+  printfulVariantId     String?
+  printfulSyncVariantId String?
+  active                Boolean  @default(true)
+  sortOrder             Int      @default(0)
+  attributes            Json?
+  metadata              Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   product               Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media                 ProductMedia[]
+  discountSchedules     DiscountSchedule[]
   cartItems             CartItem[]
   orderItems            OrderItem[]
   wishlistItems         WishlistItem[]
@@ -922,19 +1002,23 @@ model ProductVariant {
 }
 
 model ProductMedia {
-  id        String   @id @default(cuid())
+  id        String           @id @default(cuid())
   productId String
+  variantId String?
   url       String
   altText   String?
-  mediaType String   @default("image")
-  sortOrder Int      @default(0)
+  mediaType ProductMediaType @default(image)
+  sortOrder Int              @default(0)
+  isPrimary Boolean          @default(false)
   metadata  Json?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
 
   @@index([productId, sortOrder])
+  @@index([variantId])
 }
 
 model Category {
@@ -952,10 +1036,11 @@ model Category {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  shop     Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  parent   Category?         @relation("CategoryParent", fields: [parentId], references: [id])
-  children Category[]        @relation("CategoryParent")
-  products ProductCategory[]
+  shop              Shop               @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  parent            Category?          @relation("CategoryParent", fields: [parentId], references: [id])
+  children          Category[]         @relation("CategoryParent")
+  products          ProductCategory[]
+  discountSchedules DiscountSchedule[]
 
   @@unique([shopId, slug])
   @@index([shopId, parentId])
@@ -989,8 +1074,9 @@ model Collection {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  shop     Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  products ProductCollection[]
+  shop              Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products          ProductCollection[]
+  discountSchedules DiscountSchedule[]
 
   @@unique([shopId, slug])
   @@index([shopId, active])
@@ -1007,6 +1093,78 @@ model ProductCollection {
 
   @@id([productId, collectionId])
   @@index([collectionId, sortOrder])
+}
+
+model DiscountSchedule {
+  id             String               @id @default(cuid())
+  shopId         String
+  productId      String?
+  variantId      String?
+  collectionId   String?
+  categoryId     String?
+  name           String
+  type           DiscountScheduleType
+  percentageBps  Int?
+  fixedCents     Int?
+  salePriceCents Int?
+  startsAt       DateTime
+  endsAt         DateTime
+  active         Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  shop       Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product    Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant    ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  collection Collection?     @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  category   Category?       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, active])
+  @@index([productId])
+  @@index([variantId])
+  @@index([collectionId])
+  @@index([categoryId])
+  @@index([startsAt, endsAt])
+}
+
+model ImportJob {
+  id             String          @id @default(cuid())
+  shopId         String
+  type           ImportJobType
+  status         ImportJobStatus @default(uploaded)
+  sourceName     String?
+  sourceUrl      String?
+  totalRows      Int             @default(0)
+  processedRows  Int             @default(0)
+  successRows    Int             @default(0)
+  failedRows     Int             @default(0)
+  errorReportUrl String?
+  mapping        Json?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  shop Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  rows ImportJobRow[]
+
+  @@index([shopId, status])
+}
+
+model ImportJobRow {
+  id           String             @id @default(cuid())
+  importJobId  String
+  rowNumber    Int
+  status       ImportJobRowStatus @default(pending)
+  rawData      Json
+  mappedData   Json?
+  errorMessage String?
+  productId    String?
+  createdAt    DateTime           @default(now())
+
+  importJob ImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([importJobId, rowNumber])
+  @@index([productId])
 }
 
 model RelatedProduct {
@@ -2494,15 +2652,17 @@ model InventoryLedger {
 }
 
 model TaxClass {
-  id          String   @id @default(cuid())
-  shopId      String
-  name        String
-  code        String
-  description String?
-  taxable     Boolean  @default(true)
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  shopId         String
+  name           String
+  code           String
+  description    String?
+  taxable        Boolean  @default(true)
+  defaultRateBps Int?
+  active         Boolean  @default(true)
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
   products Product[]

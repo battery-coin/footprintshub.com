@@ -14,10 +14,13 @@ The FootprintsHub commerce database is a shared Neon Postgres database with expl
 ## Catalog
 
 - `Product`: shop-scoped product with type, status, visibility, SEO, inventory, preorder, token-gating, randomized-product, and digital-unlock fields.
+- Product editor fields now include cost, barcode, vendor, tags, dimensions, taxable flag, fulfillment type, Printful mapping, affiliate eligibility, scheduled publishing, canonical URL, and badge toggles.
 - `Brand`: OpenCart-inspired manufacturer/brand model for shop-scoped filtering and landing pages.
 - `ProductOption` / `ProductOptionValue`: buyer-selectable options with required flags, price deltas, and SKU suffix support.
-- `ProductVariant`: SKU-level pricing/inventory/attributes.
-- `ProductMedia`: gallery images or future video/media assets.
+- `ProductVariant`: SKU-level pricing, cost, inventory, option values, image URL, tax flag, and Printful variant mapping.
+- `ProductMedia`: gallery images or future video/media assets with primary image and optional variant assignment.
+- `DiscountSchedule`: product, variant, category, or collection sale windows for percentage, fixed, and sale-price discounts.
+- `ImportJob` / `ImportJobRow`: CSV/API/manual product import tracking and row-level diagnostics.
 - `ProductReview`: moderated product review and rating records.
 - `Category`: hierarchical navigation and filtering.
 - `ProductCategory`: many-to-many category assignment.

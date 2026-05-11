@@ -1,18 +1,38 @@
 import { NextResponse } from "next/server";
 import { getAdminSecretFromRequest, isAdminSecretValid } from "@/lib/admin/auth";
-import { getAllProductsForAdmin } from "@/lib/catalog/products";
+import { getProductForEditor, saveProduct } from "@/lib/products/product-service";
 import { productEditorSchema } from "@/lib/products/product-validation";
-import { saveProduct } from "@/lib/products/product-service";
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{ id: string }>;
+  },
+) {
   if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  return NextResponse.json({ products: await getAllProductsForAdmin() });
+  const { id } = await params;
+  const product = await getProductForEditor(id);
+
+  if (!product) {
+    return NextResponse.json({ error: "Product not found." }, { status: 404 });
+  }
+
+  return NextResponse.json({ product });
 }
 
-export async function POST(request: Request) {
+export async function PUT(
+  request: Request,
+  {
+    params,
+  }: {
+    params: Promise<{ id: string }>;
+  },
+) {
   if (!isAdminSecretValid(getAdminSecretFromRequest(request))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
@@ -23,6 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid product payload.", issues: parsed.error.issues }, { status: 400 });
   }
 
-  const result = await saveProduct(parsed.data);
-  return NextResponse.json(result, { status: result.stored ? 201 : 202 });
+  const { id } = await params;
+  const result = await saveProduct(parsed.data, id);
+  return NextResponse.json(result, { status: result.stored ? 200 : 202 });
 }

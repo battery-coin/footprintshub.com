@@ -15,7 +15,12 @@ export default async function AdminProductsPage() {
           <h1 className="text-3xl font-semibold">Products</h1>
           <p className="mt-2 text-sm text-black/55">Seed products display until Neon is connected.</p>
         </div>
-        <ButtonLink href="/admin/products/new">New product</ButtonLink>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href="/templates/footprintshub-product-import-template.csv" variant="secondary">CSV template</ButtonLink>
+          <ButtonLink href="/admin/products/import" variant="secondary">Import products</ButtonLink>
+          <ButtonLink href="/api/admin/products/export" variant="secondary">Export CSV</ButtonLink>
+          <ButtonLink href="/admin/products/new">New product</ButtonLink>
+        </div>
       </div>
       <div className="mt-6 overflow-hidden rounded-lg border border-black/10 bg-white">
         <table className="w-full min-w-[760px] text-left text-sm">

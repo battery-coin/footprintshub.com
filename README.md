@@ -55,3 +55,9 @@ npm run prisma:seed
 The app never trusts client-side prices at checkout. Checkout routes recalculate line items from the server catalog/database before creating a Stripe Checkout Session.
 
 Affiliate commissions are calculated server-side after paid orders. The program is framed as a multi-tier affiliate and ambassador system tied only to qualified purchases, not recruiting-only compensation.
+
+## Product Management
+
+The admin product editor at `/admin/products/new` and `/admin/products/[id]` supports Shopify-style product setup: media URLs, variants/options, pricing, cost and margin, inventory, tax/shipping/fulfillment settings, Printful mapping fields, scheduled discounts, SEO, CSV import, API import preview/import, and CSV export.
+
+Before using the editor against Neon, generate and review a Prisma migration for the product schema additions, then apply it to the target database.
