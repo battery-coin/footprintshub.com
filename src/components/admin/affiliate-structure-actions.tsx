@@ -24,16 +24,21 @@ const commissionBases: CommissionBase[] = [
 export function UseStructureTemplateButton({ templateKey, structureType }: { templateKey: string; structureType?: AffiliateStructureType }) {
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [adminSecret, setAdminSecret] = useState("");
+  const [showAdminSecret, setShowAdminSecret] = useState(false);
   const router = useRouter();
 
   async function useTemplate() {
     setStatus("saving");
     setMessage("");
     try {
-      const adminSecret = new URLSearchParams(window.location.search).get("admin_secret") ?? window.localStorage.getItem("footprintshub-admin-secret");
+      const resolvedAdminSecret = adminSecret.trim() || new URLSearchParams(window.location.search).get("admin_secret") || window.localStorage.getItem("footprintshub-admin-secret") || "";
+      if (resolvedAdminSecret) {
+        window.localStorage.setItem("footprintshub-admin-secret", resolvedAdminSecret);
+      }
       const response = await fetch("/api/admin/affiliates/structures/use-template", {
         method: "POST",
-        headers: { "content-type": "application/json", ...(adminSecret ? { "x-admin-secret": adminSecret } : {}) },
+        headers: { "content-type": "application/json", ...(resolvedAdminSecret ? { "x-admin-secret": resolvedAdminSecret } : {}) },
         credentials: "same-origin",
         body: JSON.stringify({ templateKey, structureType }),
       });
@@ -41,10 +46,14 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
 
       if (!response.ok) {
         setStatus("error");
+        if (response.status === 401 || response.status === 403) {
+          setShowAdminSecret(true);
+        }
         setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
         return;
       }
 
+      setShowAdminSecret(false);
       setMessage(payload.stored === false ? "Preview created. Connect DATABASE_URL for persistence." : "Structure created. Opening settings...");
       router.push(payload.redirectTo ?? "/admin/affiliates/plans");
     } catch (error) {
@@ -56,6 +65,18 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
 
   return (
     <div className="grid gap-2">
+      {showAdminSecret ? (
+        <label className="grid gap-1 text-xs font-medium text-black/55">
+          Admin secret
+          <input
+            type="password"
+            value={adminSecret}
+            onChange={(event) => setAdminSecret(event.target.value)}
+            placeholder="Enter temporary admin secret"
+            className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
+          />
+        </label>
+      ) : null}
       <Button type="button" onClick={useTemplate} disabled={status === "saving"}>
         {status === "saving" ? "Creating..." : status === "error" ? "Try again" : "Use This Structure"}
       </Button>
