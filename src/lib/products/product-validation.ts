@@ -3,20 +3,43 @@ import { z } from "zod";
 export const productTypes = [
   "physical",
   "digital",
+  "digital_download",
+  "digital_unlock",
+  "service",
+  "subscription",
   "bundle",
   "membership",
+  "nft",
+  "nft_linked_physical",
   "preorder",
   "blind_box",
   "booster_pack",
-  "digital_unlock",
-  "service",
+  "print_on_demand",
+  "event_access",
+  "appointment",
   "donation_like_supporter_bundle",
 ] as const;
 
 export const productFranchises = ["footprints", "matrix_decoded", "hero_studio", "battery_movement", "other"] as const;
 export const productStatuses = ["draft", "active", "archived", "hidden", "sold_out"] as const;
 export const productVisibilities = ["visible", "hidden", "catalog_only", "direct_link"] as const;
-export const fulfillmentTypes = ["manual", "printful", "digital", "internal", "mixed"] as const;
+export const paymentModes = ["one_time", "recurring", "one_time_or_recurring", "free", "external"] as const;
+export const deliveryModes = ["shipped", "download", "access_grant", "service_scheduled", "subscription_access", "nft_claim", "hybrid", "none"] as const;
+export const fulfillmentTypes = [
+  "manual",
+  "printful",
+  "digital",
+  "digital_download",
+  "digital_unlock",
+  "service_delivery",
+  "subscription_access",
+  "nft_delivery",
+  "hybrid",
+  "none",
+  "internal",
+  "mixed",
+] as const;
+export const recurringIntervals = ["day", "week", "month", "year"] as const;
 
 const optionalText = z.string().trim().optional().default("");
 const optionalCents = z.number().int().min(0).optional().nullable();
@@ -45,6 +68,15 @@ export const productVariantInputSchema = z.object({
   priceCents: optionalCents,
   compareAtPriceCents: optionalCents,
   costCents: optionalCents,
+  paymentMode: z.enum(paymentModes).optional(),
+  stripePriceIdOneTime: optionalText,
+  stripePriceIdRecurring: optionalText,
+  recurringInterval: z.enum(recurringIntervals).optional().nullable(),
+  recurringIntervalCount: z.number().int().min(1).optional().nullable(),
+  trialPeriodDays: z.number().int().min(0).optional().nullable(),
+  digitalAssetId: optionalText,
+  serviceTemplateId: optionalText,
+  nftTemplateId: optionalText,
   inventoryQuantity: z.number().int().min(0).default(0),
   trackInventory: z.boolean().default(true),
   allowBackorder: z.boolean().default(false),
@@ -78,6 +110,7 @@ export const productEditorSchema = z
     description: z.string().trim().min(1, "Description is required."),
     shortDescription: optionalText,
     productType: z.enum(productTypes).default("physical"),
+    paymentMode: z.enum(paymentModes).default("one_time"),
     franchise: z.enum(productFranchises).default("footprints"),
     status: z.enum(productStatuses).default("draft"),
     visibility: z.enum(productVisibilities).default("visible"),
@@ -92,6 +125,14 @@ export const productEditorSchema = z
     allowBackorder: z.boolean().default(false),
     lowStockThreshold: z.number().int().min(0).optional().nullable(),
     requiresShipping: z.boolean().default(true),
+    deliveryMode: z.enum(deliveryModes).default("shipped"),
+    requiresScheduling: z.boolean().default(false),
+    requiresDownload: z.boolean().default(false),
+    requiresWallet: z.boolean().default(false),
+    subscriptionEligible: z.boolean().default(false),
+    nftEligible: z.boolean().default(false),
+    accessDurationDays: z.number().int().min(0).optional().nullable(),
+    termsRequired: z.boolean().default(false),
     weightValue: optionalNumberText,
     weightUnit: optionalText,
     lengthValue: optionalNumberText,
@@ -145,11 +186,28 @@ export const productEditorSchema = z
       });
     }
 
-    if (product.productType === "digital" && product.requiresShipping) {
+    const nonShippingTypes = new Set(["digital", "digital_download", "digital_unlock", "service", "subscription", "membership", "nft", "event_access", "appointment"]);
+    if (nonShippingTypes.has(product.productType) && product.requiresShipping) {
       context.addIssue({
         code: "custom",
         path: ["requiresShipping"],
-        message: "Digital products should not require shipping.",
+        message: "This product type should not require shipping by default.",
+      });
+    }
+
+    if ((product.productType === "subscription" || product.paymentMode === "recurring") && product.paymentMode === "one_time") {
+      context.addIssue({
+        code: "custom",
+        path: ["paymentMode"],
+        message: "Subscription products need recurring or one-time-or-recurring payment mode.",
+      });
+    }
+
+    if ((product.productType === "digital_download" || product.requiresDownload) && product.requiresShipping) {
+      context.addIssue({
+        code: "custom",
+        path: ["requiresShipping"],
+        message: "Digital downloads should use secure download delivery instead of shipping.",
       });
     }
 

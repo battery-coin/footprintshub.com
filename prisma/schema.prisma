@@ -28,14 +28,40 @@ enum DomainStatus {
 enum ProductType {
   physical
   digital
+  digital_download
   bundle
   membership
+  subscription
+  nft
+  nft_linked_physical
   preorder
   blind_box
   booster_pack
+  print_on_demand
+  event_access
+  appointment
   digital_unlock
   service
   donation_like_supporter_bundle
+}
+
+enum ProductPaymentMode {
+  one_time
+  recurring
+  one_time_or_recurring
+  free
+  external
+}
+
+enum ProductDeliveryMode {
+  shipped
+  download
+  access_grant
+  service_scheduled
+  subscription_access
+  nft_claim
+  hybrid
+  none
 }
 
 enum Franchise {
@@ -125,8 +151,22 @@ enum ProductFulfillmentType {
   manual
   printful
   digital
+  digital_download
+  digital_unlock
+  service_delivery
+  subscription_access
+  nft_delivery
+  hybrid
+  none
   internal
   mixed
+}
+
+enum RecurringInterval {
+  day
+  week
+  month
+  year
 }
 
 enum ProductMediaType {
@@ -201,6 +241,12 @@ enum PaymentPart {
   full
 }
 
+enum StripePaymentMode {
+  payment
+  subscription
+  setup
+}
+
 enum PaymentStatus {
   unpaid
   requires_action
@@ -263,6 +309,129 @@ enum TokenPaymentIntentStatus {
   expired
   refunded
   manual_review
+}
+
+enum DownloadAccessStatus {
+  success
+  blocked
+  expired
+  revoked
+  exhausted
+}
+
+enum DigitalAssetAccessType {
+  download
+  stream
+  license_key
+  external_link
+}
+
+enum ServiceProductType {
+  consultation
+  design
+  custom_work
+  course
+  coaching
+  event
+  other
+}
+
+enum ServiceLocationType {
+  online
+  in_person
+  hybrid
+  none
+}
+
+enum ServiceOrderStatus {
+  pending_brief
+  scheduled
+  in_progress
+  delivered
+  completed
+  cancelled
+  refunded
+}
+
+enum SubscriptionStatus {
+  incomplete
+  trialing
+  active
+  past_due
+  canceled
+  unpaid
+  paused
+}
+
+enum SubscriptionPlanStatus {
+  active
+  inactive
+  archived
+}
+
+enum SubscriptionAccessType {
+  membership
+  digital_access
+  service_retainer
+  fan_club
+  creator_club
+}
+
+enum SubscriptionEntitlementType {
+  membership_access
+  digital_library
+  service_access
+  fan_club_access
+  discount
+  other
+}
+
+enum SubscriptionEntitlementStatus {
+  active
+  inactive
+  revoked
+  expired
+}
+
+enum NFTProductType {
+  offchain_certificate
+  onchain_mint
+  claim_code
+  digital_twin
+  ordinal_placeholder
+}
+
+enum NFTChain {
+  ethereum
+  base
+  polygon
+  bitcoin_ordinal
+  other
+  none
+}
+
+enum NFTMintStatus {
+  not_minted
+  pending
+  claimed
+  minted
+  failed
+  manual
+}
+
+enum NFTEntitlementStatus {
+  pending_claim
+  claimed
+  minted
+  failed
+  revoked
+  manual
+}
+
+enum ProductBundleFulfillmentBehavior {
+  included
+  separate
+  choice
 }
 
 enum FulfillmentStatus {
@@ -935,65 +1104,75 @@ model Brand {
 }
 
 model Product {
-  id                    String                 @id @default(cuid())
-  shopId                String
-  brandId               String?
-  taxClassId            String?
-  title                 String
-  slug                  String
-  subtitle              String?
-  description           String
-  shortDescription      String?
-  productType           ProductType
-  franchise             Franchise
-  status                ProductStatus          @default(draft)
-  visibility            ProductVisibility      @default(visible)
-  priceCents            Int
-  compareAtPriceCents   Int?
-  costCents             Int?
-  barcode               String?
-  currency              String                 @default("USD")
-  sku                   String?
-  vendor                String?
-  tags                  String[]               @default([])
-  inventoryQuantity     Int                    @default(0)
-  trackInventory        Boolean                @default(true)
-  allowBackorder        Boolean                @default(false)
-  lowStockThreshold     Int?
-  imageUrl              String?
-  galleryUrls           String[]               @default([])
-  seoTitle              String?
-  seoDescription        String?
-  canonicalUrl          String?
-  metaKeywords          String[]               @default([])
-  isFeatured            Boolean                @default(false)
-  isLimitedEdition      Boolean                @default(false)
-  preorderStatus        String?
-  preorderReleaseAt     DateTime?
-  requiresShipping      Boolean                @default(true)
-  weightValue           Decimal?
-  weightUnit            String?
-  lengthValue           Decimal?
-  widthValue            Decimal?
-  heightValue           Decimal?
-  dimensionUnit         String?
-  taxable               Boolean                @default(true)
-  fulfillmentType       ProductFulfillmentType @default(manual)
-  printfulProductId     String?
-  printfulSyncProductId String?
-  digitalUnlockIncluded Boolean                @default(false)
-  tokenGated            Boolean                @default(false)
-  tokenGateRule         Json?
-  isRandomized          Boolean                @default(false)
-  blindBoxEligible      Boolean                @default(false)
-  boosterPackEligible   Boolean                @default(false)
-  affiliateEligible     Boolean                @default(true)
-  oddsDisclosureUrl     String?
-  publishedAt           DateTime?
-  scheduledPublishAt    DateTime?
-  metadata              Json?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  id                     String                 @id @default(cuid())
+  shopId                 String
+  brandId                String?
+  taxClassId             String?
+  title                  String
+  slug                   String
+  subtitle               String?
+  description            String
+  shortDescription       String?
+  productType            ProductType
+  paymentMode            ProductPaymentMode     @default(one_time)
+  franchise              Franchise
+  status                 ProductStatus          @default(draft)
+  visibility             ProductVisibility      @default(visible)
+  priceCents             Int
+  compareAtPriceCents    Int?
+  costCents              Int?
+  barcode                String?
+  currency               String                 @default("USD")
+  sku                    String?
+  vendor                 String?
+  tags                   String[]               @default([])
+  inventoryQuantity      Int                    @default(0)
+  trackInventory         Boolean                @default(true)
+  allowBackorder         Boolean                @default(false)
+  lowStockThreshold      Int?
+  imageUrl               String?
+  galleryUrls            String[]               @default([])
+  seoTitle               String?
+  seoDescription         String?
+  canonicalUrl           String?
+  metaKeywords           String[]               @default([])
+  isFeatured             Boolean                @default(false)
+  isLimitedEdition       Boolean                @default(false)
+  preorderStatus         String?
+  preorderReleaseAt      DateTime?
+  requiresShipping       Boolean                @default(true)
+  deliveryMode           ProductDeliveryMode    @default(shipped)
+  requiresScheduling     Boolean                @default(false)
+  requiresDownload       Boolean                @default(false)
+  requiresWallet         Boolean                @default(false)
+  subscriptionEligible   Boolean                @default(false)
+  nftEligible            Boolean                @default(false)
+  accessDurationDays     Int?
+  termsRequired          Boolean                @default(false)
+  refundPolicyOverrideId String?
+  weightValue            Decimal?
+  weightUnit             String?
+  lengthValue            Decimal?
+  widthValue             Decimal?
+  heightValue            Decimal?
+  dimensionUnit          String?
+  taxable                Boolean                @default(true)
+  fulfillmentType        ProductFulfillmentType @default(manual)
+  printfulProductId      String?
+  printfulSyncProductId  String?
+  digitalUnlockIncluded  Boolean                @default(false)
+  tokenGated             Boolean                @default(false)
+  tokenGateRule          Json?
+  isRandomized           Boolean                @default(false)
+  blindBoxEligible       Boolean                @default(false)
+  boosterPackEligible    Boolean                @default(false)
+  affiliateEligible      Boolean                @default(true)
+  oddsDisclosureUrl      String?
+  publishedAt            DateTime?
+  scheduledPublishAt     DateTime?
+  metadata               Json?
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
 
   shop               Shop                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
   brand              Brand?                 @relation(fields: [brandId], references: [id])
@@ -1012,6 +1191,11 @@ model Product {
   cartItems          CartItem[]
   orderItems         OrderItem[]
   downloadAssets     DownloadAsset[]
+  serviceProducts    ServiceProduct[]
+  subscriptionPlans  SubscriptionPlan[]
+  nftProducts        NFTProduct[]
+  bundleItems        ProductBundleItem[]    @relation("BundleProduct")
+  bundledIn          ProductBundleItem[]    @relation("ChildProduct")
   unlocks            DigitalUnlock[]
   affiliateClicks    AffiliateClick[]
   commissionRules    CommissionRule[]
@@ -1066,33 +1250,43 @@ model ProductOptionValue {
 }
 
 model ProductVariant {
-  id                    String   @id @default(cuid())
-  productId             String
-  title                 String
-  sku                   String?
-  barcode               String?
-  optionValues          Json?
-  priceCents            Int?
-  compareAtPriceCents   Int?
-  costCents             Int?
-  inventoryQuantity     Int      @default(0)
-  trackInventory        Boolean  @default(true)
-  allowBackorder        Boolean  @default(false)
-  lowStockThreshold     Int?
-  weightValue           Decimal?
-  weightUnit            String?
-  taxable               Boolean?
-  imageUrl              String?
-  printfulVariantId     String?
-  printfulSyncVariantId String?
-  active                Boolean  @default(true)
-  sortOrder             Int      @default(0)
-  attributes            Json?
-  metadata              Json?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id                     String              @id @default(cuid())
+  productId              String
+  title                  String
+  sku                    String?
+  barcode                String?
+  optionValues           Json?
+  priceCents             Int?
+  compareAtPriceCents    Int?
+  costCents              Int?
+  paymentMode            ProductPaymentMode?
+  stripePriceIdOneTime   String?
+  stripePriceIdRecurring String?
+  recurringInterval      RecurringInterval?
+  recurringIntervalCount Int?
+  trialPeriodDays        Int?
+  digitalAssetId         String?
+  serviceTemplateId      String?
+  nftTemplateId          String?
+  inventoryQuantity      Int                 @default(0)
+  trackInventory         Boolean             @default(true)
+  allowBackorder         Boolean             @default(false)
+  lowStockThreshold      Int?
+  weightValue            Decimal?
+  weightUnit             String?
+  taxable                Boolean?
+  imageUrl               String?
+  printfulVariantId      String?
+  printfulSyncVariantId  String?
+  active                 Boolean             @default(true)
+  sortOrder              Int                 @default(0)
+  attributes             Json?
+  metadata               Json?
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
 
   product               Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  digitalAsset          DownloadAsset?                @relation(fields: [digitalAssetId], references: [id])
   media                 ProductMedia[]
   discountSchedules     DiscountSchedule[]
   cartItems             CartItem[]
@@ -1100,9 +1294,11 @@ model ProductVariant {
   wishlistItems         WishlistItem[]
   inventoryLedgers      InventoryLedger[]
   variantInventoryItems ProductVariantInventoryItem[]
+  subscriptionPlans     SubscriptionPlan[]
 
   @@index([productId])
   @@index([sku])
+  @@index([digitalAssetId])
 }
 
 model ProductMedia {
@@ -1384,6 +1580,8 @@ model Order {
   inventoryReservations        InventoryReservation[]
   commerceEvents               CommerceEvent[]
   webhookEvents                WebhookEvent[]
+  serviceOrders                ServiceOrder[]
+  nftentitlements              NFTEntitlement[]
 
   @@index([shopId])
   @@index([customerId])
@@ -1392,34 +1590,50 @@ model Order {
 }
 
 model OrderItem {
-  id             String  @id @default(cuid())
-  orderId        String
-  productId      String
-  variantId      String?
-  titleSnapshot  String
-  skuSnapshot    String?
-  quantity       Int
-  unitPriceCents Int
-  discountCents  Int     @default(0)
-  taxCents       Int     @default(0)
-  totalCents     Int
-  metadata       Json?
+  id                      String                  @id @default(cuid())
+  orderId                 String
+  productId               String
+  variantId               String?
+  titleSnapshot           String
+  skuSnapshot             String?
+  quantity                Int
+  unitPriceCents          Int
+  discountCents           Int                     @default(0)
+  taxCents                Int                     @default(0)
+  totalCents              Int
+  productTypeSnapshot     ProductType?
+  fulfillmentTypeSnapshot ProductFulfillmentType?
+  paymentModeSnapshot     ProductPaymentMode?
+  digitalAssetId          String?
+  subscriptionPlanId      String?
+  nftProductId            String?
+  serviceProductId        String?
+  downloadEntitlementId   String?
+  subscriptionId          String?
+  nftEntitlementId        String?
+  metadata                Json?
 
-  order                Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product              Product               @relation(fields: [productId], references: [id])
-  variant              ProductVariant?       @relation(fields: [variantId], references: [id])
-  unlocks              DigitalUnlock[]
-  affiliateCommissions AffiliateCommission[]
-  refunds              Refund[]
-  refundItems          RefundItem[]
-  returnRequests       ReturnRequest[]
-  downloadEntitlements DownloadEntitlement[]
-  shipmentItems        ShipmentItem[]
-  inventoryLedgers     InventoryLedger[]
-  fulfillmentItems     FulfillmentItem[]
+  order                    Order                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product                  Product                   @relation(fields: [productId], references: [id])
+  variant                  ProductVariant?           @relation(fields: [variantId], references: [id])
+  unlocks                  DigitalUnlock[]
+  affiliateCommissions     AffiliateCommission[]
+  refunds                  Refund[]
+  refundItems              RefundItem[]
+  returnRequests           ReturnRequest[]
+  downloadEntitlements     DownloadEntitlement[]
+  serviceOrders            ServiceOrder[]
+  shipmentItems            ShipmentItem[]
+  inventoryLedgers         InventoryLedger[]
+  fulfillmentItems         FulfillmentItem[]
+  subscriptionEntitlements SubscriptionEntitlement[]
+  nftEntitlements          NFTEntitlement[]
 
   @@index([orderId])
   @@index([productId])
+  @@index([subscriptionPlanId])
+  @@index([nftProductId])
+  @@index([serviceProductId])
 }
 
 model OrderAddress {
@@ -1466,20 +1680,23 @@ model OrderHistory {
 }
 
 model Payment {
-  id                      String          @id @default(cuid())
+  id                      String            @id @default(cuid())
   shopId                  String
   orderId                 String
-  provider                PaymentProvider @default(stripe)
-  paymentPart             PaymentPart     @default(full)
-  status                  PaymentStatus   @default(unpaid)
+  provider                PaymentProvider   @default(stripe)
+  paymentPart             PaymentPart       @default(full)
+  mode                    StripePaymentMode @default(payment)
+  status                  PaymentStatus     @default(unpaid)
   amountCents             Int
-  currency                String          @default("USD")
+  currency                String            @default("USD")
   stripeCheckoutSessionId String?
   stripePaymentIntentId   String?
-  idempotencyKey          String?         @unique
+  stripeSubscriptionId    String?
+  stripeCustomerId        String?
+  idempotencyKey          String?           @unique
   metadata                Json?
-  createdAt               DateTime        @default(now())
-  updatedAt               DateTime        @updatedAt
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
 
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
@@ -2801,20 +3018,27 @@ model ReturnRequest {
 }
 
 model DownloadAsset {
-  id               String              @id @default(cuid())
+  id               String                 @id @default(cuid())
   shopId           String
   productId        String?
   title            String
+  description      String?
   fileUrl          String
+  storageKey       String?
   fileName         String
+  fileSizeBytes    Int?
+  mimeType         String?
+  checksum         String?
   maxDownloads     Int?
   expiresAfterDays Int?
-  status           DownloadAssetStatus @default(draft)
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  accessType       DigitalAssetAccessType @default(download)
+  status           DownloadAssetStatus    @default(draft)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
 
   shop         Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
   product      Product?              @relation(fields: [productId], references: [id])
+  variants     ProductVariant[]
   entitlements DownloadEntitlement[]
 
   @@index([shopId, status])
@@ -2828,21 +3052,240 @@ model DownloadEntitlement {
   orderId            String
   orderItemId        String
   downloadAssetId    String
+  token              String                    @unique @default(cuid())
   remainingDownloads Int?
   expiresAt          DateTime?
+  firstDownloadedAt  DateTime?
+  lastDownloadedAt   DateTime?
+  revokedAt          DateTime?
   status             DownloadEntitlementStatus @default(active)
   createdAt          DateTime                  @default(now())
   updatedAt          DateTime                  @updatedAt
 
-  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
-  downloadAsset DownloadAsset @relation(fields: [downloadAssetId], references: [id], onDelete: Cascade)
+  shop          Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer      Customer?           @relation(fields: [customerId], references: [id])
+  order         Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem           @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  downloadAsset DownloadAsset       @relation(fields: [downloadAssetId], references: [id], onDelete: Cascade)
+  accessLogs    DownloadAccessLog[]
 
   @@index([shopId, status])
   @@index([customerId])
   @@index([orderId])
+  @@index([token])
+}
+
+model DownloadAccessLog {
+  id            String               @id @default(cuid())
+  shopId        String
+  entitlementId String
+  ipHash        String?
+  userAgent     String?
+  downloadedAt  DateTime             @default(now())
+  status        DownloadAccessStatus
+
+  entitlement DownloadEntitlement @relation(fields: [entitlementId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, downloadedAt])
+  @@index([entitlementId])
+}
+
+model ServiceProduct {
+  id                      String              @id @default(cuid())
+  shopId                  String
+  productId               String
+  serviceType             ServiceProductType  @default(other)
+  durationMinutes         Int?
+  deliveryWindowDays      Int?
+  requiresCustomerBrief   Boolean             @default(false)
+  schedulingRequired      Boolean             @default(false)
+  locationType            ServiceLocationType @default(online)
+  meetingUrl              String?
+  deliverablesDescription String?
+  revisionLimit           Int?
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, productId])
+}
+
+model ServiceOrder {
+  id            String             @id @default(cuid())
+  shopId        String
+  orderId       String
+  orderItemId   String
+  productId     String
+  customerId    String?
+  status        ServiceOrderStatus @default(pending_brief)
+  scheduledAt   DateTime?
+  deliveredAt   DateTime?
+  customerBrief String?
+  adminNotes    String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem OrderItem @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+
+  @@unique([orderItemId])
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([customerId])
+}
+
+model SubscriptionPlan {
+  id              String                 @id @default(cuid())
+  shopId          String
+  productId       String
+  variantId       String?
+  name            String
+  description     String?
+  stripeProductId String?
+  stripePriceId   String?
+  interval        RecurringInterval
+  intervalCount   Int                    @default(1)
+  trialPeriodDays Int?
+  amountCents     Int
+  currency        String                 @default("USD")
+  status          SubscriptionPlanStatus @default(active)
+  accessType      SubscriptionAccessType @default(membership)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  product               Product                @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant               ProductVariant?        @relation(fields: [variantId], references: [id])
+  customerSubscriptions CustomerSubscription[]
+
+  @@index([shopId, status])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model CustomerSubscription {
+  id                   String             @id @default(cuid())
+  shopId               String
+  customerId           String?
+  orderId              String?
+  productId            String
+  variantId            String?
+  subscriptionPlanId   String
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  status               SubscriptionStatus @default(incomplete)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  canceledAt           DateTime?
+  trialEnd             DateTime?
+  metadata             Json?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  subscriptionPlan SubscriptionPlan          @relation(fields: [subscriptionPlanId], references: [id])
+  entitlements     SubscriptionEntitlement[]
+
+  @@index([shopId, status])
+  @@index([customerId])
+  @@index([stripeSubscriptionId])
+  @@index([subscriptionPlanId])
+}
+
+model SubscriptionEntitlement {
+  id                     String                        @id @default(cuid())
+  shopId                 String
+  customerSubscriptionId String
+  customerId             String?
+  orderItemId            String?
+  entitlementType        SubscriptionEntitlementType
+  status                 SubscriptionEntitlementStatus @default(active)
+  startsAt               DateTime
+  endsAt                 DateTime?
+  metadata               Json?
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
+
+  customerSubscription CustomerSubscription @relation(fields: [customerSubscriptionId], references: [id], onDelete: Cascade)
+  orderItem            OrderItem?           @relation(fields: [orderItemId], references: [id])
+
+  @@index([shopId, status])
+  @@index([customerId])
+  @@index([customerSubscriptionId])
+}
+
+model NFTProduct {
+  id                              String         @id @default(cuid())
+  shopId                          String
+  productId                       String
+  variantId                       String?
+  nftType                         NFTProductType
+  chain                           NFTChain       @default(none)
+  contractAddress                 String?
+  tokenId                         String?
+  collectionAddress               String?
+  metadataUri                     String?
+  imageUri                        String?
+  claimRequired                   Boolean        @default(true)
+  walletRequired                  Boolean        @default(false)
+  mintStatus                      NFTMintStatus  @default(not_minted)
+  legalDisclaimerAcceptedRequired Boolean        @default(true)
+  createdAt                       DateTime       @default(now())
+  updatedAt                       DateTime       @updatedAt
+
+  product      Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  entitlements NFTEntitlement[]
+
+  @@index([shopId, productId])
+  @@index([chain, contractAddress])
+}
+
+model NFTEntitlement {
+  id              String               @id @default(cuid())
+  shopId          String
+  customerId      String?
+  orderId         String
+  orderItemId     String
+  productId       String
+  nftProductId    String
+  walletAddress   String?
+  claimCode       String?
+  claimUrl        String?
+  chain           NFTChain?
+  transactionHash String?
+  tokenId         String?
+  status          NFTEntitlementStatus @default(pending_claim)
+  claimedAt       DateTime?
+  mintedAt        DateTime?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem  OrderItem  @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  nftProduct NFTProduct @relation(fields: [nftProductId], references: [id], onDelete: Cascade)
+
+  @@unique([orderItemId])
+  @@index([shopId, status])
+  @@index([customerId])
+  @@index([orderId])
+}
+
+model ProductBundleItem {
+  id                  String                           @id @default(cuid())
+  shopId              String
+  bundleProductId     String
+  childProductId      String
+  childVariantId      String?
+  quantity            Int                              @default(1)
+  fulfillmentBehavior ProductBundleFulfillmentBehavior @default(included)
+  createdAt           DateTime                         @default(now())
+  updatedAt           DateTime                         @updatedAt
+
+  bundleProduct Product @relation("BundleProduct", fields: [bundleProductId], references: [id], onDelete: Cascade)
+  childProduct  Product @relation("ChildProduct", fields: [childProductId], references: [id])
+
+  @@index([shopId, bundleProductId])
+  @@index([childProductId])
 }
 
 model InformationPage {

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { cookies } from "next/headers";
 import { priceCartLines } from "@/lib/catalog/products";
 import { calculateCartTotals } from "@/lib/cart/cart-totals";
+import { resolveCheckoutMode } from "@/lib/checkout/checkout-mode-resolver";
 import { getDiscountForCart } from "@/lib/discounts/discount-service";
 import { validateInventoryForCart } from "@/lib/inventory/inventory-service";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
@@ -58,6 +59,16 @@ export async function POST(request: Request) {
   }
 
   const siteUrl = getSiteUrl();
+  const checkoutMode = resolveCheckoutMode(lines);
+
+  if (!checkoutMode.ok) {
+    return NextResponse.json({ error: checkoutMode.reason }, { status: 409 });
+  }
+
+  if (checkoutMode.mode === "free") {
+    return NextResponse.json({ error: "Free checkout is not enabled yet. Please contact support." }, { status: 409 });
+  }
+
   const cookieStore = await cookies();
   const referralCode = cookieStore.get(REFERRAL_COOKIE)?.value;
   const sessionId = cookieStore.get(SESSION_COOKIE)?.value;
@@ -73,6 +84,24 @@ export async function POST(request: Request) {
   const paymentPolicy = await getActiveGlobalPaymentPolicy();
   const checkoutPolicy = canCheckoutWithPolicy(paymentPolicy);
   const paymentComposition = calculatePaymentComposition(totals.totalCents, paymentPolicy);
+
+  if (checkoutMode.mode === "subscription" && (totals.shippingCents > 0 || totals.taxCents > 0)) {
+    return NextResponse.json(
+      {
+        error: "Subscription checkout currently supports recurring product lines only. Remove shipping or tax-only add-ons and try again.",
+      },
+      { status: 409 },
+    );
+  }
+
+  if (checkoutMode.mode === "subscription" && paymentPolicy.tokenPercentageBps > 0) {
+    return NextResponse.json(
+      {
+        error: "Mixed token checkout for recurring subscriptions is not enabled yet. Use a fiat-only payment policy for subscription checkout.",
+      },
+      { status: 409 },
+    );
+  }
 
   if (!checkoutPolicy.ok) {
     return NextResponse.json(
@@ -139,6 +168,20 @@ export async function POST(request: Request) {
             price_data: {
               currency: line.product.currency.toLowerCase(),
               unit_amount: line.unitPriceCents,
+              ...(checkoutMode.mode === "subscription"
+                ? {
+                    recurring: {
+                      interval:
+                        typeof line.product.metadata?.recurringInterval === "string"
+                          ? (line.product.metadata.recurringInterval as "day" | "week" | "month" | "year")
+                          : "month",
+                      interval_count:
+                        typeof line.product.metadata?.recurringIntervalCount === "number"
+                          ? Math.max(1, Math.floor(line.product.metadata.recurringIntervalCount))
+                          : 1,
+                    },
+                  }
+                : {}),
               product_data: {
                 name: line.product.title,
                 description: line.product.shortDescription,
@@ -181,7 +224,7 @@ export async function POST(request: Request) {
         ];
 
   const session = await stripe.checkout.sessions.create({
-    mode: "payment",
+    mode: checkoutMode.mode,
     success_url: `${siteUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${siteUrl}/checkout/cancel`,
     ...(stripeDiscount ? { discounts: [{ coupon: stripeDiscount.id }] } : { allow_promotion_codes: true }),
@@ -193,6 +236,8 @@ export async function POST(request: Request) {
       ...(parsed.data.cartId ? { cartId: parsed.data.cartId } : {}),
       ...(order ? { orderId: order.id, orderNumber: order.orderNumber } : {}),
       paymentCompositionMode: paymentPolicy.compositionMode,
+      checkoutMode: checkoutMode.mode,
+      productTypes: lines.map((line) => line.product.productType).join(","),
       fiatRequiredCents: String(stripeAmountCents),
       tokenRequiredCents: paymentComposition.ok ? String(paymentComposition.tokenUsdReferenceCents) : "0",
       ...(referralCode ? { referralCode } : {}),
@@ -269,6 +314,26 @@ async function createPendingOrderIfDatabaseReady({
             quantity: line.quantity,
             unitPriceCents: line.unitPriceCents,
             totalCents: line.totalCents,
+            productTypeSnapshot: line.product.productType,
+            paymentModeSnapshot: line.product.paymentMode ?? "one_time",
+            fulfillmentTypeSnapshot:
+              line.product.deliveryMode === "download"
+                ? "digital_download"
+                : line.product.deliveryMode === "service_scheduled"
+                  ? "service_delivery"
+                  : line.product.deliveryMode === "subscription_access"
+                    ? "subscription_access"
+                    : line.product.deliveryMode === "nft_claim"
+                      ? "nft_delivery"
+                      : "manual",
+            digitalAssetId:
+              typeof line.product.metadata?.digitalAssetId === "string" ? line.product.metadata.digitalAssetId : undefined,
+            subscriptionPlanId:
+              typeof line.product.metadata?.subscriptionPlanId === "string" ? line.product.metadata.subscriptionPlanId : undefined,
+            nftProductId:
+              typeof line.product.metadata?.nftProductId === "string" ? line.product.metadata.nftProductId : undefined,
+            serviceProductId:
+              typeof line.product.metadata?.serviceProductId === "string" ? line.product.metadata.serviceProductId : undefined,
             metadata: line.product.metadata as Prisma.InputJsonValue | undefined,
           })),
         },

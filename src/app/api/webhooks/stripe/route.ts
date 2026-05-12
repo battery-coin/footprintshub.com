@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
-import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
-import { deductInventoryForPaidOrder } from "@/lib/inventory/inventory-service";
 import { canCompletePaidOrder } from "@/lib/orders/payment-completion-gate";
 import { markWebhookFailed, markWebhookProcessed, recordWebhookReceived } from "@/lib/webhooks/webhook-events";
+import { completePaidOrder } from "@/workflows/orders/complete-paid-order";
 
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -96,18 +95,59 @@ export async function POST(request: Request) {
             orderId,
             provider: "stripe",
             paymentPart: "fiat",
+            mode: session.mode === "subscription" ? "subscription" : "payment",
             status: "paid",
             amountCents: session.amount_total ?? 0,
             currency: session.currency?.toUpperCase() ?? "USD",
             stripeCheckoutSessionId: session.id,
             stripePaymentIntentId: paymentIntentId,
+            stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : session.subscription?.id,
+            stripeCustomerId: typeof session.customer === "string" ? session.customer : session.customer?.id,
             idempotencyKey: `stripe:checkout.session.completed:${session.id}`,
           },
         });
 
         if (completion.ok) {
-          await deductInventoryForPaidOrder(orderId);
-          await calculateCommissionsForOrder(orderId);
+          await completePaidOrder(orderId);
+        }
+      }
+
+      await markWebhookProcessed("stripe", event.id);
+    }
+
+    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
+      const subscription = event.data.object;
+      const stripeSubscriptionId = typeof subscription.id === "string" ? subscription.id : undefined;
+      const shopId = undefined;
+      const recorded = await recordWebhookReceived({
+        provider: "stripe",
+        eventId: event.id,
+        eventType: event.type,
+        payload: body,
+        shopId,
+      });
+
+      if (recorded.duplicate) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+
+      if (stripeSubscriptionId && hasDatabaseUrl()) {
+        const status = mapStripeSubscriptionStatus(subscription.status);
+        await getPrisma().customerSubscription.updateMany({
+          where: { stripeSubscriptionId },
+          data: {
+            status,
+            cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
+            canceledAt: subscription.canceled_at ? new Date(subscription.canceled_at * 1000) : undefined,
+          },
+        });
+
+        if (status === "canceled" || status === "unpaid") {
+          const subscriptions = await getPrisma().customerSubscription.findMany({ where: { stripeSubscriptionId }, select: { id: true } });
+          await getPrisma().subscriptionEntitlement.updateMany({
+            where: { customerSubscriptionId: { in: subscriptions.map((item) => item.id) } },
+            data: { status: "inactive" },
+          });
         }
       }
 
@@ -119,4 +159,14 @@ export async function POST(request: Request) {
     await markWebhookFailed("stripe", event.id, error);
     return NextResponse.json({ error: "Stripe webhook handler failed." }, { status: 500 });
   }
+}
+
+function mapStripeSubscriptionStatus(status?: string) {
+  if (status === "trialing") return "trialing";
+  if (status === "active") return "active";
+  if (status === "past_due") return "past_due";
+  if (status === "canceled") return "canceled";
+  if (status === "unpaid") return "unpaid";
+  if (status === "paused") return "paused";
+  return "incomplete";
 }

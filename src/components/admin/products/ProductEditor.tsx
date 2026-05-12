@@ -23,6 +23,7 @@ const defaultProduct: ProductEditorInput = {
   shortDescription: "",
   description: "",
   productType: "physical",
+  paymentMode: "one_time",
   franchise: "footprints",
   status: "draft",
   visibility: "visible",
@@ -37,6 +38,14 @@ const defaultProduct: ProductEditorInput = {
   allowBackorder: false,
   lowStockThreshold: undefined,
   requiresShipping: true,
+  deliveryMode: "shipped",
+  requiresScheduling: false,
+  requiresDownload: false,
+  requiresWallet: false,
+  subscriptionEligible: false,
+  nftEligible: false,
+  accessDurationDays: undefined,
+  termsRequired: false,
   weightValue: "",
   weightUnit: "oz",
   lengthValue: "",
@@ -90,6 +99,13 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
   const productId = product?.id ?? createdId;
   const profitCents = calculateProfitCents(draft.priceCents, draft.costCents);
   const marginBps = calculateMarginBps(draft.priceCents, draft.costCents);
+  const metadata = useMemo(() => parseMetadata(draft.metadataJson), [draft.metadataJson]);
+  const hidesShippingInventory = ["digital", "digital_download", "digital_unlock", "service", "subscription", "membership", "nft", "event_access", "appointment"].includes(draft.productType);
+  const isDigitalProduct = ["digital", "digital_download", "digital_unlock"].includes(draft.productType);
+  const isServiceProduct = ["service", "appointment", "event_access"].includes(draft.productType);
+  const isSubscriptionProduct = draft.productType === "subscription" || draft.productType === "membership" || draft.paymentMode === "recurring" || draft.paymentMode === "one_time_or_recurring";
+  const isNftProduct = draft.productType === "nft" || draft.productType === "nft_linked_physical";
+  const isBundleProduct = draft.productType === "bundle";
   const adminSecretQuery = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("admin_secret") ?? "";
   const adminQuery = adminSecretQuery ? `?admin_secret=${encodeURIComponent(adminSecretQuery)}` : "";
 
@@ -108,14 +124,16 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     const next: string[] = [];
     if ((draft.costCents ?? 0) > draft.priceCents) next.push("Cost is higher than price.");
     if (draft.compareAtPriceCents != null && draft.compareAtPriceCents < draft.priceCents) next.push("Compare-at price is below the product price.");
-    if (draft.productType === "digital" && draft.requiresShipping) next.push("Digital products should not require shipping.");
+    if (hidesShippingInventory && draft.requiresShipping) next.push("This product type usually should not require shipping.");
+    if (isNftProduct) next.push("NFT-linked products must avoid investment, resale-value, appreciation, or profit language.");
+    if (isSubscriptionProduct && draft.paymentMode === "one_time") next.push("Subscription products need recurring or one-time-or-recurring payment mode.");
     if (draft.fulfillmentType === "printful" && !draft.printfulProductId && !draft.printfulSyncProductId) {
       next.push("Printful fulfillment needs a product ID or sync product ID.");
     }
     if ((draft.seoTitle?.length ?? 0) > 70) next.push("SEO title is longer than 70 characters.");
     if ((draft.seoDescription?.length ?? 0) > 160) next.push("SEO description is longer than 160 characters.");
     return next;
-  }, [draft]);
+  }, [draft, hidesShippingInventory, isNftProduct, isSubscriptionProduct]);
 
   function update<K extends keyof ProductEditorInput>(key: K, value: ProductEditorInput[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -204,6 +222,15 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
       imageUrl: draft.imageUrl,
       printfulVariantId: "",
       printfulSyncVariantId: "",
+      paymentMode: draft.paymentMode,
+      stripePriceIdOneTime: "",
+      stripePriceIdRecurring: "",
+      recurringInterval: isSubscriptionProduct ? ("month" as const) : undefined,
+      recurringIntervalCount: isSubscriptionProduct ? 1 : undefined,
+      trialPeriodDays: undefined,
+      digitalAssetId: "",
+      serviceTemplateId: "",
+      nftTemplateId: "",
       active: true,
       sortOrder: index,
     }));
@@ -339,7 +366,24 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
                 <SelectField label="Product type" value={draft.productType} onChange={(value) => update("productType", value as ProductEditorInput["productType"])}>
-                  {["physical", "digital", "bundle", "membership", "preorder", "blind_box", "booster_pack", "service"].map((value) => (
+                  {[
+                    "physical",
+                    "digital_download",
+                    "digital_unlock",
+                    "service",
+                    "subscription",
+                    "membership",
+                    "nft",
+                    "nft_linked_physical",
+                    "bundle",
+                    "print_on_demand",
+                    "preorder",
+                    "blind_box",
+                    "booster_pack",
+                    "event_access",
+                    "appointment",
+                    "donation_like_supporter_bundle",
+                  ].map((value) => (
                     <option key={value} value={value}>{labelize(value)}</option>
                   ))}
                 </SelectField>
@@ -349,6 +393,73 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                   ))}
                 </SelectField>
               </div>
+            </div>
+          </Section>
+
+          <Section title="Product type settings" detail="The editor changes based on what the customer receives and how payment is collected.">
+            <div className="grid gap-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <SelectField label="Payment mode" value={draft.paymentMode} onChange={(value) => update("paymentMode", value as ProductEditorInput["paymentMode"])}>
+                  {["one_time", "recurring", "one_time_or_recurring", "free", "external"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                </SelectField>
+                <SelectField label="Delivery mode" value={draft.deliveryMode} onChange={(value) => update("deliveryMode", value as ProductEditorInput["deliveryMode"])}>
+                  {["shipped", "download", "access_grant", "service_scheduled", "subscription_access", "nft_claim", "hybrid", "none"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                </SelectField>
+                <NumberField label="Access duration days" value={draft.accessDurationDays ?? 0} onChange={(value) => update("accessDurationDays", value || undefined)} />
+              </div>
+              <ToggleGrid>
+                <Toggle label="Requires scheduling" checked={draft.requiresScheduling} onChange={(value) => update("requiresScheduling", value)} />
+                <Toggle label="Requires secure download" checked={draft.requiresDownload} onChange={(value) => update("requiresDownload", value)} />
+                <Toggle label="Wallet required" checked={draft.requiresWallet} onChange={(value) => update("requiresWallet", value)} />
+                <Toggle label="Subscription eligible" checked={draft.subscriptionEligible} onChange={(value) => update("subscriptionEligible", value)} />
+                <Toggle label="NFT-linked eligible" checked={draft.nftEligible} onChange={(value) => update("nftEligible", value)} />
+                <Toggle label="Terms required" checked={draft.termsRequired} onChange={(value) => update("termsRequired", value)} />
+              </ToggleGrid>
+
+              {isServiceProduct ? (
+                <ContextPanel title="Service delivery" detail="Services skip shipping by default and create a service order after verified payment.">
+                  <Field label="Service type"><Input value={String(metadata.serviceType ?? "consultation")} onChange={(event) => updateMetadata("serviceType", event.target.value)} /></Field>
+                  <NumberField label="Duration minutes" value={number(metadata.durationMinutes)} onChange={(value) => updateMetadata("durationMinutes", value)} />
+                  <NumberField label="Delivery window days" value={number(metadata.deliveryWindowDays)} onChange={(value) => updateMetadata("deliveryWindowDays", value)} />
+                  <Field label="Deliverables"><Textarea value={String(metadata.deliverablesDescription ?? "")} onChange={(event) => updateMetadata("deliverablesDescription", event.target.value)} /></Field>
+                </ContextPanel>
+              ) : null}
+
+              {isDigitalProduct ? (
+                <ContextPanel title="Secure digital delivery" detail="Customers receive tokenized access after payment. Store private files in R2 or another protected storage provider.">
+                  <Field label="Digital asset ID"><Input value={String(metadata.digitalAssetId ?? "")} onChange={(event) => updateMetadata("digitalAssetId", event.target.value)} /></Field>
+                  <NumberField label="Max downloads" value={number(metadata.maxDownloads)} onChange={(value) => updateMetadata("maxDownloads", value)} />
+                  <NumberField label="Expires after days" value={number(metadata.expiresAfterDays)} onChange={(value) => updateMetadata("expiresAfterDays", value)} />
+                  <Field label="License terms"><Textarea value={String(metadata.licenseTerms ?? "")} onChange={(event) => updateMetadata("licenseTerms", event.target.value)} /></Field>
+                </ContextPanel>
+              ) : null}
+
+              {isSubscriptionProduct ? (
+                <ContextPanel title="Recurring billing" detail="Stripe Checkout uses subscription mode for recurring products. Mixed one-time and recurring carts are blocked in this MVP.">
+                  <MoneyField label="Recurring price" cents={number(metadata.recurringPriceCents)} onChange={(value) => updateMetadata("recurringPriceCents", value ?? 0)} />
+                  <SelectField label="Interval" value={String(metadata.recurringInterval ?? "month")} onChange={(value) => updateMetadata("recurringInterval", value)}>
+                    {["day", "week", "month", "year"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                  </SelectField>
+                  <NumberField label="Interval count" value={number(metadata.recurringIntervalCount) || 1} onChange={(value) => updateMetadata("recurringIntervalCount", value || 1)} />
+                  <NumberField label="Trial days" value={number(metadata.trialPeriodDays)} onChange={(value) => updateMetadata("trialPeriodDays", value)} />
+                </ContextPanel>
+              ) : null}
+
+              {isNftProduct ? (
+                <ContextPanel title="NFT-linked collectible" detail="Use claim, provenance, access, or certificate language only. No appreciation, ROI, yield, or resale-value claims.">
+                  <Field label="NFT type"><Input value={String(metadata.nftType ?? "offchain_certificate")} onChange={(event) => updateMetadata("nftType", event.target.value)} /></Field>
+                  <Field label="Chain"><Input value={String(metadata.chain ?? "none")} onChange={(event) => updateMetadata("chain", event.target.value)} /></Field>
+                  <Field label="Contract address"><Input value={String(metadata.contractAddress ?? "")} onChange={(event) => updateMetadata("contractAddress", event.target.value)} /></Field>
+                  <Field label="Claim URL"><Input value={String(metadata.claimUrl ?? "")} onChange={(event) => updateMetadata("claimUrl", event.target.value)} /></Field>
+                </ContextPanel>
+              ) : null}
+
+              {isBundleProduct ? (
+                <ContextPanel title="Hybrid bundle" detail="Bundle components can mix physical, download, service, subscription, and NFT-linked entitlements.">
+                  <Field label="Bundle component notes"><Textarea value={String(metadata.bundleNotes ?? "")} onChange={(event) => updateMetadata("bundleNotes", event.target.value)} /></Field>
+                  <Field label="Fulfillment behavior"><Input value={String(metadata.fulfillmentBehavior ?? "separate")} onChange={(event) => updateMetadata("fulfillmentBehavior", event.target.value)} /></Field>
+                </ContextPanel>
+              ) : null}
             </div>
           </Section>
 
@@ -413,6 +524,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
             </div>
           </Section>
 
+          {!hidesShippingInventory ? (
           <Section title="Inventory" detail="SKU, stock policy, and operational inventory settings.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="SKU"><Input value={draft.sku} onChange={(event) => update("sku", event.target.value)} /></Field>
@@ -425,6 +537,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               <Toggle label="Allow backorder" checked={draft.allowBackorder} onChange={(value) => update("allowBackorder", value)} />
             </ToggleGrid>
           </Section>
+          ) : null}
 
           <Section title="Options and variants" detail="Build Size, Color, Edition, Rarity, Bundle Type, or Printful variant mappings.">
             <div className="grid gap-4">
@@ -488,7 +601,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                 <Field label="Height"><Input value={draft.heightValue} onChange={(event) => update("heightValue", event.target.value)} /></Field>
                 <Field label="Dimension unit"><Input value={draft.dimensionUnit} onChange={(event) => update("dimensionUnit", event.target.value)} /></Field>
                 <SelectField label="Fulfillment" value={draft.fulfillmentType} onChange={(value) => update("fulfillmentType", value as ProductEditorInput["fulfillmentType"])}>
-                  {["manual", "printful", "digital", "internal", "mixed"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                  {["manual", "printful", "digital", "digital_download", "digital_unlock", "service_delivery", "subscription_access", "nft_delivery", "hybrid", "none", "internal", "mixed"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
                 </SelectField>
                 <Field label="Tax class ID"><Input value={draft.taxClassId} onChange={(event) => update("taxClassId", event.target.value)} /></Field>
               </div>
@@ -555,11 +668,16 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                   {draft.isLimitedEdition ? <Badge>Limited</Badge> : null}
                   {draft.productType === "blind_box" ? <Badge>Blind Box</Badge> : null}
                   {draft.productType === "booster_pack" ? <Badge>Booster Pack</Badge> : null}
+                  {isDigitalProduct ? <Badge>Secure download</Badge> : null}
+                  {isServiceProduct ? <Badge>Service</Badge> : null}
+                  {isSubscriptionProduct ? <Badge>Recurring</Badge> : null}
+                  {isNftProduct ? <Badge>Digital collectible</Badge> : null}
                 </div>
                 <h3 className="mt-3 font-semibold">{draft.title || "Product title"}</h3>
                 <p className="mt-1 text-sm text-black/55">{draft.shortDescription || "Short product summary appears here."}</p>
                 <p className="mt-3 font-semibold">{formatMoney(draft.priceCents)}</p>
                 <p className="mt-1 text-xs text-black/45">{draft.inventoryQuantity} units - {draft.status}</p>
+                <p className="mt-2 text-xs text-black/45">Payment: {labelize(draft.paymentMode)}. Delivery: {labelize(draft.deliveryMode)}.</p>
               </div>
             </div>
           </section>
@@ -675,6 +793,15 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
   function removeDiscount(index: number) {
     update("discountSchedules", draft.discountSchedules.filter((_, discountIndex) => discountIndex !== index));
   }
+
+  function updateMetadata(key: string, value: string | number | boolean | undefined) {
+    const current = parseMetadata(draft.metadataJson);
+    const next = { ...current, [key]: value };
+    if (value === "" || value == null) {
+      delete next[key];
+    }
+    update("metadataJson", JSON.stringify(next, null, 2));
+  }
 }
 
 function Section({ title, detail, children }: { title: string; detail?: string; children: ReactNode }) {
@@ -695,6 +822,18 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       {label}
       {children}
     </label>
+  );
+}
+
+function ContextPanel({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
+  return (
+    <div className="grid gap-4 rounded-lg border border-black/10 bg-black/[0.02] p-4 sm:grid-cols-2">
+      <div className="sm:col-span-2">
+        <h3 className="font-semibold">{title}</h3>
+        <p className="mt-1 text-sm text-black/55">{detail}</p>
+      </div>
+      {children}
+    </div>
   );
 }
 
@@ -758,7 +897,7 @@ function buildVariants(options: ProductEditorInput["options"]) {
   }, []);
 }
 
-function number(value: string) {
+function number(value: unknown) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
 }
@@ -773,4 +912,16 @@ function labelize(value: string) {
 
 function toDatetimeLocal(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
+function parseMetadata(value: string): Record<string, string | number | boolean | undefined> {
+  try {
+    const parsed = JSON.parse(value || "{}");
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, string | number | boolean | undefined>;
+    }
+  } catch {
+    return {};
+  }
+  return {};
 }

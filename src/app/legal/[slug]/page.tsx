@@ -44,6 +44,49 @@ const pages: Record<string, { title: string; body: string[] }> = {
     title: "Digital Goods Terms",
     body: [
       "Digital goods and unlocks provide access, utility, or collectible features. They do not promise profit, resale value, yield, or financial return.",
+      "Secure download links may be tokenized, limited by download count, and expire after the purchase window shown on the product page.",
+      "Customers may not redistribute private files, license keys, download URLs, or protected digital access unless a written license allows it.",
+    ],
+  },
+  subscriptions: {
+    title: "Subscription Terms",
+    body: [
+      "Subscription products renew on the billing interval shown at checkout and are processed through Stripe Billing when recurring payment is enabled.",
+      "Trials, failed payments, cancellation timing, and access revocation depend on the posted product terms and verified Stripe subscription status.",
+      "Customers should cancel before the renewal date when they do not want future recurring access.",
+    ],
+  },
+  services: {
+    title: "Service Product Terms",
+    body: [
+      "Service products may require a customer brief, scheduling, delivery windows, revision limits, and a defined scope of work.",
+      "Refunds or cancellations may depend on scheduling status, work already performed, custom deliverables, and the posted service terms.",
+      "Customers are responsible for providing accurate information needed to deliver the service.",
+    ],
+  },
+  "nft-digital-collectibles": {
+    title: "NFT-Linked Digital Collectibles",
+    body: [
+      "NFT-linked products may represent a digital collectible, certificate, access credential, claim code, provenance record, or digital twin.",
+      "NFT-linked products are not sold as investments and do not promise resale value, price appreciation, profit, ROI, yield, or financial return.",
+      "Blockchain transactions, wallet use, marketplace rules, network fees, and customer tax obligations may involve risks and may be irreversible.",
+      "Automatic minting is disabled unless secure wallet, signing, legal, and operational controls are reviewed and enabled.",
+    ],
+  },
+  "membership-terms": {
+    title: "Membership Terms",
+    body: [
+      "Membership products provide access to specified content, perks, services, or community features for the period shown at checkout.",
+      "Access may end or be revoked when a membership expires, is canceled, is unpaid, violates policy, or is refunded.",
+      "Membership benefits are not investments, financial products, income opportunities, or resale-value promises.",
+    ],
+  },
+  "download-license": {
+    title: "Download License",
+    body: [
+      "Digital downloads are licensed for the permitted customer use shown on the product page or receipt.",
+      "Unauthorized copying, resale, sharing, scraping, public reposting, or redistribution of protected downloads is not allowed.",
+      "Download access can be limited, revoked, or reviewed for fraud, abuse, refunds, chargebacks, or policy violations.",
     ],
   },
   "blind-box-odds": {

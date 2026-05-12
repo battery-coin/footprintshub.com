@@ -60,6 +60,8 @@ Affiliate commissions are calculated server-side after paid orders. The program 
 
 The admin product editor at `/admin/products/new` and `/admin/products/[id]` supports Shopify-style product setup: Cloudflare R2 image upload, media URLs, variants/options, pricing, cost and margin, inventory, tax/shipping/fulfillment settings, Printful mapping fields, scheduled discounts, SEO, CSV import, API import preview/import, and CSV export.
 
+The editor also adapts by product type. Service products show service delivery settings, digital download products show secure download settings, subscription and membership products show recurring billing settings, NFT-linked products show claim/provenance/legal fields, and bundle products show hybrid fulfillment notes. NFT-linked products must be described as digital collectibles, certificates, access credentials, claims, or digital twins, not investments.
+
 Before using the editor against Neon, generate and review a Prisma migration for the product schema additions, then apply it to the target database.
 
 For product media uploads, configure the `CLOUDFLARE_R2_*` Railway variables described in `docs/CLOUDFLARE_R2_PRODUCT_MEDIA.md`.

@@ -1,14 +1,25 @@
 export type ProductType =
   | "physical"
   | "digital"
+  | "digital_download"
+  | "digital_unlock"
+  | "service"
+  | "subscription"
   | "bundle"
   | "membership"
+  | "nft"
+  | "nft_linked_physical"
   | "preorder"
   | "blind_box"
   | "booster_pack"
-  | "digital_unlock"
-  | "service"
+  | "print_on_demand"
+  | "event_access"
+  | "appointment"
   | "donation_like_supporter_bundle";
+
+export type ProductPaymentMode = "one_time" | "recurring" | "one_time_or_recurring" | "free" | "external";
+
+export type ProductDeliveryMode = "shipped" | "download" | "access_grant" | "service_scheduled" | "subscription_access" | "nft_claim" | "hybrid" | "none";
 
 export type Franchise =
   | "footprints"
@@ -30,6 +41,8 @@ export type CatalogProduct = {
   description: string;
   shortDescription?: string;
   productType: ProductType;
+  paymentMode?: ProductPaymentMode;
+  deliveryMode?: ProductDeliveryMode;
   franchise: Franchise;
   status: ProductStatus;
   visibility?: ProductVisibility;
@@ -50,6 +63,13 @@ export type CatalogProduct = {
   preorderStatus?: string;
   preorderReleaseAt?: Date;
   requiresShipping?: boolean;
+  requiresScheduling?: boolean;
+  requiresDownload?: boolean;
+  requiresWallet?: boolean;
+  subscriptionEligible?: boolean;
+  nftEligible?: boolean;
+  accessDurationDays?: number;
+  termsRequired?: boolean;
   digitalUnlockIncluded: boolean;
   tokenGated: boolean;
   isRandomized?: boolean;
