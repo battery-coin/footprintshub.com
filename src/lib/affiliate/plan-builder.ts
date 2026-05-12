@@ -128,11 +128,7 @@ export async function createPlanFromTemplate(templateKey: string) {
   }
 
   const prisma = getPrisma();
-  const shop = await prisma.shop.findFirst({ where: { status: "active" }, orderBy: { createdAt: "asc" } });
-
-  if (!shop) {
-    return { ok: false as const, status: 409, error: "Create or seed a shop before creating affiliate plans." };
-  }
+  const shop = await resolvePlanShop();
 
   const program =
     (await prisma.affiliateProgram.findFirst({ where: { shopId: shop.id }, orderBy: { createdAt: "asc" } })) ??
@@ -193,6 +189,25 @@ export async function createPlanFromTemplate(templateKey: string) {
   });
 
   return { ok: true as const, stored: true, planId: plan.id, redirectTo: getPlanSetupPath(plan.id, template.structureType) };
+}
+
+async function resolvePlanShop() {
+  const prisma = getPrisma();
+  const activeShop = await prisma.shop.findFirst({ where: { status: "active" }, orderBy: { createdAt: "asc" } });
+  if (activeShop) return activeShop;
+
+  const anyShop = await prisma.shop.findFirst({ orderBy: { createdAt: "asc" } });
+  if (anyShop) return anyShop;
+
+  return prisma.shop.create({
+    data: {
+      name: "FootprintsHub",
+      slug: "footprintshub",
+      customDomain: "footprintshub.com",
+      status: "active",
+      description: "Default flagship shop created for affiliate structure setup.",
+    },
+  });
 }
 
 export function getPlanSetupPath(planId: string, structureType: AffiliateStructureType) {
