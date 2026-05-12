@@ -29,22 +29,29 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
   async function useTemplate() {
     setStatus("saving");
     setMessage("");
-    const adminSecret = new URLSearchParams(window.location.search).get("admin_secret");
-    const response = await fetch("/api/admin/affiliates/structures/use-template", {
-      method: "POST",
-      headers: { "content-type": "application/json", ...(adminSecret ? { "x-admin-secret": adminSecret } : {}) },
-      body: JSON.stringify({ templateKey, structureType }),
-    });
-    const payload = await response.json().catch(() => ({}));
+    try {
+      const adminSecret = new URLSearchParams(window.location.search).get("admin_secret") ?? window.localStorage.getItem("footprintshub-admin-secret");
+      const response = await fetch("/api/admin/affiliates/structures/use-template", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(adminSecret ? { "x-admin-secret": adminSecret } : {}) },
+        credentials: "same-origin",
+        body: JSON.stringify({ templateKey, structureType }),
+      });
+      const payload = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setStatus("error");
+        setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
+        return;
+      }
+
+      setMessage(payload.stored === false ? "Preview created. Connect DATABASE_URL for persistence." : "Structure created. Opening settings...");
+      router.push(payload.redirectTo ?? "/admin/affiliates/plans");
+    } catch (error) {
       setStatus("error");
-      setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
+      setMessage(error instanceof Error ? error.message : "Could not reach the structure setup API.");
       return;
     }
-
-    setMessage(payload.stored === false ? "Preview created. Connect DATABASE_URL for persistence." : "Structure created. Opening settings...");
-    router.push(payload.redirectTo ?? "/admin/affiliates/plans");
   }
 
   return (
