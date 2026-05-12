@@ -116,6 +116,10 @@ export const productVariantInputSchema = z.object({
   imageUrl: optionalText,
   printfulVariantId: optionalText,
   printfulSyncVariantId: optionalText,
+  printfulSku: optionalText,
+  printfulRetailPriceCents: optionalCents,
+  printfulCurrency: optionalText,
+  printfulEnabled: z.boolean().default(false),
   active: z.boolean().default(true),
   sortOrder: z.number().int().min(0).default(0),
 });
@@ -174,6 +178,9 @@ export const productEditorSchema = z
     fulfillmentType: z.enum(fulfillmentTypes).default("manual"),
     printfulProductId: optionalText,
     printfulSyncProductId: optionalText,
+    printfulTemplateId: optionalText,
+    printfulEnabled: z.boolean().default(false),
+    printfulNeedsVariantMapping: z.boolean().default(false),
     digitalUnlockIncluded: z.boolean().default(false),
     tokenGated: z.boolean().default(false),
     blindBoxEligible: z.boolean().default(false),
@@ -208,7 +215,7 @@ export const productEditorSchema = z
       });
     }
 
-    if (product.fulfillmentType === "printful" && !product.printfulProductId && !product.printfulSyncProductId) {
+    if ((product.fulfillmentType === "printful" || product.printfulEnabled) && !product.printfulProductId && !product.printfulSyncProductId) {
       context.addIssue({
         code: "custom",
         path: ["printfulProductId"],

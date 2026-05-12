@@ -75,6 +75,7 @@ export async function POST(request: Request) {
             stripeCheckoutSessionId: session.id,
             stripePaymentIntentId: paymentIntentId,
             customerEmail: session.customer_details?.email ?? session.customer_email ?? undefined,
+            shippingAddress: normalizeStripeAddress(session),
           },
           select: {
             id: true,
@@ -159,6 +160,29 @@ export async function POST(request: Request) {
     await markWebhookFailed("stripe", event.id, error);
     return NextResponse.json({ error: "Stripe webhook handler failed." }, { status: 500 });
   }
+}
+
+function normalizeStripeAddress(session: {
+  shipping_details?: { name?: string | null; address?: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; country?: string | null } | null } | null;
+  customer_details?: { name?: string | null; phone?: string | null; address?: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; country?: string | null } | null } | null;
+}) {
+  const address = session.shipping_details?.address ?? session.customer_details?.address;
+
+  if (!address) {
+    return undefined;
+  }
+
+  return {
+    name: session.shipping_details?.name ?? session.customer_details?.name ?? null,
+    phone: session.customer_details?.phone ?? null,
+    line1: address.line1 ?? null,
+    line2: address.line2 ?? null,
+    city: address.city ?? null,
+    state: address.state ?? null,
+    postalCode: address.postal_code ?? null,
+    country: address.country ?? null,
+    source: "stripe_checkout",
+  };
 }
 
 function mapStripeSubscriptionStatus(status?: string) {

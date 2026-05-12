@@ -47,6 +47,23 @@ export type ProductDeliveryMode =
   | "hybrid"
   | "none";
 
+export type ProductFulfillmentType =
+  | "manual"
+  | "printful"
+  | "digital"
+  | "digital_download"
+  | "digital_unlock"
+  | "service_delivery"
+  | "subscription_access"
+  | "nft_delivery"
+  | "ad_delivery"
+  | "sponsorship_delivery"
+  | "promotion_delivery"
+  | "hybrid"
+  | "none"
+  | "internal"
+  | "mixed";
+
 export type Franchise =
   | "footprints"
   | "matrix_decoded"
@@ -69,6 +86,7 @@ export type CatalogProduct = {
   productType: ProductType;
   paymentMode?: ProductPaymentMode;
   deliveryMode?: ProductDeliveryMode;
+  fulfillmentType?: ProductFulfillmentType;
   franchise: Franchise;
   status: ProductStatus;
   visibility?: ProductVisibility;
@@ -101,6 +119,9 @@ export type CatalogProduct = {
   isRandomized?: boolean;
   oddsDisclosureUrl?: string;
   affiliateEligible?: boolean;
+  printfulEnabled?: boolean;
+  printfulProductId?: string;
+  printfulSyncProductId?: string;
   metadata?: Record<string, unknown>;
 };
 

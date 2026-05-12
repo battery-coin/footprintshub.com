@@ -1,0 +1,41 @@
+# Environment Variables
+
+## Public Browser Variables
+
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+- `NEXT_PUBLIC_ENABLE_CRYPTO_CHECKOUT`
+- `NEXT_PUBLIC_ENABLE_AFFILIATE_PROGRAM`
+- `NEXT_PUBLIC_ENABLE_PRINTFUL`
+- `NEXT_PUBLIC_FLAGSHIP_SHOP_DOMAIN`
+- `NEXT_PUBLIC_HERO_STUDIO_SHOP_DOMAIN`
+
+## Server-Only Variables
+
+- `DATABASE_URL`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `ADMIN_SECRET`
+- `PLATFORM_OWNER_EMAIL`
+- `ADMIN_EMAILS`
+- `PRINTFUL_API_KEY`
+- `PRINTFUL_STORE_ID`
+- `PRINTFUL_API_BASE_URL`
+- `PRINTFUL_CONFIRM_ORDERS`
+- `PRINTFUL_DEFAULT_SHIPPING_METHOD`
+- `PRINTFUL_WEBHOOK_SECRET`
+- `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- `AFFILIATE_IP_HASH_SECRET`
+- `COMMERCE_INTERNAL_API_TOKEN`
+- `COINBASE_BUSINESS_API_KEY`
+- `COINBASE_WEBHOOK_SECRET`
+
+Never commit `.env`, production credentials, private keys, wallet seeds, Railway tokens, Cloudflare tokens, Stripe secrets, or Printful tokens.
+
+## Railway Printful Setup
+
+1. Add `PRINTFUL_API_KEY`.
+2. Add `PRINTFUL_STORE_ID` if using an account-level token.
+3. Keep `PRINTFUL_CONFIRM_ORDERS=false` until a draft order is verified.
+4. Set `PRINTFUL_DEFAULT_SHIPPING_METHOD=STANDARD` unless a tested method is chosen.
+5. Redeploy Railway.

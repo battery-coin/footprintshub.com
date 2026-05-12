@@ -3,6 +3,7 @@ import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
 import { createAdCampaignsFromOrder } from "@/lib/ads/ad-order-service";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { deductInventoryForPaidOrder } from "@/lib/inventory/inventory-service";
+import { submitPrintfulOrderForPaidOrder } from "@/workflows/fulfillment/submit-printful-order";
 
 const digitalTypes = new Set(["digital", "digital_download"]);
 const serviceTypes = new Set(["service", "appointment", "event_access"]);
@@ -168,6 +169,7 @@ export async function completePaidOrder(orderId: string) {
   });
 
   await createAdCampaignsFromOrder(order);
+  await submitPrintfulOrderForPaidOrder(orderId);
   await deductInventoryForPaidOrder(orderId);
   await calculateCommissionsForOrder(orderId);
 

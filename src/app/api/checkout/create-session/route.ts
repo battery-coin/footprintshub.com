@@ -81,6 +81,13 @@ export async function POST(request: Request) {
       })
     : undefined;
   const totals = calculateCartTotals({ lines, discount });
+  const containsPrintfulItems = lines.some(
+    (line) =>
+      line.product.fulfillmentType === "printful" ||
+      line.product.printfulEnabled ||
+      line.product.productType === "print_on_demand",
+  );
+  const fulfillmentRequired = totals.requiresShipping || containsPrintfulItems;
   const paymentPolicy = await getActiveGlobalPaymentPolicy();
   const checkoutPolicy = canCheckoutWithPolicy(paymentPolicy);
   const paymentComposition = calculatePaymentComposition(totals.totalCents, paymentPolicy);
@@ -229,6 +236,14 @@ export async function POST(request: Request) {
     cancel_url: `${siteUrl}/checkout/cancel`,
     ...(stripeDiscount ? { discounts: [{ coupon: stripeDiscount.id }] } : { allow_promotion_codes: true }),
     line_items: lineItems,
+    ...(fulfillmentRequired
+      ? {
+          shipping_address_collection: {
+            allowed_countries: ["US", "CA", "GB", "AU", "NZ", "DE", "FR", "ES", "IT", "NL"],
+          },
+          phone_number_collection: { enabled: true },
+        }
+      : {}),
     metadata: {
       source: "footprintshub-commerce",
       productIds: lines.map((line) => line.product.id).join(","),
@@ -238,6 +253,8 @@ export async function POST(request: Request) {
       paymentCompositionMode: paymentPolicy.compositionMode,
       checkoutMode: checkoutMode.mode,
       productTypes: lines.map((line) => line.product.productType).join(","),
+      containsPrintfulItems: String(containsPrintfulItems),
+      fulfillmentRequired: String(fulfillmentRequired),
       fiatRequiredCents: String(stripeAmountCents),
       tokenRequiredCents: paymentComposition.ok ? String(paymentComposition.tokenUsdReferenceCents) : "0",
       ...(referralCode ? { referralCode } : {}),
@@ -317,7 +334,9 @@ async function createPendingOrderIfDatabaseReady({
             productTypeSnapshot: line.product.productType,
             paymentModeSnapshot: line.product.paymentMode ?? "one_time",
             fulfillmentTypeSnapshot:
-              line.product.deliveryMode === "download"
+              line.product.fulfillmentType === "printful" || line.product.printfulEnabled || line.product.productType === "print_on_demand"
+                ? "printful"
+                : line.product.deliveryMode === "download"
                 ? "digital_download"
                 : line.product.deliveryMode === "service_scheduled"
                   ? "service_delivery"
@@ -333,6 +352,10 @@ async function createPendingOrderIfDatabaseReady({
                         : line.product.deliveryMode === "sponsor_placement"
                           ? "sponsorship_delivery"
                           : "manual",
+            fulfillmentProvider:
+              line.product.fulfillmentType === "printful" || line.product.printfulEnabled || line.product.productType === "print_on_demand"
+                ? "printful"
+                : undefined,
             digitalAssetId:
               typeof line.product.metadata?.digitalAssetId === "string" ? line.product.metadata.digitalAssetId : undefined,
             subscriptionPlanId:

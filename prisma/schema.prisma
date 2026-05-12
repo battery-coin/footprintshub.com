@@ -474,12 +474,20 @@ enum RefundStatus {
 
 enum PrintfulOrderStatus {
   configuration_required
+  draft
+  inreview
   pending
   submitted
   accepted
+  inprocess
+  onhold
+  partial
   failed
   cancelled
   fulfilled
+  shipped
+  delivered
+  archived
 }
 
 enum ShipmentStatus {
@@ -1006,10 +1014,20 @@ enum ShippingProfileType {
 
 enum FulfillmentRecordStatus {
   pending
+  submitted
+  accepted
+  in_production
   packed
+  fulfilled
   shipped
   delivered
+  failed
   cancelled
+}
+
+enum ShopPrintfulMode {
+  platform_account
+  creator_account
 }
 
 enum PromotionStatus {
@@ -1045,18 +1063,22 @@ enum IdempotencyKeyStatus {
 }
 
 model Shop {
-  id           String     @id @default(cuid())
-  name         String
-  slug         String     @unique
-  subdomain    String?    @unique
-  customDomain String?    @unique
-  description  String?
-  logoUrl      String?
-  bannerUrl    String?
-  ownerUserId  String?
-  status       ShopStatus @default(draft)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id                           String           @id @default(cuid())
+  name                         String
+  slug                         String           @unique
+  subdomain                    String?          @unique
+  customDomain                 String?          @unique
+  description                  String?
+  logoUrl                      String?
+  bannerUrl                    String?
+  ownerUserId                  String?
+  status                       ShopStatus       @default(draft)
+  printfulEnabled              Boolean          @default(false)
+  printfulStoreId              String?
+  printfulMode                 ShopPrintfulMode @default(platform_account)
+  printfulDefaultConfirmOrders Boolean          @default(false)
+  createdAt                    DateTime         @default(now())
+  updatedAt                    DateTime         @updatedAt
 
   owner                           User?                            @relation("ShopOwner", fields: [ownerUserId], references: [id])
   domains                         ShopDomain[]
@@ -1099,6 +1121,8 @@ model Shop {
   paymentSessions                 PaymentSession[]
   paymentCollections              PaymentCollection[]
   printfulOrders                  PrintfulOrder[]
+  printfulOrderItems              PrintfulOrderItem[]
+  printfulWebhookEvents           PrintfulWebhookEvent[]
   stockLocations                  StockLocation[]
   inventoryItems                  InventoryItem[]
   inventoryReservations           InventoryReservation[]
@@ -1217,75 +1241,78 @@ model Brand {
 }
 
 model Product {
-  id                     String                 @id @default(cuid())
-  shopId                 String
-  brandId                String?
-  taxClassId             String?
-  title                  String
-  slug                   String
-  subtitle               String?
-  description            String
-  shortDescription       String?
-  productType            ProductType
-  paymentMode            ProductPaymentMode     @default(one_time)
-  franchise              Franchise
-  status                 ProductStatus          @default(draft)
-  visibility             ProductVisibility      @default(visible)
-  priceCents             Int
-  compareAtPriceCents    Int?
-  costCents              Int?
-  barcode                String?
-  currency               String                 @default("USD")
-  sku                    String?
-  vendor                 String?
-  tags                   String[]               @default([])
-  inventoryQuantity      Int                    @default(0)
-  trackInventory         Boolean                @default(true)
-  allowBackorder         Boolean                @default(false)
-  lowStockThreshold      Int?
-  imageUrl               String?
-  galleryUrls            String[]               @default([])
-  seoTitle               String?
-  seoDescription         String?
-  canonicalUrl           String?
-  metaKeywords           String[]               @default([])
-  isFeatured             Boolean                @default(false)
-  isLimitedEdition       Boolean                @default(false)
-  preorderStatus         String?
-  preorderReleaseAt      DateTime?
-  requiresShipping       Boolean                @default(true)
-  deliveryMode           ProductDeliveryMode    @default(shipped)
-  requiresScheduling     Boolean                @default(false)
-  requiresDownload       Boolean                @default(false)
-  requiresWallet         Boolean                @default(false)
-  subscriptionEligible   Boolean                @default(false)
-  nftEligible            Boolean                @default(false)
-  accessDurationDays     Int?
-  termsRequired          Boolean                @default(false)
-  refundPolicyOverrideId String?
-  weightValue            Decimal?
-  weightUnit             String?
-  lengthValue            Decimal?
-  widthValue             Decimal?
-  heightValue            Decimal?
-  dimensionUnit          String?
-  taxable                Boolean                @default(true)
-  fulfillmentType        ProductFulfillmentType @default(manual)
-  printfulProductId      String?
-  printfulSyncProductId  String?
-  digitalUnlockIncluded  Boolean                @default(false)
-  tokenGated             Boolean                @default(false)
-  tokenGateRule          Json?
-  isRandomized           Boolean                @default(false)
-  blindBoxEligible       Boolean                @default(false)
-  boosterPackEligible    Boolean                @default(false)
-  affiliateEligible      Boolean                @default(true)
-  oddsDisclosureUrl      String?
-  publishedAt            DateTime?
-  scheduledPublishAt     DateTime?
-  metadata               Json?
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
+  id                          String                 @id @default(cuid())
+  shopId                      String
+  brandId                     String?
+  taxClassId                  String?
+  title                       String
+  slug                        String
+  subtitle                    String?
+  description                 String
+  shortDescription            String?
+  productType                 ProductType
+  paymentMode                 ProductPaymentMode     @default(one_time)
+  franchise                   Franchise
+  status                      ProductStatus          @default(draft)
+  visibility                  ProductVisibility      @default(visible)
+  priceCents                  Int
+  compareAtPriceCents         Int?
+  costCents                   Int?
+  barcode                     String?
+  currency                    String                 @default("USD")
+  sku                         String?
+  vendor                      String?
+  tags                        String[]               @default([])
+  inventoryQuantity           Int                    @default(0)
+  trackInventory              Boolean                @default(true)
+  allowBackorder              Boolean                @default(false)
+  lowStockThreshold           Int?
+  imageUrl                    String?
+  galleryUrls                 String[]               @default([])
+  seoTitle                    String?
+  seoDescription              String?
+  canonicalUrl                String?
+  metaKeywords                String[]               @default([])
+  isFeatured                  Boolean                @default(false)
+  isLimitedEdition            Boolean                @default(false)
+  preorderStatus              String?
+  preorderReleaseAt           DateTime?
+  requiresShipping            Boolean                @default(true)
+  deliveryMode                ProductDeliveryMode    @default(shipped)
+  requiresScheduling          Boolean                @default(false)
+  requiresDownload            Boolean                @default(false)
+  requiresWallet              Boolean                @default(false)
+  subscriptionEligible        Boolean                @default(false)
+  nftEligible                 Boolean                @default(false)
+  accessDurationDays          Int?
+  termsRequired               Boolean                @default(false)
+  refundPolicyOverrideId      String?
+  weightValue                 Decimal?
+  weightUnit                  String?
+  lengthValue                 Decimal?
+  widthValue                  Decimal?
+  heightValue                 Decimal?
+  dimensionUnit               String?
+  taxable                     Boolean                @default(true)
+  fulfillmentType             ProductFulfillmentType @default(manual)
+  printfulProductId           String?
+  printfulSyncProductId       String?
+  printfulTemplateId          String?
+  printfulEnabled             Boolean                @default(false)
+  printfulNeedsVariantMapping Boolean                @default(false)
+  digitalUnlockIncluded       Boolean                @default(false)
+  tokenGated                  Boolean                @default(false)
+  tokenGateRule               Json?
+  isRandomized                Boolean                @default(false)
+  blindBoxEligible            Boolean                @default(false)
+  boosterPackEligible         Boolean                @default(false)
+  affiliateEligible           Boolean                @default(true)
+  oddsDisclosureUrl           String?
+  publishedAt                 DateTime?
+  scheduledPublishAt          DateTime?
+  metadata                    Json?
+  createdAt                   DateTime               @default(now())
+  updatedAt                   DateTime               @updatedAt
 
   shop               Shop                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
   brand              Brand?                 @relation(fields: [brandId], references: [id])
@@ -1319,6 +1346,7 @@ model Product {
   discountSchedules  DiscountSchedule[]
   importRows         ImportJobRow[]
   paymentPolicies    ProductPaymentPolicy[]
+  printfulOrderItems PrintfulOrderItem[]
 
   @@unique([shopId, slug])
   @@index([shopId])
@@ -1365,40 +1393,44 @@ model ProductOptionValue {
 }
 
 model ProductVariant {
-  id                     String              @id @default(cuid())
-  productId              String
-  title                  String
-  sku                    String?
-  barcode                String?
-  optionValues           Json?
-  priceCents             Int?
-  compareAtPriceCents    Int?
-  costCents              Int?
-  paymentMode            ProductPaymentMode?
-  stripePriceIdOneTime   String?
-  stripePriceIdRecurring String?
-  recurringInterval      RecurringInterval?
-  recurringIntervalCount Int?
-  trialPeriodDays        Int?
-  digitalAssetId         String?
-  serviceTemplateId      String?
-  nftTemplateId          String?
-  inventoryQuantity      Int                 @default(0)
-  trackInventory         Boolean             @default(true)
-  allowBackorder         Boolean             @default(false)
-  lowStockThreshold      Int?
-  weightValue            Decimal?
-  weightUnit             String?
-  taxable                Boolean?
-  imageUrl               String?
-  printfulVariantId      String?
-  printfulSyncVariantId  String?
-  active                 Boolean             @default(true)
-  sortOrder              Int                 @default(0)
-  attributes             Json?
-  metadata               Json?
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
+  id                       String              @id @default(cuid())
+  productId                String
+  title                    String
+  sku                      String?
+  barcode                  String?
+  optionValues             Json?
+  priceCents               Int?
+  compareAtPriceCents      Int?
+  costCents                Int?
+  paymentMode              ProductPaymentMode?
+  stripePriceIdOneTime     String?
+  stripePriceIdRecurring   String?
+  recurringInterval        RecurringInterval?
+  recurringIntervalCount   Int?
+  trialPeriodDays          Int?
+  digitalAssetId           String?
+  serviceTemplateId        String?
+  nftTemplateId            String?
+  inventoryQuantity        Int                 @default(0)
+  trackInventory           Boolean             @default(true)
+  allowBackorder           Boolean             @default(false)
+  lowStockThreshold        Int?
+  weightValue              Decimal?
+  weightUnit               String?
+  taxable                  Boolean?
+  imageUrl                 String?
+  printfulVariantId        String?
+  printfulSyncVariantId    String?
+  printfulSku              String?
+  printfulRetailPriceCents Int?
+  printfulCurrency         String?
+  printfulEnabled          Boolean             @default(false)
+  active                   Boolean             @default(true)
+  sortOrder                Int                 @default(0)
+  attributes               Json?
+  metadata                 Json?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
 
   product               Product                       @relation(fields: [productId], references: [id], onDelete: Cascade)
   digitalAsset          DownloadAsset?                @relation(fields: [digitalAssetId], references: [id])
@@ -1410,6 +1442,7 @@ model ProductVariant {
   inventoryLedgers      InventoryLedger[]
   variantInventoryItems ProductVariantInventoryItem[]
   subscriptionPlans     SubscriptionPlan[]
+  printfulOrderItems    PrintfulOrderItem[]
 
   @@index([productId])
   @@index([sku])
@@ -1728,6 +1761,11 @@ model OrderItem {
   downloadEntitlementId   String?
   subscriptionId          String?
   nftEntitlementId        String?
+  printfulVariantId       String?
+  printfulSyncVariantId   String?
+  printfulOrderItemId     String?
+  printfulStatus          String?
+  fulfillmentProvider     String?
   metadata                Json?
 
   order                    Order                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
@@ -1746,6 +1784,7 @@ model OrderItem {
   fulfillmentItems         FulfillmentItem[]
   subscriptionEntitlements SubscriptionEntitlement[]
   nftEntitlements          NFTEntitlement[]
+  printfulOrderItems       PrintfulOrderItem[]
 
   @@index([orderId])
   @@index([productId])
@@ -2011,26 +2050,100 @@ model RefundItem {
 }
 
 model PrintfulOrder {
-  id              String              @id @default(cuid())
-  shopId          String
-  orderId         String
-  externalOrderId String?
-  printfulOrderId String?
-  status          PrintfulOrderStatus @default(configuration_required)
-  idempotencyKey  String?             @unique
-  requestHash     String?
-  error           String?
-  submittedAt     DateTime?
-  metadata        Json?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+  id                String              @id @default(cuid())
+  shopId            String
+  orderId           String
+  fulfillmentId     String?
+  externalOrderId   String?
+  printfulOrderId   String?
+  status            PrintfulOrderStatus @default(configuration_required)
+  idempotencyKey    String?             @unique
+  requestHash       String?
+  recipientSnapshot Json?
+  itemsSnapshot     Json?
+  shippingSnapshot  Json?
+  requestPayload    Json?
+  responsePayload   Json?
+  errorPayload      Json?
+  error             String?
+  confirmOrder      Boolean             @default(false)
+  submittedAt       DateTime?
+  lastSyncedAt      DateTime?
+  metadata          Json?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
-  shop  Shop  @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  shop        Shop                @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order       Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fulfillment Fulfillment?        @relation(fields: [fulfillmentId], references: [id], onDelete: SetNull)
+  items       PrintfulOrderItem[]
 
   @@index([shopId, status])
   @@index([orderId])
+  @@index([fulfillmentId])
   @@index([printfulOrderId])
+}
+
+model PrintfulOrderItem {
+  id                    String   @id @default(cuid())
+  shopId                String
+  printfulOrderId       String
+  orderItemId           String
+  productId             String
+  variantId             String?
+  printfulVariantId     String?
+  printfulSyncVariantId String?
+  quantity              Int
+  status                String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  shop          Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  printfulOrder PrintfulOrder   @relation(fields: [printfulOrderId], references: [id], onDelete: Cascade)
+  orderItem     OrderItem       @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  product       Product         @relation(fields: [productId], references: [id])
+  variant       ProductVariant? @relation(fields: [variantId], references: [id])
+
+  @@unique([printfulOrderId, orderItemId])
+  @@index([shopId])
+  @@index([orderItemId])
+  @@index([productId])
+  @@index([variantId])
+}
+
+model PrintfulWebhookEvent {
+  id           String    @id @default(cuid())
+  shopId       String?
+  eventId      String?
+  type         String
+  rawPayload   Json
+  signature    String?
+  processedAt  DateTime?
+  status       String    @default("pending")
+  errorMessage String?
+  createdAt    DateTime  @default(now())
+
+  shop Shop? @relation(fields: [shopId], references: [id], onDelete: SetNull)
+
+  @@index([shopId])
+  @@index([eventId])
+  @@index([type])
+  @@index([status])
+}
+
+model ProviderIdempotencyKey {
+  id          String   @id @default(cuid())
+  provider    String
+  scope       String
+  key         String
+  status      String
+  requestHash String?
+  response    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([provider, scope, key])
+  @@index([provider, status])
 }
 
 model Shipment {
@@ -4177,22 +4290,28 @@ model ShippingOption {
 }
 
 model Fulfillment {
-  id             String                  @id @default(cuid())
-  shopId         String
-  orderId        String
-  provider       String
-  status         FulfillmentRecordStatus @default(pending)
-  trackingNumber String?
-  trackingUrl    String?
-  shippedAt      DateTime?
-  deliveredAt    DateTime?
-  metadata       Json?
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
+  id                 String                  @id @default(cuid())
+  shopId             String
+  orderId            String
+  provider           String
+  status             FulfillmentRecordStatus @default(pending)
+  providerOrderId    String?
+  providerExternalId String?
+  trackingNumber     String?
+  trackingUrl        String?
+  submittedAt        DateTime?
+  fulfilledAt        DateTime?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  errorMessage       String?
+  metadata           Json?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
 
-  shop  Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  order Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  items FulfillmentItem[]
+  shop           Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order          Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items          FulfillmentItem[]
+  printfulOrders PrintfulOrder[]
 
   @@index([shopId, status])
   @@index([orderId])

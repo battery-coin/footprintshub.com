@@ -57,6 +57,9 @@ const defaultProduct: ProductEditorInput = {
   fulfillmentType: "manual",
   printfulProductId: "",
   printfulSyncProductId: "",
+  printfulTemplateId: "",
+  printfulEnabled: false,
+  printfulNeedsVariantMapping: false,
   digitalUnlockIncluded: false,
   tokenGated: false,
   blindBoxEligible: false,
@@ -145,7 +148,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     if (isAdProduct) next.push("Ad products create a campaign pending creative review after verified payment.");
     if (isNftProduct) next.push("NFT-linked products must avoid investment, resale-value, appreciation, or profit language.");
     if (isSubscriptionProduct && draft.paymentMode === "one_time") next.push("Subscription products need recurring or one-time-or-recurring payment mode.");
-    if (draft.fulfillmentType === "printful" && !draft.printfulProductId && !draft.printfulSyncProductId) {
+    if ((draft.fulfillmentType === "printful" || draft.printfulEnabled) && !draft.printfulProductId && !draft.printfulSyncProductId) {
       next.push("Printful fulfillment needs a product ID or sync product ID.");
     }
     if ((draft.seoTitle?.length ?? 0) > 70) next.push("SEO title is longer than 70 characters.");
@@ -240,6 +243,10 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
       imageUrl: draft.imageUrl,
       printfulVariantId: "",
       printfulSyncVariantId: "",
+      printfulSku: "",
+      printfulRetailPriceCents: undefined,
+      printfulCurrency: draft.currency,
+      printfulEnabled: draft.fulfillmentType === "printful",
       paymentMode: draft.paymentMode,
       stripePriceIdOneTime: "",
       stripePriceIdRecurring: "",
@@ -611,7 +618,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               </div>
               {draft.variants.length ? (
                 <div className="overflow-x-auto rounded-lg border border-black/10">
-                  <table className="w-full min-w-[980px] text-left text-sm">
+                  <table className="w-full min-w-[1180px] text-left text-sm">
                     <thead className="bg-black/[0.03]">
                       <tr>
                         <th className="px-3 py-2">Variant</th>
@@ -620,6 +627,8 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                         <th className="px-3 py-2">Cost</th>
                         <th className="px-3 py-2">Inventory</th>
                         <th className="px-3 py-2">Printful variant</th>
+                        <th className="px-3 py-2">Sync variant</th>
+                        <th className="px-3 py-2">Printful SKU</th>
                         <th className="px-3 py-2">Active</th>
                       </tr>
                     </thead>
@@ -632,6 +641,8 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                           <td className="px-3 py-2"><MoneyInput cents={variant.costCents} onChange={(value) => updateVariant(index, "costCents", value)} /></td>
                           <td className="px-3 py-2"><Input type="number" value={variant.inventoryQuantity} onChange={(event) => updateVariant(index, "inventoryQuantity", number(event.target.value))} /></td>
                           <td className="px-3 py-2"><Input value={variant.printfulVariantId} onChange={(event) => updateVariant(index, "printfulVariantId", event.target.value)} /></td>
+                          <td className="px-3 py-2"><Input value={variant.printfulSyncVariantId} onChange={(event) => updateVariant(index, "printfulSyncVariantId", event.target.value)} /></td>
+                          <td className="px-3 py-2"><Input value={variant.printfulSku} onChange={(event) => updateVariant(index, "printfulSku", event.target.value)} /></td>
                           <td className="px-3 py-2"><input type="checkbox" checked={variant.active} onChange={(event) => updateVariant(index, "active", event.target.checked)} /></td>
                         </tr>
                       ))}
@@ -664,8 +675,11 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               </div>
               {draft.fulfillmentType === "printful" ? (
                 <div className="grid gap-4 rounded-lg border border-black/10 bg-black/[0.02] p-4 sm:grid-cols-2">
+                  <Toggle label="Enable Printful handoff" checked={draft.printfulEnabled} onChange={(value) => update("printfulEnabled", value)} />
+                  <Toggle label="Needs variant mapping review" checked={draft.printfulNeedsVariantMapping} onChange={(value) => update("printfulNeedsVariantMapping", value)} />
                   <Field label="Printful product ID"><Input value={draft.printfulProductId} onChange={(event) => update("printfulProductId", event.target.value)} /></Field>
                   <Field label="Printful sync product ID"><Input value={draft.printfulSyncProductId} onChange={(event) => update("printfulSyncProductId", event.target.value)} /></Field>
+                  <Field label="Printful template ID"><Input value={draft.printfulTemplateId} onChange={(event) => update("printfulTemplateId", event.target.value)} /></Field>
                   <p className="sm:col-span-2 text-sm text-black/55">Printful submission still runs only after verified payment. Configure `PRINTFUL_API_KEY` before production fulfillment.</p>
                 </div>
               ) : null}

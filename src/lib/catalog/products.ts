@@ -15,6 +15,7 @@ function mapProduct(product: Product): CatalogProduct {
     productType: product.productType,
     paymentMode: product.paymentMode,
     deliveryMode: product.deliveryMode,
+    fulfillmentType: product.fulfillmentType,
     franchise: product.franchise,
     status: product.status,
     visibility: product.visibility,
@@ -46,6 +47,9 @@ function mapProduct(product: Product): CatalogProduct {
     tokenGated: product.tokenGated,
     isRandomized: product.isRandomized,
     oddsDisclosureUrl: product.oddsDisclosureUrl ?? undefined,
+    printfulEnabled: product.printfulEnabled,
+    printfulProductId: product.printfulProductId ?? undefined,
+    printfulSyncProductId: product.printfulSyncProductId ?? undefined,
     metadata:
       product.metadata && typeof product.metadata === "object" && !Array.isArray(product.metadata)
         ? (product.metadata as Record<string, unknown>)

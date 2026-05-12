@@ -88,7 +88,10 @@ Inventory quantity remains on product/variant for fast reads, but every paid ded
 - `PaymentSession`: provider-neutral checkout/payment session with provider identifiers and idempotency key.
 - `PaymentCollection`: order-level payable/refundable amount grouping for future capture/refund workflows.
 - `FulfillmentProvider`: shop-scoped fulfillment provider configuration.
-- `PrintfulOrder`: Printful submission state, external IDs, idempotency key, request hash, and error details.
+- `PrintfulOrder`: Printful submission state, external IDs, idempotency key, request hash, request/response/error snapshots, recipient/items/shipping snapshots, confirmation policy, and sync timestamps.
+- `PrintfulOrderItem`: Printful item-to-order-item mapping with product, variant, and provider variant IDs.
+- `PrintfulWebhookEvent`: received Printful webhook payloads for processing and audit review.
+- `ProviderIdempotencyKey`: provider-neutral idempotency scaffold for Printful and future provider retries.
 - `ShippingProfile`: shipping behavior groups such as standard, digital, heavy, fragile, and collectible.
 - `ShippingOption`: region/provider shipping choices returned to checkout.
 - `Fulfillment` / `FulfillmentItem`: provider-neutral fulfillment records separate from shipment tracking history.

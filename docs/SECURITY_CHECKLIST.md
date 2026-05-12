@@ -13,6 +13,10 @@
 - Security headers in `next.config.ts`.
 - `.env.example` uses placeholders only.
 - No raw card data storage.
+- Printful API key remains server-only.
+- Printful handoff runs only after verified Stripe payment.
+- Printful order creation uses internal idempotency and provider external IDs.
+- Printful admin retry/refresh routes require `canManagePrintful`.
 
 ## Required Before Production
 

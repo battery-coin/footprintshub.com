@@ -71,3 +71,7 @@ Ad products are reviewed placements, sponsorships, creator/fan-club promotions, 
 Before using the editor against Neon, generate and review a Prisma migration for the product schema additions, then apply it to the target database.
 
 For product media uploads, configure the `CLOUDFLARE_R2_*` Railway variables described in `docs/CLOUDFLARE_R2_PRODUCT_MEDIA.md`.
+
+## Printful Fulfillment
+
+Printful handoff runs only after a verified Stripe paid webhook. Configure `PRINTFUL_API_KEY`, `PRINTFUL_STORE_ID`, `PRINTFUL_API_BASE_URL`, `PRINTFUL_CONFIRM_ORDERS`, and `PRINTFUL_DEFAULT_SHIPPING_METHOD` in Railway. Keep `PRINTFUL_CONFIRM_ORDERS=false` until a paid test order creates a verified Printful draft order.
