@@ -1,10 +1,11 @@
 import { AffiliateShell } from "@/components/affiliate/affiliate-shell";
-import { getDemoReferralLink } from "@/lib/affiliate/demo-data";
+import { demoAffiliate } from "@/lib/affiliate/demo-data";
+import { buildReferralUrl } from "@/lib/url/site-url";
 
 export default function AffiliateLinksPage() {
   const links = ["/", "/products/footprints-supporter-bundle", "/products/matrix-decoded-alpha-deck"].map((path) => ({
     path,
-    url: getDemoReferralLink(path),
+    url: buildReferralUrl(demoAffiliate.referralCode, path),
   }));
 
   return (

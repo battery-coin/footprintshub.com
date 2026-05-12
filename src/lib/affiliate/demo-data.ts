@@ -1,4 +1,5 @@
 import { buildReferralUrl } from "./attribution";
+import { getSiteUrl } from "@/lib/url/site-url";
 
 export const demoAffiliate = {
   id: "aff_demo_founder",
@@ -102,7 +103,7 @@ export const demoMarketingAssets = [
 
 export function getDemoReferralLink(path = "/") {
   return buildReferralUrl({
-    baseUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://footprintshub.com",
+    baseUrl: getSiteUrl(),
     code: demoAffiliate.referralCode,
     path,
   });

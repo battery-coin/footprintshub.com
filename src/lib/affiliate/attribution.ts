@@ -1,4 +1,5 @@
 import type { AttributionModel } from "./types";
+import { normalizeBaseUrl } from "@/lib/url/site-url";
 
 export const REFERRAL_COOKIE = "fh_ref";
 export const VISITOR_COOKIE = "fh_visitor";
@@ -13,23 +14,9 @@ export function buildReferralUrl({
   code: string;
   path?: string;
 }) {
-  const url = new URL(path, normalizeReferralBaseUrl(baseUrl));
+  const url = new URL(path, normalizeBaseUrl(baseUrl));
   url.searchParams.set("ref", code);
   return url.toString();
-}
-
-function normalizeReferralBaseUrl(baseUrl: string) {
-  const trimmed = baseUrl.trim();
-
-  if (!trimmed) {
-    return "https://footprintshub.com";
-  }
-
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed.replace(/\/$/, "");
-  }
-
-  return `https://${trimmed.replace(/\/$/, "")}`;
 }
 
 export function shouldReplaceAttribution({

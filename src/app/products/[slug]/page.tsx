@@ -5,6 +5,7 @@ import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductArt } from "@/components/product/product-art";
 import { formatMoney, getProductBySlug, getProducts } from "@/lib/catalog/products";
+import { buildAbsoluteUrl } from "@/lib/url/site-url";
 
 export async function generateStaticParams() {
   const products = await getProducts();
@@ -26,8 +27,7 @@ export default async function ProductDetailPage({
   const related = (await getProducts())
     .filter((item) => item.id !== product.id && item.franchise === product.franchise)
     .slice(0, 4);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ?? "https://footprintshub.com";
-  const productUrl = `${siteUrl}/products/${product.slug}`;
+  const productUrl = buildAbsoluteUrl(`/products/${product.slug}`);
 
   return (
     <main>

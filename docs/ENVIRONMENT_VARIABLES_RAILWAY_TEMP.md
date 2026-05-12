@@ -44,6 +44,20 @@ NEXT_PUBLIC_FLAGSHIP_SHOP_DOMAIN=footprintshub.com
 NEXT_PUBLIC_HERO_STUDIO_SHOP_DOMAIN=shop.herostudio.org
 ```
 
+`NEXT_PUBLIC_SITE_URL` must be a full URL with protocol. Use:
+
+```txt
+NEXT_PUBLIC_SITE_URL=https://footprintshubcom-production-155d.up.railway.app
+```
+
+Do not use:
+
+```txt
+NEXT_PUBLIC_SITE_URL=footprintshubcom-production-155d.up.railway.app
+```
+
+The app now normalizes missing protocol defensively, but Railway should still be configured with the full `https://` URL.
+
 ## Optional Disabled Services
 
 Keep these blank or test-only until the provider is configured:

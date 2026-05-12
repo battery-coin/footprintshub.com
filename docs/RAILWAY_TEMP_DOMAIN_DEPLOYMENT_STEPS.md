@@ -18,6 +18,14 @@ NEXT_PUBLIC_SITE_URL=https://REPLACE_WITH_RAILWAY_TEMP_DOMAIN
 DATABASE_URL=REPLACE_WITH_NEON_CONNECTION_STRING
 ```
 
+For the current Railway temporary domain, use:
+
+```txt
+NEXT_PUBLIC_SITE_URL=https://footprintshubcom-production-155d.up.railway.app
+```
+
+Do not enter only `footprintshubcom-production-155d.up.railway.app`; protocol-less values caused a previous Turbopack prerender failure on `/affiliate/links`.
+
 11. Redeploy.
 12. Test these URLs:
 
@@ -33,4 +41,3 @@ https://REPLACE_WITH_RAILWAY_TEMP_DOMAIN/checkout
 ## Stop Point
 
 Do not connect `footprintshub.com` or `www.footprintshub.com` until the Railway temporary URL works cleanly.
-
