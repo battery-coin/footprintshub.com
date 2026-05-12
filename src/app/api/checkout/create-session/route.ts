@@ -9,6 +9,9 @@ import { validateInventoryForCart } from "@/lib/inventory/inventory-service";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { getStripe } from "@/lib/stripe";
 import { getSiteUrl } from "@/lib/url";
+import { canCheckoutWithPolicy, calculatePaymentComposition } from "@/lib/payments/mixed-payment-calculator";
+import { createOrderPaymentComposition } from "@/lib/payments/payment-composition";
+import { getActiveGlobalPaymentPolicy } from "@/lib/payments/payment-policy";
 import { REFERRAL_COOKIE, SESSION_COOKIE, VISITOR_COOKIE } from "@/lib/affiliate/attribution";
 
 const checkoutSchema = z.object({
@@ -67,6 +70,26 @@ export async function POST(request: Request) {
       })
     : undefined;
   const totals = calculateCartTotals({ lines, discount });
+  const paymentPolicy = await getActiveGlobalPaymentPolicy();
+  const checkoutPolicy = canCheckoutWithPolicy(paymentPolicy);
+  const paymentComposition = calculatePaymentComposition(totals.totalCents, paymentPolicy);
+
+  if (!checkoutPolicy.ok) {
+    return NextResponse.json(
+      {
+        error: checkoutPolicy.reason,
+        paymentPolicy: {
+          compositionMode: paymentPolicy.compositionMode,
+          fiatPercentageBps: paymentPolicy.fiatPercentageBps,
+          tokenPercentageBps: paymentPolicy.tokenPercentageBps,
+          tokenSymbol: paymentPolicy.tokenSymbol,
+        },
+        composition: paymentComposition.ok ? paymentComposition : null,
+      },
+      { status: 409 },
+    );
+  }
+
   const order = await createPendingOrderIfDatabaseReady({
     lines,
     totals,
@@ -76,6 +99,16 @@ export async function POST(request: Request) {
     visitorId,
     couponCode: totals.appliedDiscountCode,
   });
+  if (order && paymentComposition.ok) {
+    await createOrderPaymentComposition({
+      orderId: order.id,
+      shopId: order.shopId,
+      totalCents: totals.totalCents,
+      policy: paymentPolicy,
+    });
+  }
+
+  const stripeAmountCents = paymentComposition.ok ? paymentComposition.fiatRequiredCents : totals.totalCents;
   const stripeDiscount =
     totals.discountCents > 0
       ? await stripe.coupons.create({
@@ -85,52 +118,67 @@ export async function POST(request: Request) {
           name: totals.appliedDiscountCode ? `FootprintsHub ${totals.appliedDiscountCode}` : "FootprintsHub discount",
         })
       : null;
-  const lineItems = [
-    ...lines.map((line) => ({
-      quantity: line.quantity,
-      price_data: {
-        currency: line.product.currency.toLowerCase(),
-        unit_amount: line.unitPriceCents,
-        product_data: {
-          name: line.product.title,
-          description: line.product.shortDescription,
-          metadata: {
-            productId: line.product.id,
-            shopId: line.product.shopId,
-            slug: line.product.slug,
-          },
-        },
-      },
-    })),
-    ...(totals.shippingCents > 0
+  const lineItems =
+    paymentPolicy.tokenPercentageBps > 0
       ? [
           {
             quantity: 1,
             price_data: {
               currency: totals.currency.toLowerCase(),
-              unit_amount: totals.shippingCents,
+              unit_amount: stripeAmountCents,
               product_data: {
-                name: "Shipping",
+                name: "FootprintsHub USD payment portion",
+                description: "USD portion of a mixed utility token payment policy.",
               },
             },
           },
         ]
-      : []),
-    ...(totals.taxCents > 0
-      ? [
-          {
-            quantity: 1,
+      : [
+          ...lines.map((line) => ({
+            quantity: line.quantity,
             price_data: {
-              currency: totals.currency.toLowerCase(),
-              unit_amount: totals.taxCents,
+              currency: line.product.currency.toLowerCase(),
+              unit_amount: line.unitPriceCents,
               product_data: {
-                name: "Estimated tax",
+                name: line.product.title,
+                description: line.product.shortDescription,
+                metadata: {
+                  productId: line.product.id,
+                  shopId: line.product.shopId,
+                  slug: line.product.slug,
+                },
               },
             },
-          },
-        ]
-      : []),
-  ];
+          })),
+          ...(totals.shippingCents > 0
+            ? [
+                {
+                  quantity: 1,
+                  price_data: {
+                    currency: totals.currency.toLowerCase(),
+                    unit_amount: totals.shippingCents,
+                    product_data: {
+                      name: "Shipping",
+                    },
+                  },
+                },
+              ]
+            : []),
+          ...(totals.taxCents > 0
+            ? [
+                {
+                  quantity: 1,
+                  price_data: {
+                    currency: totals.currency.toLowerCase(),
+                    unit_amount: totals.taxCents,
+                    product_data: {
+                      name: "Estimated tax",
+                    },
+                  },
+                },
+              ]
+            : []),
+        ];
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -144,6 +192,9 @@ export async function POST(request: Request) {
       shopId: lines[0]?.product.shopId,
       ...(parsed.data.cartId ? { cartId: parsed.data.cartId } : {}),
       ...(order ? { orderId: order.id, orderNumber: order.orderNumber } : {}),
+      paymentCompositionMode: paymentPolicy.compositionMode,
+      fiatRequiredCents: String(stripeAmountCents),
+      tokenRequiredCents: paymentComposition.ok ? String(paymentComposition.tokenUsdReferenceCents) : "0",
       ...(referralCode ? { referralCode } : {}),
       ...(sessionId ? { sessionId } : {}),
       ...(visitorId ? { visitorId } : {}),
@@ -224,6 +275,7 @@ async function createPendingOrderIfDatabaseReady({
       },
       select: {
         id: true,
+        shopId: true,
         orderNumber: true,
       },
     });

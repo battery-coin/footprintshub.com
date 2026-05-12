@@ -189,17 +189,80 @@ enum OrderAddressType {
 
 enum PaymentProvider {
   stripe
+  coinbase
+  token_manual
   manual
   battery_coin
+}
+
+enum PaymentPart {
+  fiat
+  token
+  full
 }
 
 enum PaymentStatus {
   unpaid
   requires_action
   paid
+  partially_paid
+  fiat_paid_token_pending
+  token_paid_fiat_pending
   failed
+  cancelled
   refunded
   partially_refunded
+}
+
+enum PaymentCompositionMode {
+  fiat_only
+  token_only
+  mixed_ratio
+  owner_defined
+  product_override
+  subscription_override
+}
+
+enum PaymentPolicyStatus {
+  draft
+  active
+  archived
+}
+
+enum PaymentPolicyAppliesTo {
+  global
+  product
+  category
+  collection
+  subscription
+  ad
+  affiliate_payout
+  manual
+}
+
+enum PaymentRoundingMode {
+  nearest_cent
+  round_up_fiat
+  round_up_token
+}
+
+enum OrderPaymentCompositionStatus {
+  pending
+  partially_paid
+  paid
+  failed
+  cancelled
+  refunded
+}
+
+enum TokenPaymentIntentStatus {
+  pending
+  seen
+  confirmed
+  failed
+  expired
+  refunded
+  manual_review
 }
 
 enum FulfillmentStatus {
@@ -751,6 +814,12 @@ model Shop {
   taxClasses                      TaxClass[]
   taxRates                        TaxRate[]
   shippingMethods                 ShippingMethod[]
+  tokenPaymentAssets              TokenPaymentAsset[]
+  paymentPolicies                 PaymentPolicy[]
+  productPaymentPolicies          ProductPaymentPolicy[]
+  subscriptionPaymentPolicies     SubscriptionPaymentPolicy[]
+  orderPaymentCompositions        OrderPaymentComposition[]
+  tokenPaymentIntents             TokenPaymentIntent[]
   weightClasses                   WeightClass[]
   lengthClasses                   LengthClass[]
   marketRegions                   MarketRegion[]
@@ -926,9 +995,9 @@ model Product {
   createdAt             DateTime               @default(now())
   updatedAt             DateTime               @updatedAt
 
-  shop               Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  brand              Brand?                @relation(fields: [brandId], references: [id])
-  taxClass           TaxClass?             @relation(fields: [taxClassId], references: [id])
+  shop               Shop                   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  brand              Brand?                 @relation(fields: [brandId], references: [id])
+  taxClass           TaxClass?              @relation(fields: [taxClassId], references: [id])
   variants           ProductVariant[]
   media              ProductMedia[]
   options            ProductOption[]
@@ -936,8 +1005,8 @@ model Product {
   productCategories  ProductCategory[]
   productCollections ProductCollection[]
   salesChannels      ProductSalesChannel[]
-  relatedProducts    RelatedProduct[]      @relation("ProductRelatedSource")
-  relatedTo          RelatedProduct[]      @relation("ProductRelatedTarget")
+  relatedProducts    RelatedProduct[]       @relation("ProductRelatedSource")
+  relatedTo          RelatedProduct[]       @relation("ProductRelatedTarget")
   wishlistItems      WishlistItem[]
   compareItems       CompareItem[]
   cartItems          CartItem[]
@@ -950,6 +1019,7 @@ model Product {
   inventoryLedgers   InventoryLedger[]
   discountSchedules  DiscountSchedule[]
   importRows         ImportJobRow[]
+  paymentPolicies    ProductPaymentPolicy[]
 
   @@unique([shopId, slug])
   @@index([shopId])
@@ -1292,6 +1362,8 @@ model Order {
   items                        OrderItem[]
   addresses                    OrderAddress[]
   payments                     Payment[]
+  paymentCompositions          OrderPaymentComposition[]
+  tokenPaymentIntents          TokenPaymentIntent[]
   paymentSessions              PaymentSession[]
   paymentCollections           PaymentCollection[]
   refunds                      Refund[]
@@ -1398,6 +1470,7 @@ model Payment {
   shopId                  String
   orderId                 String
   provider                PaymentProvider @default(stripe)
+  paymentPart             PaymentPart     @default(full)
   status                  PaymentStatus   @default(unpaid)
   amountCents             Int
   currency                String          @default("USD")
@@ -1412,6 +1485,154 @@ model Payment {
 
   @@index([shopId, status])
   @@index([orderId])
+}
+
+model TokenPaymentAsset {
+  id                 String   @id @default(cuid())
+  shopId             String
+  symbol             String
+  name               String
+  chain              String
+  contractAddress    String?
+  decimals           Int      @default(18)
+  enabled            Boolean  @default(false)
+  utilityDescription String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  shop                     Shop                      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  paymentPolicies          PaymentPolicy[]
+  orderPaymentCompositions OrderPaymentComposition[]
+  tokenPaymentIntents      TokenPaymentIntent[]
+
+  @@unique([shopId, symbol, chain])
+  @@index([shopId, enabled])
+}
+
+model PaymentPolicy {
+  id                        String                 @id @default(cuid())
+  shopId                    String
+  name                      String
+  description               String?
+  status                    PaymentPolicyStatus    @default(draft)
+  compositionMode           PaymentCompositionMode @default(fiat_only)
+  fiatCurrency              String                 @default("USD")
+  fiatPercentageBps         Int                    @default(10000)
+  tokenPercentageBps        Int                    @default(0)
+  tokenAssetId              String?
+  appliesTo                 PaymentPolicyAppliesTo @default(global)
+  requireExactRatio         Boolean                @default(true)
+  allowCustomerOverpayToken Boolean                @default(false)
+  allowCustomerOverpayFiat  Boolean                @default(false)
+  roundingMode              PaymentRoundingMode    @default(nearest_cent)
+  minFiatCents              Int?
+  minTokenUnits             Decimal?
+  maxTokenUnits             Decimal?
+  effectiveFrom             DateTime?
+  effectiveTo               DateTime?
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+
+  shop                     Shop                        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  tokenAsset               TokenPaymentAsset?          @relation(fields: [tokenAssetId], references: [id])
+  productPolicies          ProductPaymentPolicy[]
+  subscriptionPolicies     SubscriptionPaymentPolicy[]
+  orderPaymentCompositions OrderPaymentComposition[]
+
+  @@index([shopId, status])
+  @@index([shopId, appliesTo])
+  @@index([tokenAssetId])
+}
+
+model ProductPaymentPolicy {
+  id              String   @id @default(cuid())
+  shopId          String
+  productId       String
+  paymentPolicyId String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  paymentPolicy PaymentPolicy @relation(fields: [paymentPolicyId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, paymentPolicyId])
+  @@index([shopId])
+  @@index([paymentPolicyId])
+}
+
+model SubscriptionPaymentPolicy {
+  id                 String   @id @default(cuid())
+  shopId             String
+  subscriptionPlanId String
+  paymentPolicyId    String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  shop          Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  paymentPolicy PaymentPolicy @relation(fields: [paymentPolicyId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionPlanId, paymentPolicyId])
+  @@index([shopId])
+  @@index([paymentPolicyId])
+}
+
+model OrderPaymentComposition {
+  id                     String                        @id @default(cuid())
+  shopId                 String
+  orderId                String
+  paymentPolicyId        String?
+  fiatCurrency           String                        @default("USD")
+  fiatRequiredCents      Int                           @default(0)
+  fiatPaidCents          Int                           @default(0)
+  tokenAssetId           String?
+  tokenSymbol            String?
+  tokenRequiredUnits     Decimal?
+  tokenPaidUnits         Decimal?
+  tokenUsdReferenceCents Int?
+  status                 OrderPaymentCompositionStatus @default(pending)
+  metadata               Json?
+  createdAt              DateTime                      @default(now())
+  updatedAt              DateTime                      @updatedAt
+
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentPolicy       PaymentPolicy?       @relation(fields: [paymentPolicyId], references: [id])
+  tokenAsset          TokenPaymentAsset?   @relation(fields: [tokenAssetId], references: [id])
+  tokenPaymentIntents TokenPaymentIntent[]
+
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([paymentPolicyId])
+  @@index([tokenAssetId])
+}
+
+model TokenPaymentIntent {
+  id                     String                   @id @default(cuid())
+  shopId                 String
+  orderId                String
+  paymentCompositionId   String
+  tokenAssetId           String
+  chain                  String
+  receivingWalletAddress String?
+  requiredUnits          Decimal
+  paidUnits              Decimal?
+  transactionHash        String?
+  status                 TokenPaymentIntentStatus @default(pending)
+  expiresAt              DateTime?
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+
+  shop               Shop                    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order              Order                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentComposition OrderPaymentComposition @relation(fields: [paymentCompositionId], references: [id], onDelete: Cascade)
+  tokenAsset         TokenPaymentAsset       @relation(fields: [tokenAssetId], references: [id])
+
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([paymentCompositionId])
+  @@index([tokenAssetId])
+  @@index([transactionHash])
 }
 
 model Refund {

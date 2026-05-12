@@ -21,31 +21,39 @@ const commissionBases: CommissionBase[] = [
   "gross_margin",
 ];
 
-export function UseStructureTemplateButton({ templateKey }: { templateKey: string }) {
+export function UseStructureTemplateButton({ templateKey, structureType }: { templateKey: string; structureType?: AffiliateStructureType }) {
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [message, setMessage] = useState("");
   const router = useRouter();
 
   async function useTemplate() {
     setStatus("saving");
+    setMessage("");
+    const adminSecret = new URLSearchParams(window.location.search).get("admin_secret");
     const response = await fetch("/api/admin/affiliates/structures/use-template", {
       method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ templateKey }),
+      headers: { "content-type": "application/json", ...(adminSecret ? { "x-admin-secret": adminSecret } : {}) },
+      body: JSON.stringify({ templateKey, structureType }),
     });
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
       setStatus("error");
+      setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
       return;
     }
 
+    setMessage(payload.stored === false ? "Preview created. Connect DATABASE_URL for persistence." : "Structure created. Opening settings...");
     router.push(payload.redirectTo ?? "/admin/affiliates/plans");
   }
 
   return (
-    <Button type="button" onClick={useTemplate} disabled={status === "saving"}>
-      {status === "saving" ? "Creating..." : status === "error" ? "Try again" : "Use This Structure"}
-    </Button>
+    <div className="grid gap-2">
+      <Button type="button" onClick={useTemplate} disabled={status === "saving"}>
+        {status === "saving" ? "Creating..." : status === "error" ? "Try again" : "Use This Structure"}
+      </Button>
+      {message ? <p className={status === "error" ? "text-sm text-red-600" : "text-sm text-black/60"}>{message}</p> : null}
+    </div>
   );
 }
 

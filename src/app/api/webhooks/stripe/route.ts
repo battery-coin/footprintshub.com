@@ -3,6 +3,7 @@ import { getStripe } from "@/lib/stripe";
 import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { deductInventoryForPaidOrder } from "@/lib/inventory/inventory-service";
+import { canCompletePaidOrder } from "@/lib/orders/payment-completion-gate";
 import { markWebhookFailed, markWebhookProcessed, recordWebhookReceived } from "@/lib/webhooks/webhook-events";
 
 export async function POST(request: Request) {
@@ -50,11 +51,28 @@ export async function POST(request: Request) {
         const paymentIntentId =
           typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
 
-        const paidOrder = await getPrisma().order.update({
+        const prisma = getPrisma();
+        const composition = await prisma.orderPaymentComposition.findFirst({ where: { orderId } });
+        const fiatPaidCents = session.amount_total ?? 0;
+
+        const updatedComposition = composition
+          ? await prisma.orderPaymentComposition.update({
+              where: { id: composition.id },
+              data: {
+                fiatPaidCents,
+                status:
+                  fiatPaidCents >= composition.fiatRequiredCents && Number(composition.tokenRequiredUnits ?? 0) <= Number(composition.tokenPaidUnits ?? 0)
+                    ? "paid"
+                    : "partially_paid",
+              },
+            })
+          : null;
+        const completion = canCompletePaidOrder(updatedComposition ?? undefined);
+        const paidOrder = await prisma.order.update({
           where: { id: orderId },
           data: {
-            status: "paid",
-            paymentStatus: "paid",
+            status: completion.ok ? "paid" : "awaiting_payment",
+            paymentStatus: completion.ok ? "paid" : "fiat_paid_token_pending",
             stripeCheckoutSessionId: session.id,
             stripePaymentIntentId: paymentIntentId,
             customerEmail: session.customer_details?.email ?? session.customer_email ?? undefined,
@@ -65,7 +83,7 @@ export async function POST(request: Request) {
           },
         });
 
-        await getPrisma().payment.upsert({
+        await prisma.payment.upsert({
           where: {
             idempotencyKey: `stripe:checkout.session.completed:${session.id}`,
           },
@@ -77,6 +95,7 @@ export async function POST(request: Request) {
             shopId: paidOrder.shopId,
             orderId,
             provider: "stripe",
+            paymentPart: "fiat",
             status: "paid",
             amountCents: session.amount_total ?? 0,
             currency: session.currency?.toUpperCase() ?? "USD",
@@ -86,8 +105,10 @@ export async function POST(request: Request) {
           },
         });
 
-        await deductInventoryForPaidOrder(orderId);
-        await calculateCommissionsForOrder(orderId);
+        if (completion.ok) {
+          await deductInventoryForPaidOrder(orderId);
+          await calculateCommissionsForOrder(orderId);
+        }
       }
 
       await markWebhookProcessed("stripe", event.id);

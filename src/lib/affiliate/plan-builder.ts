@@ -122,7 +122,7 @@ export async function createPlanFromTemplate(templateKey: string) {
       ok: true as const,
       stored: false,
       planId: `${template.structureType}-draft`,
-      redirectTo: `/admin/affiliates/plans/${template.structureType}-draft/levels`,
+      redirectTo: getPlanSetupPath(`${template.structureType}-draft`, template.structureType),
       message: "DATABASE_URL is not configured, so the template was previewed without persistence.",
     };
   }
@@ -145,50 +145,60 @@ export async function createPlanFromTemplate(templateKey: string) {
       },
     }));
 
-  const plan = await prisma.affiliatePlan.create({
-    data: {
-      shopId: shop.id,
-      affiliateProgramId: program.id,
-      name: template.name,
-      description: `${template.description} ${getStructureEngineNotice(template.structureType)}`,
-      status: "draft",
-      planType: template.structureType === "unilevel" ? "seven_level" : "hybrid",
-      structureType: template.structureType,
-      isDefault: false,
-      maxActiveLevels: template.structureType === "binary" ? 2 : 7,
-      maxCommissionPoolBps: 2000,
-      levels: {
-        create: template.defaultLevels.map((level) => ({
-          shopId: shop.id,
-          levelDepth: level.levelDepth,
-          label: level.label,
-          enabled: level.enabled,
-          structureType: template.structureType,
-          commissionType: level.commissionType,
-          percentageBps: level.percentageBps,
-          fixedCents: level.fixedCents,
-          commissionBase: level.commissionBase,
-          maxPerOrderCents: level.maxPerOrderCents,
-          maxPerMonthCents: level.maxPerMonthCents,
-          sortOrder: level.sortOrder,
-        })),
+  const plan = await prisma.$transaction(async (tx) => {
+    const created = await tx.affiliatePlan.create({
+      data: {
+        shopId: shop.id,
+        affiliateProgramId: program.id,
+        name: template.name,
+        description: `${template.description} ${getStructureEngineNotice(template.structureType)}`,
+        status: "draft",
+        planType: template.structureType === "unilevel" ? "seven_level" : "hybrid",
+        structureType: template.structureType,
+        isDefault: false,
+        maxActiveLevels: template.structureType === "binary" ? 2 : 7,
+        maxCommissionPoolBps: 2000,
+        levels: {
+          create: template.defaultLevels.map((level) => ({
+            shopId: shop.id,
+            levelDepth: level.levelDepth,
+            label: level.label,
+            enabled: level.enabled,
+            structureType: template.structureType,
+            commissionType: level.commissionType,
+            percentageBps: level.percentageBps,
+            fixedCents: level.fixedCents,
+            commissionBase: level.commissionBase,
+            maxPerOrderCents: level.maxPerOrderCents,
+            maxPerMonthCents: level.maxPerMonthCents,
+            sortOrder: level.sortOrder,
+          })),
+        },
       },
-    },
+    });
+
+    await createStructureConfig({ tx, planId: created.id, shopId: shop.id, template });
+
+    await tx.affiliateAuditLog.create({
+      data: {
+        shopId: shop.id,
+        action: "affiliate_plan_created_from_template",
+        entityType: "AffiliatePlan",
+        entityId: created.id,
+        after: { templateKey, structureType: template.structureType },
+      },
+    });
+
+    return created;
   });
 
-  await createStructureConfig({ planId: plan.id, shopId: shop.id, template });
+  return { ok: true as const, stored: true, planId: plan.id, redirectTo: getPlanSetupPath(plan.id, template.structureType) };
+}
 
-  await prisma.affiliateAuditLog.create({
-    data: {
-      shopId: shop.id,
-      action: "affiliate_plan_created_from_template",
-      entityType: "AffiliatePlan",
-      entityId: plan.id,
-      after: { templateKey, structureType: template.structureType },
-    },
-  });
-
-  return { ok: true as const, stored: true, planId: plan.id, redirectTo: `/admin/affiliates/plans/${plan.id}/levels` };
+export function getPlanSetupPath(planId: string, structureType: AffiliateStructureType) {
+  if (structureType === "binary") return `/admin/affiliates/plans/${planId}/binary`;
+  if (structureType === "matrix") return `/admin/affiliates/plans/${planId}/matrix`;
+  return `/admin/affiliates/plans/${planId}/levels`;
 }
 
 export async function updatePlanLevels(planId: string, levels: StructureLevelTemplate[]) {
@@ -455,15 +465,17 @@ export function previewPlan(plan: AdminAffiliatePlanView, subtotalCents = 10_000
 }
 
 async function createStructureConfig({
+  tx,
   planId,
   shopId,
   template,
 }: {
+  tx?: Prisma.TransactionClient;
   planId: string;
   shopId: string;
   template: AffiliateStructureTemplate;
 }) {
-  const prisma = getPrisma();
+  const prisma = tx ?? getPrisma();
 
   if (template.structureType === "binary") {
     const config = template.defaultConfig as Prisma.BinaryPlanConfigUncheckedCreateInput;

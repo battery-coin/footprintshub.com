@@ -1,5 +1,6 @@
 import { AdminShell } from "@/components/admin/admin-shell";
 import { SetupPanel } from "@/components/ui/setup-panel";
+import { ButtonLink } from "@/components/ui/button";
 
 export default function AdminPaymentSettingsPage() {
   return (
@@ -8,8 +9,13 @@ export default function AdminPaymentSettingsPage() {
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Payments</p>
         <h1 className="mt-3 text-4xl font-semibold">Payment settings</h1>
         <p className="mt-4 max-w-3xl text-sm leading-7 text-black/60">
-          Stripe Checkout is the first production payment provider. Coinbase crypto checkout remains disabled unless explicitly configured.
+          Stripe Checkout is the first production fiat provider. Battery Coin token payment settings are utility-payment configuration only and remain blocked at checkout until a token processor or manual verification policy is enabled.
         </p>
+        <div className="mt-5 flex flex-wrap gap-3">
+          <ButtonLink href="/admin/settings/payments/mixed">Mixed payment ratios</ButtonLink>
+          <ButtonLink href="/admin/settings/tokens" variant="secondary">Token assets</ButtonLink>
+          <ButtonLink href="/admin/payments/token" variant="secondary">Token payment review</ButtonLink>
+        </div>
         <div className="mt-8">
           <SetupPanel
             title="Provider readiness"

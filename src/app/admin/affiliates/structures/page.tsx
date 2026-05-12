@@ -7,6 +7,14 @@ import { formatBpsAsPercent } from "@/lib/money/percentage-bps";
 export default function AdminAffiliateStructuresPage() {
   return (
     <AffiliateAdminPage title="Choose commission structure">
+      <div className="mb-6 rounded-lg border border-black/10 bg-white p-5">
+        <p className="text-sm leading-6 text-black/65">
+          Commission structures determine how qualified-purchase commissions are calculated. Payment policies determine whether customers pay in USD, Battery Coin, or a configured split such as 50% USD / 50% token.
+        </p>
+        <a href="/admin/settings/payments/mixed" className="mt-3 inline-flex text-sm font-semibold text-black underline">
+          Manage Payment Ratios
+        </a>
+      </div>
       <div className="grid gap-5 lg:grid-cols-3">
         {affiliateStructureTemplates.map((template) => (
           <section key={template.key} className="grid gap-5 rounded-lg border border-black/10 bg-white p-5">
@@ -15,8 +23,8 @@ export default function AdminAffiliateStructuresPage() {
                 <h2 className="text-xl font-semibold">{template.name}</h2>
                 <p className="mt-2 text-sm leading-6 text-black/60">{template.description}</p>
               </div>
-              <Badge className={template.engineStatus === "functional" ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-800"}>
-                {template.engineStatus}
+              <Badge className={template.engineStatus === "functional" ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-blue-800"}>
+                {template.engineStatus === "functional" ? "Recommended" : "Configurable"}
               </Badge>
             </div>
 
@@ -35,7 +43,7 @@ export default function AdminAffiliateStructuresPage() {
             </div>
 
             <div className="rounded-md bg-black/[0.03] p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Default rates</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-black/45">Default editable settings</p>
               <div className="mt-3 grid gap-2">
                 {template.defaultLevels.slice(0, 4).map((level) => (
                   <div key={level.levelDepth} className="flex items-center justify-between text-sm">
@@ -46,9 +54,12 @@ export default function AdminAffiliateStructuresPage() {
                   </div>
                 ))}
               </div>
+              {template.engineStatus !== "functional" ? (
+                <p className="mt-3 text-xs leading-5 text-amber-800">Configuration ready; payout engine requires final activation.</p>
+              ) : null}
             </div>
 
-            <UseStructureTemplateButton templateKey={template.key} />
+            <UseStructureTemplateButton templateKey={template.key} structureType={template.structureType} />
           </section>
         ))}
       </div>

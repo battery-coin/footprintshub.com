@@ -30,6 +30,9 @@ const links: Array<{ href: string; label: string; permission: PermissionKey }> =
   { href: "/admin/audit-logs", label: "Audit logs", permission: "canViewAuditLogs" },
   { href: "/admin/security", label: "Security", permission: "canManageSecurity" },
   { href: "/admin/settings", label: "Settings", permission: "canManageShopSettings" },
+  { href: "/admin/settings/payments/mixed", label: "Payment ratios", permission: "canManageFunds" },
+  { href: "/admin/settings/tokens", label: "Token assets", permission: "canManageFunds" },
+  { href: "/admin/payments/token", label: "Token reviews", permission: "canManageFunds" },
   { href: "/owner/roles", label: "Owner roles", permission: "canManageRoles" },
   { href: "/owner/audit-logs", label: "Owner audit logs", permission: "canViewAuditLogs" },
 ];
