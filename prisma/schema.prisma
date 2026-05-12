@@ -470,6 +470,43 @@ enum RefundStatus {
   succeeded
   failed
   cancelled
+  rejected
+  partially_succeeded
+}
+
+enum RefundProvider {
+  stripe
+  manual
+  store_credit
+  coinbase_future
+}
+
+enum RefundType {
+  full
+  partial
+  manual
+  store_credit
+  chargeback_adjustment
+}
+
+enum OrderRefundStatus {
+  not_refunded
+  refund_requested
+  partially_refunded
+  refunded
+  refund_failed
+  chargeback_opened
+  chargeback_lost
+  chargeback_won
+}
+
+enum OrderItemRefundStatus {
+  not_refunded
+  refund_requested
+  partially_refunded
+  refunded
+  return_requested
+  return_received
 }
 
 enum PrintfulOrderStatus {
@@ -505,6 +542,9 @@ enum InventoryLedgerType {
   deduction
   restock
   refund_adjustment
+  refund_restock
+  return_received
+  refund_no_restock
   manual_adjustment
 }
 
@@ -791,6 +831,8 @@ enum AffiliateCommissionStatus {
   paid
   reversed
   partially_reversed
+  held_due_to_refund
+  chargeback_reversed
   capped
 }
 
@@ -800,6 +842,8 @@ enum AffiliateWalletLedgerType {
   reject_debit
   payout_debit
   reversal_debit
+  refund_reversal_debit
+  chargeback_debit
   manual_credit
   manual_debit
   coupon_debit
@@ -1691,6 +1735,9 @@ model Order {
   paymentStatus           PaymentStatus     @default(unpaid)
   paymentProvider         PaymentProvider?
   cryptoPaymentStatus     String?
+  refundStatus            OrderRefundStatus @default(not_refunded)
+  refundedAmountCents     Int               @default(0)
+  refundableAmountCents   Int?
   fulfillmentStatus       FulfillmentStatus @default(unfulfilled)
   subtotalCents           Int
   discountCents           Int               @default(0)
@@ -1702,6 +1749,7 @@ model Order {
   stripePaymentIntentId   String?
   paymentSessionId        String?
   paidAt                  DateTime?
+  refundedAt              DateTime?
   customerEmail           String?
   shippingAddress         Json?
   billingAddress          Json?
@@ -1722,6 +1770,7 @@ model Order {
   paymentSessions              PaymentSession[]
   paymentCollections           PaymentCollection[]
   refunds                      Refund[]
+  refundItems                  RefundItem[]
   printfulOrders               PrintfulOrder[]
   shipments                    Shipment[]
   fulfillments                 Fulfillment[]
@@ -1757,10 +1806,13 @@ model OrderItem {
   titleSnapshot           String
   skuSnapshot             String?
   quantity                Int
+  refundedQuantity        Int                     @default(0)
   unitPriceCents          Int
   discountCents           Int                     @default(0)
   taxCents                Int                     @default(0)
   totalCents              Int
+  refundedAmountCents     Int                     @default(0)
+  refundStatus            OrderItemRefundStatus   @default(not_refunded)
   productTypeSnapshot     ProductType?
   fulfillmentTypeSnapshot ProductFulfillmentType?
   paymentModeSnapshot     ProductPaymentMode?
@@ -1867,7 +1919,8 @@ model Payment {
   createdAt               DateTime          @default(now())
   updatedAt               DateTime          @updatedAt
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  refunds Refund[]
 
   @@index([shopId, status])
   @@index([orderId])
@@ -2022,41 +2075,68 @@ model TokenPaymentIntent {
 }
 
 model Refund {
-  id             String       @id @default(cuid())
-  shopId         String
-  orderId        String
-  orderItemId    String?
-  paymentId      String?
-  status         RefundStatus @default(requested)
-  amountCents    Int
-  reason         String?
-  stripeRefundId String?
-  metadata       Json?
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id                    String         @id @default(cuid())
+  shopId                String
+  orderId               String
+  orderItemId           String?
+  paymentId             String?
+  provider              RefundProvider @default(stripe)
+  providerRefundId      String?
+  type                  RefundType     @default(partial)
+  status                RefundStatus   @default(requested)
+  amountCents           Int
+  currency              String         @default("USD")
+  reason                String?
+  adminNote             String?
+  customerNote          String?
+  requestedByUserId     String?
+  approvedByUserId      String?
+  processedByUserId     String?
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+  stripeRefundId        String?
+  idempotencyKey        String?        @unique
+  requestPayload        Json?
+  responsePayload       Json?
+  errorPayload          Json?
+  metadata              Json?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  approvedAt            DateTime?
+  processedAt           DateTime?
+  failedAt              DateTime?
 
-  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  orderItem OrderItem?   @relation(fields: [orderItemId], references: [id])
-  items     RefundItem[]
+  order              Order               @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem          OrderItem?          @relation(fields: [orderItemId], references: [id])
+  payment            Payment?            @relation(fields: [paymentId], references: [id])
+  items              RefundItem[]
+  storeCreditLedgers StoreCreditLedger[]
 
   @@index([shopId, status])
   @@index([orderId])
+  @@index([provider, providerRefundId])
 }
 
 model RefundItem {
   id          String   @id @default(cuid())
+  shopId      String
   refundId    String
+  orderId     String
   orderItemId String
   quantity    Int
   amountCents Int
+  reason      String?
   restock     Boolean  @default(false)
   metadata    Json?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   refund    Refund    @relation(fields: [refundId], references: [id], onDelete: Cascade)
+  order     Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
   orderItem OrderItem @relation(fields: [orderItemId], references: [id])
 
   @@index([refundId])
+  @@index([orderId])
   @@index([orderItemId])
 }
 
@@ -3202,6 +3282,7 @@ model StoreCreditLedger {
   shopId      String
   customerId  String
   orderId     String?
+  refundId    String?
   type        StoreCreditLedgerType
   amountCents Int
   currency    String                @default("USD")
@@ -3211,9 +3292,11 @@ model StoreCreditLedger {
   shop     Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   order    Order?   @relation(fields: [orderId], references: [id])
+  refund   Refund?  @relation(fields: [refundId], references: [id])
 
   @@index([shopId, customerId])
   @@index([orderId])
+  @@index([refundId])
 }
 
 model LoyaltyPointLedger {

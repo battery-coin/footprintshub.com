@@ -1,50 +1,44 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { logRefundApproved } from "@/lib/audit/audit-log";
 import { requireRequestPermission } from "@/lib/auth/require-permission";
-
-const refundSchema = z.object({
-  orderId: z.string().min(1),
-  amountCents: z.coerce.number().int().positive(),
-  reason: z.string().min(3).max(500).optional(),
-  restock: z.boolean().optional(),
-});
+import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
+import { RefundError } from "@/lib/refunds/refund-errors";
+import { createRefundRequest } from "@/lib/refunds/refund-service";
+import { createRefundSchema } from "@/lib/refunds/refund-validation";
 
 export async function GET(request: Request) {
   const allowed = await requireRequestPermission(request, "canManageRefunds");
-  if (!allowed.ok) {
-    return allowed.response;
+  if (!allowed.ok) return allowed.response;
+
+  if (!hasDatabaseUrl()) {
+    return NextResponse.json({ refunds: [], stored: false });
   }
 
-  return NextResponse.json({ refunds: [] });
+  const refunds = await getPrisma().refund.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    include: {
+      order: { select: { orderNumber: true, customerEmail: true, paymentStatus: true, refundStatus: true } },
+      items: true,
+    },
+  });
+
+  return NextResponse.json({ refunds });
 }
 
 export async function POST(request: Request) {
   const allowed = await requireRequestPermission(request, "canManageRefunds");
-  if (!allowed.ok) {
-    return allowed.response;
-  }
+  if (!allowed.ok) return allowed.response;
 
-  const parsed = refundSchema.safeParse(await request.json().catch(() => null));
-
+  const parsed = createRefundSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid refund payload." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid refund payload.", details: parsed.error.flatten() }, { status: 400 });
   }
 
-  await logRefundApproved({
-    actorId: allowed.user?.id,
-    targetType: "refund",
-    targetId: parsed.data.orderId,
-    metadata: parsed.data,
-  });
-
-  return NextResponse.json(
-    {
-      accepted: true,
-      stored: false,
-      message: "Refund review payload accepted. Connect Stripe refund execution and Neon persistence before production writes.",
-      refund: parsed.data,
-    },
-    { status: 202 },
-  );
+  try {
+    const result = await createRefundRequest(parsed.data, allowed.user?.id);
+    return NextResponse.json(result, { status: result.processed ? 200 : 202 });
+  } catch (error) {
+    const status = error instanceof RefundError ? error.status : 500;
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Refund request failed." }, { status });
+  }
 }

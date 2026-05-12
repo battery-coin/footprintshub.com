@@ -19,6 +19,13 @@
 - Printful handoff runs only after verified Stripe payment.
 - Printful order creation uses internal idempotency and provider external IDs.
 - Printful admin retry/refresh routes require `canManagePrintful`.
+- Refund APIs require `canManageRefunds`.
+- Stripe refunds are created only through server-side code.
+- Refund amounts are recalculated server-side and cannot exceed remaining refundable amount.
+- Stripe refunds use idempotency keys.
+- Refund webhooks are recorded idempotently.
+- Affiliate refund reversals are idempotent per refund and commission.
+- Inventory refund restock entries are idempotent per refund and order item.
 
 ## Required Before Production
 

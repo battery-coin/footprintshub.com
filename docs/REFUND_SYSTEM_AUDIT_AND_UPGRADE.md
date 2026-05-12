@@ -3,9 +3,15 @@
 ## Added In This Pass
 
 - `/admin/refunds` route with a clear refund review workflow.
-- `/api/admin/refunds` route with `ADMIN_SECRET` protection and Zod validation.
+- `/api/admin/refunds` route with `canManageRefunds` protection and Zod validation.
 - `RefundItem` Prisma model for line-level refund quantity, amount, and restock intent.
 - Refund legal copy and admin settings visibility.
+- Server-side Stripe refund provider.
+- Stripe refund webhook reconciliation.
+- Order and order-item refund status fields.
+- Inventory restock ledger hook.
+- Affiliate commission reversal hook.
+- Printful and digital access manual-review markers.
 
 ## Required Production Behavior
 
@@ -18,5 +24,4 @@
 
 ## Remaining Work
 
-Refund execution is scaffolded. It should not be considered production complete until Stripe sandbox refunds, partial refunds, webhook idempotency, inventory restock, and affiliate reversal are tested end to end.
-
+Refund execution is implemented locally, but it should not be considered launch-complete until Stripe sandbox refunds, partial refunds, webhook idempotency, inventory restock, and affiliate reversal are tested end to end against the target Railway/Neon environment.

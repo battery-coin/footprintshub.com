@@ -59,8 +59,8 @@ Money is stored in integer cents. Percent values are basis points.
 - `OrderAddress`: billing and shipping snapshots.
 - `OrderHistory`: status/comment timeline with customer-visible flag.
 - `Payment`: Stripe/manual/future Battery Coin payment records.
-- `Refund`: refund and credit-memo foundation.
-- `RefundItem`: line-level refund quantity, amount, and restock intent.
+- `Refund`: shop-scoped refund record with provider, provider refund ID, type, status lifecycle, Stripe identifiers, admin/customer notes, idempotency key, and request/response/error payload snapshots.
+- `RefundItem`: line-level refund quantity, amount, item reason, and restock intent.
 - `ReturnRequest`: RMA-style return, replacement, refund, and store-credit request workflow.
 - `Shipment`: fulfillment and tracking foundation.
 - `ShipmentItem`: item-level fulfillment records.
@@ -70,7 +70,7 @@ Order items must not be recalculated from live products after purchase.
 
 ## Inventory
 
-- `InventoryLedger`: stock changes for initial adjustments, reservations, releases, paid deductions, restocks, refund adjustments, and manual changes.
+- `InventoryLedger`: stock changes for initial adjustments, reservations, releases, paid deductions, restocks, refund adjustments, refund restock, return received, no-restock refund, and manual changes.
 - `StockLocation`: Medusa-inspired stock location for the shop's default warehouse or future creator/fulfillment locations.
 - `InventoryItem`: SKU-level stock unit separate from product/variant display data.
 - `ProductVariantInventoryItem`: links variants to one or more inventory items with required quantity.

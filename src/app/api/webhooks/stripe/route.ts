@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { canCompletePaidOrder } from "@/lib/orders/payment-completion-gate";
+import { handleProviderRefundSucceeded } from "@/lib/refunds/refund-service";
 import { markWebhookFailed, markWebhookProcessed, recordWebhookReceived } from "@/lib/webhooks/webhook-events";
 import { completePaidOrder } from "@/workflows/orders/complete-paid-order";
 
@@ -29,8 +30,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
+    const eventType = event.type as string;
+
+    if (eventType === "checkout.session.completed") {
+      const session = event.data.object as {
+        id: string;
+        metadata?: Record<string, string>;
+        payment_intent?: string | { id: string } | null;
+        amount_total?: number | null;
+        currency?: string | null;
+        mode?: string | null;
+        subscription?: string | { id: string } | null;
+        customer?: string | { id: string } | null;
+        customer_details?: { email?: string | null; name?: string | null; phone?: string | null; address?: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; country?: string | null } | null } | null;
+        customer_email?: string | null;
+        shipping_details?: { name?: string | null; address?: { line1?: string | null; line2?: string | null; city?: string | null; state?: string | null; postal_code?: string | null; country?: string | null } | null } | null;
+      };
       const orderId = typeof session.metadata?.orderId === "string" ? session.metadata.orderId : undefined;
       const shopId = typeof session.metadata?.shopId === "string" ? session.metadata.shopId : undefined;
       const recorded = await recordWebhookReceived({
@@ -116,14 +131,85 @@ export async function POST(request: Request) {
       await markWebhookProcessed("stripe", event.id);
     }
 
-    if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {
-      const subscription = event.data.object;
+    if (eventType === "charge.refunded" || eventType === "refund.updated" || eventType === "charge.refund.updated") {
+      const providerObject = event.data.object as {
+        id?: string;
+        object?: string;
+        amount?: number;
+        amount_refunded?: number;
+        currency?: string;
+        payment_intent?: string | null;
+        charge?: string | null;
+        status?: string;
+        refunds?: { data?: Array<{ id?: string; amount?: number; currency?: string; payment_intent?: string | null; charge?: string | null; status?: string }> };
+      };
+      const refundObject = providerObject.object === "refund" ? providerObject : providerObject.refunds?.data?.[0];
+      const providerRefundId = refundObject?.id ?? providerObject.id;
+      const paymentIntentId = refundObject?.payment_intent ?? providerObject.payment_intent ?? undefined;
+      const chargeId = refundObject?.charge ?? providerObject.charge ?? (providerObject.object === "charge" ? providerObject.id : undefined);
+      const recorded = await recordWebhookReceived({
+        provider: "stripe",
+        eventId: event.id,
+        eventType,
+        payload: body,
+      });
+
+      if (recorded.duplicate) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+
+      if (providerRefundId && hasDatabaseUrl()) {
+        await handleProviderRefundSucceeded({
+          providerRefundId,
+          paymentIntentId: paymentIntentId ?? undefined,
+          chargeId: chargeId ?? undefined,
+          amountCents: refundObject?.amount ?? providerObject.amount_refunded ?? providerObject.amount ?? 0,
+          currency: refundObject?.currency ?? providerObject.currency ?? "usd",
+          payload: providerObject,
+        });
+      }
+
+      await markWebhookProcessed("stripe", event.id);
+    }
+
+    if (eventType === "payment_intent.canceled" || eventType === "dispute.created" || eventType === "dispute.closed") {
+      const providerObject = event.data.object as { id?: string; object?: string; status?: string; payment_intent?: string | null };
+      const recorded = await recordWebhookReceived({
+        provider: "stripe",
+        eventId: event.id,
+        eventType,
+        payload: body,
+      });
+      if (recorded.duplicate) {
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+      if (hasDatabaseUrl()) {
+        await getPrisma().order.updateMany({
+          where: { stripePaymentIntentId: providerObject.payment_intent ?? providerObject.id ?? "" },
+          data:
+            eventType === "dispute.created"
+              ? { refundStatus: "chargeback_opened" }
+              : eventType === "payment_intent.canceled"
+                ? { paymentStatus: "cancelled" }
+                : {},
+        });
+      }
+      await markWebhookProcessed("stripe", event.id);
+    }
+
+    if (eventType === "customer.subscription.updated" || eventType === "customer.subscription.deleted") {
+      const subscription = event.data.object as {
+        id?: string;
+        status?: string;
+        cancel_at_period_end?: boolean;
+        canceled_at?: number | null;
+      };
       const stripeSubscriptionId = typeof subscription.id === "string" ? subscription.id : undefined;
       const shopId = undefined;
       const recorded = await recordWebhookReceived({
         provider: "stripe",
         eventId: event.id,
-        eventType: event.type,
+        eventType,
         payload: body,
         shopId,
       });
