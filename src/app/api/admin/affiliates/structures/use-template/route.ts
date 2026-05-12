@@ -28,7 +28,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Choose Binary, Matrix, or Unilevel." }, { status: 400 });
   }
 
-  const result = await createPlanFromTemplate(templateKey);
+  const result = await createPlanFromTemplate(templateKey).catch((error) => ({
+    ok: false as const,
+    status: 500,
+    error: error instanceof Error ? error.message : "Could not create affiliate structure.",
+  }));
 
   if (!result.ok) {
     return NextResponse.json({ error: result.error }, { status: result.status });
