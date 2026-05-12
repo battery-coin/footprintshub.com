@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { calculateCommissionsForOrder } from "@/lib/affiliate/order-commission";
+import { createAdCampaignsFromOrder } from "@/lib/ads/ad-order-service";
 import { getPrisma, hasDatabaseUrl } from "@/lib/db/prisma";
 import { deductInventoryForPaidOrder } from "@/lib/inventory/inventory-service";
 
@@ -166,6 +167,7 @@ export async function completePaidOrder(orderId: string) {
     });
   });
 
+  await createAdCampaignsFromOrder(order);
   await deductInventoryForPaidOrder(orderId);
   await calculateCommissionsForOrder(orderId);
 

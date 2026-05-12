@@ -11,6 +11,19 @@ export const productTypes = [
   "membership",
   "nft",
   "nft_linked_physical",
+  "ad_placement",
+  "sponsorship",
+  "campaign_boost",
+  "creator_promotion",
+  "fan_club_promotion",
+  "newsletter_ad",
+  "homepage_feature",
+  "banner_ad",
+  "video_ad",
+  "event_sponsorship",
+  "classified_ad",
+  "featured_listing",
+  "social_promotion_package",
   "preorder",
   "blind_box",
   "booster_pack",
@@ -24,7 +37,21 @@ export const productFranchises = ["footprints", "matrix_decoded", "hero_studio",
 export const productStatuses = ["draft", "active", "archived", "hidden", "sold_out"] as const;
 export const productVisibilities = ["visible", "hidden", "catalog_only", "direct_link"] as const;
 export const paymentModes = ["one_time", "recurring", "one_time_or_recurring", "free", "external"] as const;
-export const deliveryModes = ["shipped", "download", "access_grant", "service_scheduled", "subscription_access", "nft_claim", "hybrid", "none"] as const;
+export const deliveryModes = [
+  "shipped",
+  "download",
+  "access_grant",
+  "service_scheduled",
+  "subscription_access",
+  "nft_claim",
+  "ad_review_and_schedule",
+  "ad_auto_schedule",
+  "sponsor_placement",
+  "campaign_boost",
+  "featured_listing",
+  "hybrid",
+  "none",
+] as const;
 export const fulfillmentTypes = [
   "manual",
   "printful",
@@ -34,6 +61,9 @@ export const fulfillmentTypes = [
   "service_delivery",
   "subscription_access",
   "nft_delivery",
+  "ad_delivery",
+  "sponsorship_delivery",
+  "promotion_delivery",
   "hybrid",
   "none",
   "internal",
@@ -186,7 +216,30 @@ export const productEditorSchema = z
       });
     }
 
-    const nonShippingTypes = new Set(["digital", "digital_download", "digital_unlock", "service", "subscription", "membership", "nft", "event_access", "appointment"]);
+    const nonShippingTypes = new Set([
+      "digital",
+      "digital_download",
+      "digital_unlock",
+      "service",
+      "subscription",
+      "membership",
+      "nft",
+      "event_access",
+      "appointment",
+      "ad_placement",
+      "sponsorship",
+      "campaign_boost",
+      "creator_promotion",
+      "fan_club_promotion",
+      "newsletter_ad",
+      "homepage_feature",
+      "banner_ad",
+      "video_ad",
+      "event_sponsorship",
+      "classified_ad",
+      "featured_listing",
+      "social_promotion_package",
+    ]);
     if (nonShippingTypes.has(product.productType) && product.requiresShipping) {
       context.addIssue({
         code: "custom",

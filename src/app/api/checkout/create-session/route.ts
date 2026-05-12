@@ -325,7 +325,14 @@ async function createPendingOrderIfDatabaseReady({
                     ? "subscription_access"
                     : line.product.deliveryMode === "nft_claim"
                       ? "nft_delivery"
-                      : "manual",
+                      : line.product.deliveryMode === "ad_review_and_schedule" ||
+                          line.product.deliveryMode === "ad_auto_schedule" ||
+                          line.product.deliveryMode === "campaign_boost" ||
+                          line.product.deliveryMode === "featured_listing"
+                        ? "ad_delivery"
+                        : line.product.deliveryMode === "sponsor_placement"
+                          ? "sponsorship_delivery"
+                          : "manual",
             digitalAssetId:
               typeof line.product.metadata?.digitalAssetId === "string" ? line.product.metadata.digitalAssetId : undefined,
             subscriptionPlanId:

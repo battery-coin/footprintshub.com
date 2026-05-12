@@ -34,6 +34,19 @@ enum ProductType {
   subscription
   nft
   nft_linked_physical
+  ad_placement
+  sponsorship
+  campaign_boost
+  creator_promotion
+  fan_club_promotion
+  newsletter_ad
+  homepage_feature
+  banner_ad
+  video_ad
+  event_sponsorship
+  classified_ad
+  featured_listing
+  social_promotion_package
   preorder
   blind_box
   booster_pack
@@ -60,6 +73,11 @@ enum ProductDeliveryMode {
   service_scheduled
   subscription_access
   nft_claim
+  ad_review_and_schedule
+  ad_auto_schedule
+  sponsor_placement
+  campaign_boost
+  featured_listing
   hybrid
   none
 }
@@ -156,6 +174,9 @@ enum ProductFulfillmentType {
   service_delivery
   subscription_access
   nft_delivery
+  ad_delivery
+  sponsorship_delivery
+  promotion_delivery
   hybrid
   none
   internal
@@ -557,10 +578,91 @@ enum CommissionScope {
   lifetime
   manual
   ad_product
+  ad_placement
+  sponsorship
+  campaign_boost
+  recurring_ad_subscription
   service
   subscription
   digital
   nft
+}
+
+enum AdPlacementType {
+  homepage_banner
+  sidebar_banner
+  newsletter_feature
+  creator_page
+  fan_club_page
+  product_feature
+  campaign_feature
+  video_pre_roll
+  social_post
+  event_sponsor
+  other
+}
+
+enum AdBillingMode {
+  one_time
+  recurring
+}
+
+enum AdPackageType {
+  single_placement
+  bundle
+  sponsorship
+  campaign_boost
+  creator_boost
+  fan_club_boost
+}
+
+enum AdCampaignStatus {
+  draft
+  pending_creative
+  pending_review
+  approved
+  scheduled
+  live
+  paused
+  completed
+  rejected
+  cancelled
+  refunded
+}
+
+enum AdCreativeType {
+  image
+  video
+  html
+  text
+  link
+  social_copy
+}
+
+enum AdCreativeStatus {
+  uploaded
+  pending_review
+  approved
+  rejected
+  replaced
+}
+
+enum AdScheduleSlotStatus {
+  available
+  reserved
+  scheduled
+  live
+  completed
+  cancelled
+}
+
+enum SponsoredPlacementTargetType {
+  product
+  collection
+  campaign
+  creator
+  fan_club
+  homepage
 }
 
 enum AffiliatePlanStatus {
@@ -1045,6 +1147,17 @@ model Shop {
   discountSchedules               DiscountSchedule[]
   importJobs                      ImportJob[]
   userAppRoles                    UserAppRole[]
+  adPlacements                    AdPlacement[]
+  adProductConfigs                AdProductConfig[]
+  adCampaigns                     AdCampaign[]
+  adCreatives                     AdCreative[]
+  adScheduleSlots                 AdScheduleSlot[]
+  adMetrics                       AdMetric[]
+  adClicks                        AdClick[]
+  adImpressions                   AdImpression[]
+  sponsoredPlacements             SponsoredPlacement[]
+  adPolicyAcceptances             AdPolicyAcceptance[]
+  adSubscriptions                 AdSubscription[]
 
   @@index([ownerUserId])
 }
@@ -1194,6 +1307,8 @@ model Product {
   serviceProducts    ServiceProduct[]
   subscriptionPlans  SubscriptionPlan[]
   nftProducts        NFTProduct[]
+  adProductConfig    AdProductConfig?
+  adCampaigns        AdCampaign[]
   bundleItems        ProductBundleItem[]    @relation("BundleProduct")
   bundledIn          ProductBundleItem[]    @relation("ChildProduct")
   unlocks            DigitalUnlock[]
@@ -1582,6 +1697,7 @@ model Order {
   webhookEvents                WebhookEvent[]
   serviceOrders                ServiceOrder[]
   nftentitlements              NFTEntitlement[]
+  adCampaigns                  AdCampaign[]
 
   @@index([shopId])
   @@index([customerId])
@@ -1608,6 +1724,7 @@ model OrderItem {
   subscriptionPlanId      String?
   nftProductId            String?
   serviceProductId        String?
+  adCampaignId            String?
   downloadEntitlementId   String?
   subscriptionId          String?
   nftEntitlementId        String?
@@ -1623,6 +1740,7 @@ model OrderItem {
   returnRequests           ReturnRequest[]
   downloadEntitlements     DownloadEntitlement[]
   serviceOrders            ServiceOrder[]
+  adCampaigns              AdCampaign[]
   shipmentItems            ShipmentItem[]
   inventoryLedgers         InventoryLedger[]
   fulfillmentItems         FulfillmentItem[]
@@ -1634,6 +1752,7 @@ model OrderItem {
   @@index([subscriptionPlanId])
   @@index([nftProductId])
   @@index([serviceProductId])
+  @@index([adCampaignId])
 }
 
 model OrderAddress {
@@ -3286,6 +3405,288 @@ model ProductBundleItem {
 
   @@index([shopId, bundleProductId])
   @@index([childProductId])
+}
+
+model AdPlacement {
+  id                  String          @id @default(cuid())
+  shopId              String
+  name                String
+  slug                String
+  description         String?
+  placementType       AdPlacementType
+  locationKey         String
+  dimensions          String?
+  allowedMediaTypes   String[]        @default([])
+  maxFileSizeBytes    Int?
+  basePriceCents      Int
+  currency            String          @default("USD")
+  billingMode         AdBillingMode   @default(one_time)
+  defaultDurationDays Int?
+  requiresApproval    Boolean         @default(true)
+  active              Boolean         @default(true)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  productConfigs      AdProductConfig[]
+  campaigns           AdCampaign[]
+  scheduleSlots       AdScheduleSlot[]
+  metrics             AdMetric[]
+  clicks              AdClick[]
+  impressions         AdImpression[]
+  sponsoredPlacements SponsoredPlacement[]
+  subscriptions       AdSubscription[]
+
+  @@unique([shopId, slug])
+  @@index([shopId, active])
+  @@index([placementType])
+}
+
+model AdProductConfig {
+  id                         String             @id @default(cuid())
+  shopId                     String
+  productId                  String             @unique
+  adPlacementId              String?
+  packageType                AdPackageType      @default(single_placement)
+  durationDays               Int?
+  includedImpressions        Int?
+  includedClicks             Int?
+  includedPosts              Int?
+  includedNewsletterMentions Int?
+  requiresCreativeUpload     Boolean            @default(true)
+  requiresTargetUrl          Boolean            @default(true)
+  requiresAdminApproval      Boolean            @default(true)
+  allowRecurring             Boolean            @default(false)
+  recurringInterval          RecurringInterval?
+  startDateRequired          Boolean            @default(false)
+  categoryRestrictions       Json?
+  creatorShopRestrictions    Json?
+  notes                      String?
+  createdAt                  DateTime           @default(now())
+  updatedAt                  DateTime           @updatedAt
+
+  shop        Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  adPlacement AdPlacement? @relation(fields: [adPlacementId], references: [id])
+
+  @@index([shopId])
+  @@index([adPlacementId])
+}
+
+model AdCampaign {
+  id                   String           @id @default(cuid())
+  shopId               String
+  advertiserCustomerId String?
+  advertiserEmail      String
+  advertiserName       String?
+  orderId              String?
+  orderItemId          String?
+  productId            String
+  adPlacementId        String?
+  title                String
+  status               AdCampaignStatus @default(pending_creative)
+  targetUrl            String?
+  startAt              DateTime?
+  endAt                DateTime?
+  approvedAt           DateTime?
+  rejectedAt           DateTime?
+  rejectionReason      String?
+  pausedAt             DateTime?
+  completedAt          DateTime?
+  adminNotes           String?
+  customerNotes        String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  shop                Shop                 @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order               Order?               @relation(fields: [orderId], references: [id])
+  orderItem           OrderItem?           @relation(fields: [orderItemId], references: [id])
+  product             Product              @relation(fields: [productId], references: [id])
+  adPlacement         AdPlacement?         @relation(fields: [adPlacementId], references: [id])
+  creatives           AdCreative[]
+  scheduleSlots       AdScheduleSlot[]
+  metrics             AdMetric[]
+  clicks              AdClick[]
+  impressions         AdImpression[]
+  sponsoredPlacements SponsoredPlacement[]
+  subscriptions       AdSubscription[]
+
+  @@index([shopId, status])
+  @@index([advertiserEmail])
+  @@index([orderId])
+  @@index([orderItemId])
+  @@index([productId])
+  @@index([adPlacementId])
+}
+
+model AdCreative {
+  id              String           @id @default(cuid())
+  shopId          String
+  adCampaignId    String
+  type            AdCreativeType
+  title           String?
+  fileUrl         String?
+  imageUrl        String?
+  videoUrl        String?
+  html            String?
+  text            String?
+  targetUrl       String?
+  altText         String?
+  status          AdCreativeStatus @default(uploaded)
+  rejectionReason String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign AdCampaign @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, status])
+  @@index([adCampaignId])
+}
+
+model AdScheduleSlot {
+  id            String               @id @default(cuid())
+  shopId        String
+  adPlacementId String
+  adCampaignId  String?
+  startAt       DateTime
+  endAt         DateTime
+  status        AdScheduleSlotStatus @default(available)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  shop      Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  placement AdPlacement @relation(fields: [adPlacementId], references: [id], onDelete: Cascade)
+  campaign  AdCampaign? @relation(fields: [adCampaignId], references: [id])
+
+  @@index([shopId, status])
+  @@index([adPlacementId, startAt, endAt])
+  @@index([adCampaignId])
+}
+
+model AdMetric {
+  id            String   @id @default(cuid())
+  shopId        String
+  adCampaignId  String
+  adPlacementId String?
+  date          DateTime
+  impressions   Int      @default(0)
+  clicks        Int      @default(0)
+  conversions   Int?
+  spendCents    Int?
+  revenueCents  Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shop      Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign  AdCampaign   @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  placement AdPlacement? @relation(fields: [adPlacementId], references: [id])
+
+  @@unique([adCampaignId, date])
+  @@index([shopId, date])
+  @@index([adPlacementId])
+}
+
+model AdClick {
+  id            String   @id @default(cuid())
+  shopId        String
+  adCampaignId  String
+  adPlacementId String?
+  visitorId     String?
+  sessionId     String?
+  ipHash        String?
+  userAgent     String?
+  referrer      String?
+  targetUrl     String
+  createdAt     DateTime @default(now())
+
+  shop      Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign  AdCampaign   @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  placement AdPlacement? @relation(fields: [adPlacementId], references: [id])
+
+  @@index([shopId, createdAt])
+  @@index([adCampaignId])
+  @@index([adPlacementId])
+}
+
+model AdImpression {
+  id            String   @id @default(cuid())
+  shopId        String
+  adCampaignId  String
+  adPlacementId String?
+  visitorId     String?
+  sessionId     String?
+  ipHash        String?
+  userAgent     String?
+  createdAt     DateTime @default(now())
+
+  shop      Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign  AdCampaign   @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  placement AdPlacement? @relation(fields: [adPlacementId], references: [id])
+
+  @@index([shopId, createdAt])
+  @@index([adCampaignId])
+}
+
+model SponsoredPlacement {
+  id           String                       @id @default(cuid())
+  shopId       String
+  adCampaignId String
+  targetType   SponsoredPlacementTargetType
+  targetId     String
+  placementKey String
+  startAt      DateTime
+  endAt        DateTime
+  status       AdCampaignStatus             @default(scheduled)
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
+
+  shop          Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign      AdCampaign   @relation(fields: [adCampaignId], references: [id], onDelete: Cascade)
+  adPlacement   AdPlacement? @relation(fields: [adPlacementId], references: [id])
+  adPlacementId String?
+
+  @@index([shopId, placementKey, status])
+  @@index([adCampaignId])
+  @@index([targetType, targetId])
+}
+
+model AdPolicyAcceptance {
+  id              String   @id @default(cuid())
+  shopId          String
+  customerId      String?
+  advertiserEmail String
+  acceptedAt      DateTime @default(now())
+  policyVersion   String
+  ipHash          String?
+  createdAt       DateTime @default(now())
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, advertiserEmail])
+  @@index([customerId])
+}
+
+model AdSubscription {
+  id                     String             @id @default(cuid())
+  shopId                 String
+  customerSubscriptionId String
+  adCampaignId           String?
+  adPlacementId          String
+  status                 SubscriptionStatus @default(active)
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  autoRenew              Boolean            @default(true)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  shop      Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  campaign  AdCampaign? @relation(fields: [adCampaignId], references: [id])
+  placement AdPlacement @relation(fields: [adPlacementId], references: [id])
+
+  @@index([shopId, status])
+  @@index([customerSubscriptionId])
+  @@index([adCampaignId])
 }
 
 model InformationPage {

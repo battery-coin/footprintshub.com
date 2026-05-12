@@ -43,6 +43,15 @@
 ## OpenCart-Derived Additions
 
 - Validate product option payloads server-side before pricing.
+
+## Ad Sales
+
+- Require payment verification before campaign creation.
+- Require admin approval before ads go live.
+- Reject unsafe ad target URLs such as `javascript:` and non-http schemes.
+- Disable or sanitize HTML ads before any live display.
+- Validate creative file type and file size before storage uploads.
+- Keep click/impression fraud controls on the launch checklist.
 - Moderate product reviews before public display.
 - Enforce download entitlements, limits, expiration, and shop scope.
 - Validate file upload type, size, storage path, and public/private access.

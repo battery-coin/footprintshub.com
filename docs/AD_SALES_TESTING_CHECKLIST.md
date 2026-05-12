@@ -1,0 +1,23 @@
+# Ad Sales Testing Checklist
+
+- `/ads` loads.
+- `/ads/buy` loads.
+- `/advertise` redirects to `/ads`.
+- `/advertise/packages` lists packages.
+- `/advertise/packages/[slug]` renders package details.
+- Ad package can be added to cart.
+- Ad package checkout does not require shipping.
+- Paid ad order creates `AdCampaign`.
+- Unpaid ad order does not create a live ad.
+- `/advertise/campaigns/[id]/creative` submits creative.
+- Admin can update campaign status.
+- AdSlot only renders approved/scheduled/live campaigns in date range.
+- `/ads/click/[campaignId]` tracks and redirects.
+- Unsafe target URL is rejected.
+- Affiliate commission remains tied to qualified ad purchase.
+- Refund rules document ad delivery status.
+- `npx prisma validate` passes.
+- `npm run build` passes.
+- `npm run lint` passes.
+- `npm run typecheck` passes.
+- `npm test` passes.

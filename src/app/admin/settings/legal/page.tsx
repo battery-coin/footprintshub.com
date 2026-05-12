@@ -23,6 +23,10 @@ const legalRoutes = [
   "/legal/printful-fulfillment",
   "/legal/store-credit",
   "/legal/crypto-payments",
+  "/legal/advertising-terms",
+  "/legal/sponsorship-terms",
+  "/legal/ad-content-policy",
+  "/legal/ad-refunds",
 ];
 
 export default function AdminLegalSettingsPage() {

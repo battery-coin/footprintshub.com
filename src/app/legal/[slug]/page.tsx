@@ -204,6 +204,36 @@ const pages: Record<string, { title: string; body: string[] }> = {
       "Refunds, overpayments, underpayments, network fees, exchange-rate differences, and chargeback-like disputes require separate provider-specific policy before launch.",
     ],
   },
+  "advertising-terms": {
+    title: "Advertising Terms",
+    body: [
+      "FootprintsHub ad products are reviewed internal placements, sponsorships, promotions, and campaign features. They are not a programmatic ad exchange.",
+      "All ads are subject to approval before publishing. The platform may reject, pause, remove, or request changes to creative at any time for policy, legal, security, or brand reasons.",
+      "Ad purchases do not guarantee impressions, clicks, conversions, sales, audience growth, or performance unless a package expressly promises a specific deliverable.",
+    ],
+  },
+  "sponsorship-terms": {
+    title: "Sponsorship Terms",
+    body: [
+      "Sponsorship packages may include reviewed placements, mentions, event support, creator or fan-club features, or campaign promotion.",
+      "Sponsors are responsible for accurate claims, lawful creative, rights to submitted assets, and compliance with platform policy.",
+    ],
+  },
+  "ad-content-policy": {
+    title: "Ad Content Policy",
+    body: [
+      "Ads may not promote illegal products or services, misleading claims, harassment, hate, explicit adult content, unreviewed weapons or drug claims, false financial claims, or unsubstantiated medical claims.",
+      "HTML ads are disabled by default unless reviewed and sanitized. Unsafe target URLs such as javascript: or data: URLs are rejected.",
+    ],
+  },
+  "ad-refunds": {
+    title: "Ad Refund Terms",
+    body: [
+      "Ad refunds depend on review, scheduling, delivery, and campaign status. Not-yet-reviewed or rejected ads may be eligible for refund or creative resubmission.",
+      "Live or completed ads may be partially refundable or non-refundable depending on delivery status and the posted package terms.",
+      "Affiliate commissions on ad purchases may be reversed for refunds, chargebacks, rejected campaigns, or cancelled ad delivery.",
+    ],
+  },
 };
 
 export default async function LegalPage({

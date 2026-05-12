@@ -9,6 +9,19 @@ export type ProductType =
   | "membership"
   | "nft"
   | "nft_linked_physical"
+  | "ad_placement"
+  | "sponsorship"
+  | "campaign_boost"
+  | "creator_promotion"
+  | "fan_club_promotion"
+  | "newsletter_ad"
+  | "homepage_feature"
+  | "banner_ad"
+  | "video_ad"
+  | "event_sponsorship"
+  | "classified_ad"
+  | "featured_listing"
+  | "social_promotion_package"
   | "preorder"
   | "blind_box"
   | "booster_pack"
@@ -19,7 +32,20 @@ export type ProductType =
 
 export type ProductPaymentMode = "one_time" | "recurring" | "one_time_or_recurring" | "free" | "external";
 
-export type ProductDeliveryMode = "shipped" | "download" | "access_grant" | "service_scheduled" | "subscription_access" | "nft_claim" | "hybrid" | "none";
+export type ProductDeliveryMode =
+  | "shipped"
+  | "download"
+  | "access_grant"
+  | "service_scheduled"
+  | "subscription_access"
+  | "nft_claim"
+  | "ad_review_and_schedule"
+  | "ad_auto_schedule"
+  | "sponsor_placement"
+  | "campaign_boost"
+  | "featured_listing"
+  | "hybrid"
+  | "none";
 
 export type Franchise =
   | "footprints"
@@ -74,6 +100,7 @@ export type CatalogProduct = {
   tokenGated: boolean;
   isRandomized?: boolean;
   oddsDisclosureUrl?: string;
+  affiliateEligible?: boolean;
   metadata?: Record<string, unknown>;
 };
 

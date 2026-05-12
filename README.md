@@ -62,6 +62,12 @@ The admin product editor at `/admin/products/new` and `/admin/products/[id]` sup
 
 The editor also adapts by product type. Service products show service delivery settings, digital download products show secure download settings, subscription and membership products show recurring billing settings, NFT-linked products show claim/provenance/legal fields, and bundle products show hybrid fulfillment notes. NFT-linked products must be described as digital collectibles, certificates, access credentials, claims, or digital twins, not investments.
 
+## Ad Sales
+
+FootprintsHub now supports internal ad packages and sponsorship products through the same product, cart, checkout, order, affiliate, refund, and reporting foundation. Public buyers can start at `/ads` or `/ads/buy`; admins manage review and operations at `/admin/ads`.
+
+Ad products are reviewed placements, sponsorships, creator/fan-club promotions, campaign boosts, newsletter ads, banners, video spotlights, and featured listings. They do not promise guaranteed impressions, clicks, conversions, or sales unless a specific package expressly states a deliverable.
+
 Before using the editor against Neon, generate and review a Prisma migration for the product schema additions, then apply it to the target database.
 
 For product media uploads, configure the `CLOUDFLARE_R2_*` Railway variables described in `docs/CLOUDFLARE_R2_PRODUCT_MEDIA.md`.

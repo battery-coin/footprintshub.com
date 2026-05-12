@@ -83,6 +83,22 @@ const defaultProduct: ProductEditorInput = {
   metadataJson: "{}",
 };
 
+const adProductTypes = [
+  "ad_placement",
+  "sponsorship",
+  "campaign_boost",
+  "creator_promotion",
+  "fan_club_promotion",
+  "newsletter_ad",
+  "homepage_feature",
+  "banner_ad",
+  "video_ad",
+  "event_sponsorship",
+  "classified_ad",
+  "featured_listing",
+  "social_promotion_package",
+];
+
 export function ProductEditor({ mode, product }: ProductEditorProps) {
   const [draft, setDraft] = useState<ProductEditorInput>(product ?? defaultProduct);
   const [saveState, setSaveState] = useState<SaveState>("idle");
@@ -100,7 +116,8 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
   const profitCents = calculateProfitCents(draft.priceCents, draft.costCents);
   const marginBps = calculateMarginBps(draft.priceCents, draft.costCents);
   const metadata = useMemo(() => parseMetadata(draft.metadataJson), [draft.metadataJson]);
-  const hidesShippingInventory = ["digital", "digital_download", "digital_unlock", "service", "subscription", "membership", "nft", "event_access", "appointment"].includes(draft.productType);
+  const isAdProduct = adProductTypes.includes(draft.productType);
+  const hidesShippingInventory = ["digital", "digital_download", "digital_unlock", "service", "subscription", "membership", "nft", "event_access", "appointment", ...adProductTypes].includes(draft.productType);
   const isDigitalProduct = ["digital", "digital_download", "digital_unlock"].includes(draft.productType);
   const isServiceProduct = ["service", "appointment", "event_access"].includes(draft.productType);
   const isSubscriptionProduct = draft.productType === "subscription" || draft.productType === "membership" || draft.paymentMode === "recurring" || draft.paymentMode === "one_time_or_recurring";
@@ -125,6 +142,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     if ((draft.costCents ?? 0) > draft.priceCents) next.push("Cost is higher than price.");
     if (draft.compareAtPriceCents != null && draft.compareAtPriceCents < draft.priceCents) next.push("Compare-at price is below the product price.");
     if (hidesShippingInventory && draft.requiresShipping) next.push("This product type usually should not require shipping.");
+    if (isAdProduct) next.push("Ad products create a campaign pending creative review after verified payment.");
     if (isNftProduct) next.push("NFT-linked products must avoid investment, resale-value, appreciation, or profit language.");
     if (isSubscriptionProduct && draft.paymentMode === "one_time") next.push("Subscription products need recurring or one-time-or-recurring payment mode.");
     if (draft.fulfillmentType === "printful" && !draft.printfulProductId && !draft.printfulSyncProductId) {
@@ -133,7 +151,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
     if ((draft.seoTitle?.length ?? 0) > 70) next.push("SEO title is longer than 70 characters.");
     if ((draft.seoDescription?.length ?? 0) > 160) next.push("SEO description is longer than 160 characters.");
     return next;
-  }, [draft, hidesShippingInventory, isNftProduct, isSubscriptionProduct]);
+  }, [draft, hidesShippingInventory, isAdProduct, isNftProduct, isSubscriptionProduct]);
 
   function update<K extends keyof ProductEditorInput>(key: K, value: ProductEditorInput[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
@@ -375,6 +393,19 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                     "membership",
                     "nft",
                     "nft_linked_physical",
+                    "ad_placement",
+                    "sponsorship",
+                    "campaign_boost",
+                    "creator_promotion",
+                    "fan_club_promotion",
+                    "newsletter_ad",
+                    "homepage_feature",
+                    "banner_ad",
+                    "video_ad",
+                    "event_sponsorship",
+                    "classified_ad",
+                    "featured_listing",
+                    "social_promotion_package",
                     "bundle",
                     "print_on_demand",
                     "preorder",
@@ -403,7 +434,21 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                   {["one_time", "recurring", "one_time_or_recurring", "free", "external"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
                 </SelectField>
                 <SelectField label="Delivery mode" value={draft.deliveryMode} onChange={(value) => update("deliveryMode", value as ProductEditorInput["deliveryMode"])}>
-                  {["shipped", "download", "access_grant", "service_scheduled", "subscription_access", "nft_claim", "hybrid", "none"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                  {[
+                    "shipped",
+                    "download",
+                    "access_grant",
+                    "service_scheduled",
+                    "subscription_access",
+                    "nft_claim",
+                    "ad_review_and_schedule",
+                    "ad_auto_schedule",
+                    "sponsor_placement",
+                    "campaign_boost",
+                    "featured_listing",
+                    "hybrid",
+                    "none",
+                  ].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
                 </SelectField>
                 <NumberField label="Access duration days" value={draft.accessDurationDays ?? 0} onChange={(value) => update("accessDurationDays", value || undefined)} />
               </div>
@@ -458,6 +503,18 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                 <ContextPanel title="Hybrid bundle" detail="Bundle components can mix physical, download, service, subscription, and NFT-linked entitlements.">
                   <Field label="Bundle component notes"><Textarea value={String(metadata.bundleNotes ?? "")} onChange={(event) => updateMetadata("bundleNotes", event.target.value)} /></Field>
                   <Field label="Fulfillment behavior"><Input value={String(metadata.fulfillmentBehavior ?? "separate")} onChange={(event) => updateMetadata("fulfillmentBehavior", event.target.value)} /></Field>
+                </ContextPanel>
+              ) : null}
+
+              {isAdProduct ? (
+                <ContextPanel title="Ad sales package" detail="After verified payment, this product creates an ad campaign that stays pending until creative is submitted and approved.">
+                  <Field label="Package type"><Input value={String(metadata.adPackageType ?? "single_placement")} onChange={(event) => updateMetadata("adPackageType", event.target.value)} /></Field>
+                  <Field label="Placement key"><Input value={String(metadata.placementKey ?? "homepage_feature")} onChange={(event) => updateMetadata("placementKey", event.target.value)} /></Field>
+                  <NumberField label="Duration days" value={number(metadata.durationDays) || 30} onChange={(value) => updateMetadata("durationDays", value || 30)} />
+                  <NumberField label="Included impressions" value={number(metadata.includedImpressions)} onChange={(value) => updateMetadata("includedImpressions", value)} />
+                  <NumberField label="Included clicks" value={number(metadata.includedClicks)} onChange={(value) => updateMetadata("includedClicks", value)} />
+                  <Field label="Creative requirements"><Textarea value={String(metadata.creativeRequirements ?? "Image or video URL, headline, target URL, and policy acceptance required.")} onChange={(event) => updateMetadata("creativeRequirements", event.target.value)} /></Field>
+                  <Field label="Advertiser instructions"><Textarea value={String(metadata.advertiserInstructions ?? "Submit creative after purchase. Ads are reviewed before scheduling.")} onChange={(event) => updateMetadata("advertiserInstructions", event.target.value)} /></Field>
                 </ContextPanel>
               ) : null}
             </div>
@@ -601,7 +658,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                 <Field label="Height"><Input value={draft.heightValue} onChange={(event) => update("heightValue", event.target.value)} /></Field>
                 <Field label="Dimension unit"><Input value={draft.dimensionUnit} onChange={(event) => update("dimensionUnit", event.target.value)} /></Field>
                 <SelectField label="Fulfillment" value={draft.fulfillmentType} onChange={(value) => update("fulfillmentType", value as ProductEditorInput["fulfillmentType"])}>
-                  {["manual", "printful", "digital", "digital_download", "digital_unlock", "service_delivery", "subscription_access", "nft_delivery", "hybrid", "none", "internal", "mixed"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
+                  {["manual", "printful", "digital", "digital_download", "digital_unlock", "service_delivery", "subscription_access", "nft_delivery", "ad_delivery", "sponsorship_delivery", "promotion_delivery", "hybrid", "none", "internal", "mixed"].map((value) => <option key={value} value={value}>{labelize(value)}</option>)}
                 </SelectField>
                 <Field label="Tax class ID"><Input value={draft.taxClassId} onChange={(event) => update("taxClassId", event.target.value)} /></Field>
               </div>
@@ -672,6 +729,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
                   {isServiceProduct ? <Badge>Service</Badge> : null}
                   {isSubscriptionProduct ? <Badge>Recurring</Badge> : null}
                   {isNftProduct ? <Badge>Digital collectible</Badge> : null}
+                  {isAdProduct ? <Badge>Ad package</Badge> : null}
                 </div>
                 <h3 className="mt-3 font-semibold">{draft.title || "Product title"}</h3>
                 <p className="mt-1 text-sm text-black/55">{draft.shortDescription || "Short product summary appears here."}</p>

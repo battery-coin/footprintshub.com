@@ -12,6 +12,7 @@ const links: Array<{ href: string; label: string; permission: PermissionKey }> =
   { href: "/admin/services", label: "Services", permission: "canManageFulfillment" },
   { href: "/admin/subscriptions", label: "Subscriptions", permission: "canManageSubscriptions" },
   { href: "/admin/nfts", label: "Digital collectibles", permission: "canManageNFTProducts" },
+  { href: "/admin/ads", label: "Ads", permission: "canManageAds" },
   { href: "/admin/categories", label: "Categories", permission: "canManageCatalog" },
   { href: "/admin/collections", label: "Collections", permission: "canManageCatalog" },
   { href: "/admin/orders", label: "Orders", permission: "canViewOrders" },
