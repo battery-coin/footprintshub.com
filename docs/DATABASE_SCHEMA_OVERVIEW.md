@@ -86,6 +86,9 @@ Inventory quantity remains on product/variant for fast reads, but every paid ded
 - `ProductSalesChannel`: many-to-many product/channel availability.
 - `PaymentProviderConfig`: shop-scoped provider enablement and non-secret config for Stripe Checkout, manual, PayPal placeholder, and Battery Coin placeholder.
 - `PaymentSession`: provider-neutral checkout/payment session with provider identifiers and idempotency key.
+- `CryptoPayment`: Coinbase crypto checkout record with hosted URL, provider checkout ID, status, transaction hash, and safe provider metadata.
+- `WalletConnection`: verified public wallet address metadata for identity and future token-gated utility.
+- `WalletVerificationNonce`: single-use wallet signature challenges for EVM wallet verification.
 - `PaymentCollection`: order-level payable/refundable amount grouping for future capture/refund workflows.
 - `FulfillmentProvider`: shop-scoped fulfillment provider configuration.
 - `PrintfulOrder`: Printful submission state, external IDs, idempotency key, request hash, request/response/error snapshots, recipient/items/shipping snapshots, confirmation policy, and sync timestamps.

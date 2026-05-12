@@ -199,9 +199,11 @@ const pages: Record<string, { title: string; body: string[] }> = {
   "crypto-payments": {
     title: "Crypto Payment Terms",
     body: [
-      "Crypto checkout is disabled unless the store explicitly enables a reviewed provider integration.",
-      "Any future Battery Coin or Coinbase checkout option is for approved utility payment only and is not an investment, yield, staking, resale, or profit opportunity.",
-      "Refunds, overpayments, underpayments, network fees, exchange-rate differences, and chargeback-like disputes require separate provider-specific policy before launch.",
+      "Crypto payments are processed by a third-party payment provider and may take time to confirm.",
+      "An order is not confirmed until FootprintsHub verifies payment status through the provider. Returning from a provider checkout page is not proof of payment.",
+      "Supported assets and networks are determined by the provider. Customers are responsible for using the correct provider checkout flow.",
+      "Battery Coin or other token payment support is a utility payment feature only and is not an investment, yield, staking, resale, profit, ROI, or appreciation opportunity.",
+      "Refunds, overpayments, underpayments, network fees, exchange-rate differences, and provider disputes require provider-specific review and final store policy.",
     ],
   },
   "advertising-terms": {

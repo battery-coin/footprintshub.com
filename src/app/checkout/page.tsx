@@ -9,6 +9,8 @@ import { useCart } from "@/components/cart/cart-provider";
 
 export default function CheckoutPage() {
   const { items, subtotalCents, checkout, isCheckingOut } = useCart();
+  const [isCryptoCheckingOut, setIsCryptoCheckingOut] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedRandomized, setAcceptedRandomized] = useState(false);
   const hasPhysical = items.some((item) => item.requiresShipping !== false);
@@ -18,6 +20,32 @@ export default function CheckoutPage() {
     () => (hasPhysical ? "Shipping details are required for physical and print-on-demand products." : "This cart can skip shipping if all items remain digital-only."),
     [hasPhysical],
   );
+
+  async function startCryptoCheckout() {
+    setCheckoutError(null);
+    setIsCryptoCheckingOut(true);
+    try {
+      const response = await fetch("/api/checkout/coinbase/create", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+        }),
+      });
+      const payload = (await response.json()) as { url?: string; error?: string };
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error ?? "Crypto checkout is not available yet.");
+      }
+      window.location.href = payload.url;
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : "Crypto checkout is not available yet.");
+    } finally {
+      setIsCryptoCheckingOut(false);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -33,7 +61,7 @@ export default function CheckoutPage() {
         <p className="text-sm font-medium uppercase tracking-[0.2em] text-[var(--accent)]">Checkout</p>
         <h1 className="mt-3 text-4xl font-semibold">Review before payment</h1>
         <p className="mt-4 text-sm leading-7 text-black/60">
-          Stripe Checkout opens after the server recalculates product prices, product status, inventory, and cart totals.
+          Payment opens after the server recalculates product prices, product status, inventory, and cart totals.
         </p>
 
         <div className="mt-8 grid gap-4">
@@ -60,6 +88,15 @@ export default function CheckoutPage() {
               <Link href="/legal/digital-goods" className="underline">Digital goods</Link>
             </div>
           </div>
+          <div className="rounded-lg border border-black/10 bg-white p-5">
+            <h2 className="text-xl font-semibold">Crypto payment</h2>
+            <p className="mt-2 text-sm leading-6 text-black/60">
+              Coinbase Checkout can be used for eligible one-time crypto payments when enabled by the owner. Your order is confirmed only after server-side payment verification.
+            </p>
+            <Link href="/legal/crypto-payments" className="mt-3 inline-block text-sm underline">
+              Crypto payment terms
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -85,6 +122,10 @@ export default function CheckoutPage() {
           <Button type="button" onClick={checkout} disabled={!canCheckout || isCheckingOut}>
             {isCheckingOut ? "Opening Stripe..." : "Continue to Stripe Checkout"}
           </Button>
+          <Button type="button" variant="secondary" onClick={startCryptoCheckout} disabled={!canCheckout || isCryptoCheckingOut}>
+            {isCryptoCheckingOut ? "Opening Coinbase..." : "Pay with Crypto"}
+          </Button>
+          {checkoutError ? <p className="text-sm leading-6 text-red-700">{checkoutError}</p> : null}
           <ButtonLink href="/cart" variant="secondary">Return to cart</ButtonLink>
         </div>
       </aside>

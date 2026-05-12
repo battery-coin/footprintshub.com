@@ -974,6 +974,7 @@ enum SalesChannelStatus {
 
 enum PaymentProviderConfigCode {
   stripe_checkout
+  coinbase_crypto
   manual
   paypal_placeholder
   battery_coin_placeholder
@@ -981,8 +982,11 @@ enum PaymentProviderConfigCode {
 
 enum PaymentSessionStatus {
   pending
+  created
   authorized
   captured
+  paid
+  expired
   failed
   cancelled
   refunded
@@ -1120,6 +1124,8 @@ model Shop {
   paymentProviderConfigs          PaymentProviderConfig[]
   paymentSessions                 PaymentSession[]
   paymentCollections              PaymentCollection[]
+  cryptoPayments                  CryptoPayment[]
+  walletConnections               WalletConnection[]
   printfulOrders                  PrintfulOrder[]
   printfulOrderItems              PrintfulOrderItem[]
   printfulWebhookEvents           PrintfulWebhookEvent[]
@@ -1683,6 +1689,8 @@ model Order {
   orderNumber             String            @unique
   status                  OrderStatus       @default(pending)
   paymentStatus           PaymentStatus     @default(unpaid)
+  paymentProvider         PaymentProvider?
+  cryptoPaymentStatus     String?
   fulfillmentStatus       FulfillmentStatus @default(unfulfilled)
   subtotalCents           Int
   discountCents           Int               @default(0)
@@ -1692,6 +1700,8 @@ model Order {
   currency                String            @default("USD")
   stripeCheckoutSessionId String?           @unique
   stripePaymentIntentId   String?
+  paymentSessionId        String?
+  paidAt                  DateTime?
   customerEmail           String?
   shippingAddress         Json?
   billingAddress          Json?
@@ -1706,6 +1716,7 @@ model Order {
   items                        OrderItem[]
   addresses                    OrderAddress[]
   payments                     Payment[]
+  cryptoPayments               CryptoPayment[]
   paymentCompositions          OrderPaymentComposition[]
   tokenPaymentIntents          TokenPaymentIntent[]
   paymentSessions              PaymentSession[]
@@ -4108,20 +4119,91 @@ model PaymentSession {
   currency                String                    @default("USD")
   providerSessionId       String?
   providerPaymentIntentId String?
+  providerHostedUrl       String?
+  expiresAt               DateTime?
   metadata                Json?
   idempotencyKey          String?
   createdAt               DateTime                  @default(now())
   updatedAt               DateTime                  @updatedAt
 
-  shop  Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  cart  Cart?  @relation(fields: [cartId], references: [id])
-  order Order? @relation(fields: [orderId], references: [id])
+  shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  cart           Cart?           @relation(fields: [cartId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  cryptoPayments CryptoPayment[]
 
   @@unique([provider, providerSessionId])
   @@unique([idempotencyKey])
   @@index([shopId, status])
   @@index([cartId])
   @@index([orderId])
+}
+
+model CryptoPayment {
+  id                 String   @id @default(cuid())
+  shopId             String
+  orderId            String
+  paymentSessionId   String?
+  provider           String   @default("coinbase")
+  providerCheckoutId String
+  providerChargeId   String?
+  hostedUrl          String
+  status             String
+  amountCents        Int
+  currency           String   @default("USD")
+  cryptoCurrency     String?
+  network            String?
+  transactionHash    String?
+  walletAddress      String?
+  payerWalletAddress String?
+  rawStatusPayload   Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  order          Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentSession PaymentSession? @relation(fields: [paymentSessionId], references: [id])
+
+  @@unique([provider, providerCheckoutId])
+  @@index([shopId, status])
+  @@index([orderId])
+  @@index([paymentSessionId])
+}
+
+model WalletConnection {
+  id            String    @id @default(cuid())
+  shopId        String?
+  customerId    String?
+  userId        String?
+  walletAddress String
+  chainId       String?
+  walletType    String    @default("other")
+  connectorName String?
+  verifiedAt    DateTime?
+  lastSeenAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  shop Shop? @relation(fields: [shopId], references: [id])
+
+  @@unique([walletAddress, shopId, userId])
+  @@index([shopId])
+  @@index([customerId])
+  @@index([userId])
+  @@index([walletAddress])
+}
+
+model WalletVerificationNonce {
+  id            String    @id @default(cuid())
+  walletAddress String
+  nonce         String    @unique
+  message       String
+  status        String    @default("pending")
+  expiresAt     DateTime
+  createdAt     DateTime  @default(now())
+  usedAt        DateTime?
+
+  @@index([walletAddress, status])
+  @@index([expiresAt])
 }
 
 model PaymentCollection {

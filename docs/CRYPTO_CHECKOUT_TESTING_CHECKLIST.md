@@ -1,0 +1,24 @@
+# Crypto Checkout Testing Checklist
+
+- [ ] Coinbase env missing disables crypto checkout gracefully.
+- [ ] Coinbase checkout create route rejects invalid carts.
+- [ ] Coinbase checkout create route recalculates product prices server-side.
+- [ ] Coinbase checkout create route creates `Order`, `PaymentSession`, and `CryptoPayment`.
+- [ ] Coinbase checkout hosted URL is returned only from the server.
+- [ ] Success page does not mark order paid.
+- [ ] Cancel page does not mark order paid.
+- [ ] Webhook with invalid signature is rejected.
+- [ ] Duplicate webhook does not duplicate paid processing.
+- [ ] Paid webhook marks order paid.
+- [ ] Paid webhook triggers `completePaidOrder`.
+- [ ] Printful runs only after verified paid status.
+- [ ] Affiliate commissions run once after verified paid status.
+- [ ] Failed, cancelled, or expired webhook marks payment failed/cancelled/expired.
+- [ ] Wallet nonce expires and is single-use.
+- [ ] Reused nonce is rejected.
+- [ ] Wallet signature mismatch is rejected.
+- [ ] No Coinbase secrets appear in the client bundle.
+- [ ] `npx prisma validate` passes.
+- [ ] `npm run typecheck` passes.
+- [ ] `npm run lint` passes.
+- [ ] `npm run build` passes.

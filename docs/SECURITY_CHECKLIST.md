@@ -3,9 +3,11 @@
 ## Implemented Baseline
 
 - Stripe webhook signature verification.
+- Coinbase webhook signature verification before crypto-paid order completion.
 - Webhook idempotency table.
 - Zod validation for important API payloads.
 - Server-side checkout price recalculation.
+- Server-side Coinbase checkout creation; no client-submitted payment amounts are trusted.
 - Inventory deduction idempotency keys.
 - Admin audit log model.
 - Affiliate audit log model.
@@ -67,6 +69,7 @@
 
 - Treat `PaymentProviderConfig.config` as non-secret unless encrypted; keep provider secrets in environment variables.
 - Use `PaymentSession`, `WebhookEvent`, `CommerceEvent`, and `IdempotencyKey` for retry-safe workflows.
+- Wallet connection uses single-use nonce and signed-message verification; wallet connection is never payment proof.
 - Reserve inventory before checkout only with expiration and idempotency.
 - Deduct inventory only after verified payment.
 - Release reservations on checkout cancellation/expiration.

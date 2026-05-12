@@ -29,6 +29,7 @@
     "react-dom": "^19.2.6",
     "stripe": "^22.1.1",
     "tailwind-merge": "^3.5.0",
+    "viem": "^2.48.11",
     "zod": "^4.4.3"
   },
   "devDependencies": {
