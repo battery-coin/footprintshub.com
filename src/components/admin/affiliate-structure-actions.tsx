@@ -20,6 +20,25 @@ const commissionBases: CommissionBase[] = [
   "matrix_level_volume",
   "gross_margin",
 ];
+const adminSecretStorageKey = "footprintshub-admin-secret";
+
+function getAdminSecretInput() {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("admin_secret") || window.localStorage.getItem(adminSecretStorageKey) || "";
+}
+
+function saveAdminSecret(secret: string) {
+  if (typeof window === "undefined") return;
+  if (secret) window.localStorage.setItem(adminSecretStorageKey, secret);
+}
+
+function adminJsonHeaders(secret: string) {
+  return { "content-type": "application/json", ...(secret ? { "x-admin-secret": secret } : {}) };
+}
+
+function unauthorizedMessage(defaultMessage: string) {
+  return `${defaultMessage} Enter the Railway ADMIN_SECRET and try again.`;
+}
 
 export function UseStructureTemplateButton({ templateKey, structureType }: { templateKey: string; structureType?: AffiliateStructureType }) {
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
@@ -32,14 +51,18 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
     setStatus("saving");
     setMessage("");
     try {
-      const resolvedAdminSecret = adminSecret.trim() || new URLSearchParams(window.location.search).get("admin_secret") || window.localStorage.getItem("footprintshub-admin-secret") || "";
-      if (resolvedAdminSecret) {
-        window.localStorage.setItem("footprintshub-admin-secret", resolvedAdminSecret);
+      const resolvedAdminSecret = adminSecret.trim() || getAdminSecretInput();
+      if (!resolvedAdminSecret) {
+        setShowAdminSecret(true);
+        setStatus("error");
+        setMessage("Admin authorization is required before creating a structure. Enter the Railway ADMIN_SECRET and click again.");
+        return;
       }
+      saveAdminSecret(resolvedAdminSecret);
 
       const response = await fetch("/api/admin/affiliates/structures/use-template", {
         method: "POST",
-        headers: { "content-type": "application/json", ...(resolvedAdminSecret ? { "x-admin-secret": resolvedAdminSecret } : {}) },
+        headers: adminJsonHeaders(resolvedAdminSecret),
         credentials: "same-origin",
         body: JSON.stringify({ templateKey, structureType }),
       });
@@ -49,7 +72,11 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
         if (response.status === 401 || response.status === 403) {
           setShowAdminSecret(true);
         }
-        setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
+        setMessage(
+          response.status === 401 || response.status === 403
+            ? unauthorizedMessage(payload.error ?? "Unauthorized.")
+            : payload.error ?? "Could not create this structure. Check owner/admin access and try again.",
+        );
         setStatus("error");
         return;
       }
@@ -66,7 +93,7 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
 
   return (
     <div className="grid gap-2">
-      {showAdminSecret ? (
+      {showAdminSecret || status === "error" ? (
         <label className="grid gap-1 text-xs font-medium text-black/55">
           Admin secret
           <input
@@ -89,34 +116,82 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
 export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
   const [levels, setLevels] = useState<LevelRow[]>(plan.levels);
   const [message, setMessage] = useState("");
+  const [adminSecret, setAdminSecret] = useState("");
+  const [showAdminSecret, setShowAdminSecret] = useState(false);
 
   function updateLevel(index: number, patch: Partial<LevelRow>) {
     setLevels((current) => current.map((level, levelIndex) => (levelIndex === index ? { ...level, ...patch } : level)));
   }
 
   async function saveLevels() {
+    const resolvedAdminSecret = adminSecret.trim() || getAdminSecretInput();
+    if (!resolvedAdminSecret) {
+      setShowAdminSecret(true);
+      setMessage("Admin authorization is required to save levels. Enter the Railway ADMIN_SECRET and try again.");
+      return;
+    }
+    saveAdminSecret(resolvedAdminSecret);
     setMessage("Saving level labels and percentages...");
     const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/levels`, {
       method: "PUT",
-      headers: { "content-type": "application/json" },
+      headers: adminJsonHeaders(resolvedAdminSecret),
       body: JSON.stringify({ levels }),
     });
     const payload = await response.json().catch(() => ({}));
-    setMessage(response.ok ? (payload.stored === false ? "Accepted as scaffold until DATABASE_URL is configured." : "Levels saved.") : payload.error ?? "Could not save levels.");
+    if (!response.ok && (response.status === 401 || response.status === 403)) setShowAdminSecret(true);
+    setMessage(
+      response.ok
+        ? payload.stored === false
+          ? "Accepted as scaffold until DATABASE_URL is configured."
+          : "Levels saved."
+        : response.status === 401 || response.status === 403
+          ? unauthorizedMessage(payload.error ?? "Unauthorized.")
+          : payload.error ?? "Could not save levels.",
+    );
   }
 
   async function activatePlan() {
+    const resolvedAdminSecret = adminSecret.trim() || getAdminSecretInput();
+    if (!resolvedAdminSecret) {
+      setShowAdminSecret(true);
+      setMessage("Admin authorization is required to activate plans. Enter the Railway ADMIN_SECRET and try again.");
+      return;
+    }
+    saveAdminSecret(resolvedAdminSecret);
     setMessage("Activating plan...");
-    const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/activate`, { method: "POST" });
+    const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/activate`, { method: "POST", headers: adminJsonHeaders(resolvedAdminSecret) });
     const payload = await response.json().catch(() => ({}));
-    setMessage(response.ok ? (payload.stored === false ? "Activation accepted as scaffold until DATABASE_URL is configured." : "Plan activated.") : payload.error ?? "Could not activate plan.");
+    if (!response.ok && (response.status === 401 || response.status === 403)) setShowAdminSecret(true);
+    setMessage(
+      response.ok
+        ? payload.stored === false
+          ? "Activation accepted as scaffold until DATABASE_URL is configured."
+          : "Plan activated."
+        : response.status === 401 || response.status === 403
+          ? unauthorizedMessage(payload.error ?? "Unauthorized.")
+          : payload.error ?? "Could not activate plan.",
+    );
   }
 
   async function duplicatePlan() {
+    const resolvedAdminSecret = adminSecret.trim() || getAdminSecretInput();
+    if (!resolvedAdminSecret) {
+      setShowAdminSecret(true);
+      setMessage("Admin authorization is required to duplicate plans. Enter the Railway ADMIN_SECRET and try again.");
+      return;
+    }
+    saveAdminSecret(resolvedAdminSecret);
     setMessage("Duplicating plan...");
-    const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/duplicate`, { method: "POST" });
+    const response = await fetch(`/api/admin/affiliates/plans/${plan.id}/duplicate`, { method: "POST", headers: adminJsonHeaders(resolvedAdminSecret) });
     const payload = await response.json().catch(() => ({}));
-    setMessage(response.ok ? `Duplicate ready: ${payload.planId ?? "draft copy"}` : payload.error ?? "Could not duplicate plan.");
+    if (!response.ok && (response.status === 401 || response.status === 403)) setShowAdminSecret(true);
+    setMessage(
+      response.ok
+        ? `Duplicate ready: ${payload.planId ?? "draft copy"}`
+        : response.status === 401 || response.status === 403
+          ? unauthorizedMessage(payload.error ?? "Unauthorized.")
+          : payload.error ?? "Could not duplicate plan.",
+    );
   }
 
   return (
@@ -196,6 +271,18 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
       <div className="h-fit rounded-lg border border-black/10 bg-white p-5">
         <h2 className="text-lg font-semibold">Plan actions</h2>
         <p className="mt-2 text-sm leading-6 text-black/60">Save labels and rates first, then activate after reviewing compliance warnings and commission pool caps.</p>
+        {showAdminSecret ? (
+          <label className="mt-5 grid gap-1 text-xs font-medium text-black/55">
+            Admin secret
+            <input
+              type="password"
+              value={adminSecret}
+              onChange={(event) => setAdminSecret(event.target.value)}
+              placeholder="Enter temporary admin secret"
+              className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
+            />
+          </label>
+        ) : null}
         <div className="mt-5 grid gap-3">
           <Button type="button" onClick={saveLevels}>
             Save levels
@@ -223,22 +310,52 @@ export function StructureSettingsForm({
   fields: Array<{ name: string; label: string; value: string | number | boolean; type?: "text" | "number" | "checkbox" }>;
 }) {
   const [message, setMessage] = useState("");
+  const [adminSecret, setAdminSecret] = useState("");
+  const [showAdminSecret, setShowAdminSecret] = useState(false);
 
   async function saveSettings(formData: FormData) {
+    const resolvedAdminSecret = adminSecret.trim() || getAdminSecretInput();
+    if (!resolvedAdminSecret) {
+      setShowAdminSecret(true);
+      setMessage("Admin authorization is required to save settings. Enter the Railway ADMIN_SECRET and try again.");
+      return;
+    }
+    saveAdminSecret(resolvedAdminSecret);
     const payload = Object.fromEntries(
       fields.map((field) => [field.name, field.type === "checkbox" ? formData.get(field.name) === "on" : formData.get(field.name)]),
     );
     const response = await fetch(`/api/admin/affiliates/plans/${planId}/${structureType}`, {
       method: "PUT",
-      headers: { "content-type": "application/json" },
+      headers: adminJsonHeaders(resolvedAdminSecret),
       body: JSON.stringify(payload),
     });
     const body = await response.json().catch(() => ({}));
-    setMessage(response.ok ? (body.stored === false ? "Settings accepted as scaffold until DATABASE_URL is configured." : "Settings saved.") : body.error ?? "Could not save settings.");
+    if (!response.ok && (response.status === 401 || response.status === 403)) setShowAdminSecret(true);
+    setMessage(
+      response.ok
+        ? body.stored === false
+          ? "Settings accepted as scaffold until DATABASE_URL is configured."
+          : "Settings saved."
+        : response.status === 401 || response.status === 403
+          ? unauthorizedMessage(body.error ?? "Unauthorized.")
+          : body.error ?? "Could not save settings.",
+    );
   }
 
   return (
     <form action={saveSettings} className="grid gap-4 rounded-lg border border-black/10 bg-white p-5">
+      {showAdminSecret ? (
+        <label className="grid gap-1 text-xs font-medium text-black/55">
+          Admin secret
+          <input
+            type="password"
+            value={adminSecret}
+            onChange={(event) => setAdminSecret(event.target.value)}
+            placeholder="Enter temporary admin secret"
+            className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
+          />
+        </label>
+      ) : null}
       {fields.map((field) => (
         <label key={field.name} className="grid gap-1 text-sm font-medium text-black/60">
           {field.label}
