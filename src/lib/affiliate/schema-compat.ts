@@ -4,6 +4,7 @@ export async function ensureAffiliateProgramActivePlanColumn() {
   const prisma = getPrisma();
 
   await prisma.$executeRawUnsafe('ALTER TABLE "AffiliateProgram" ADD COLUMN IF NOT EXISTS "activePlanId" TEXT');
+  await prisma.$executeRawUnsafe('ALTER TABLE "AffiliateProgram" ADD COLUMN IF NOT EXISTS "defaultPlanType" TEXT');
   await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "AffiliateProgram_activePlanId_idx" ON "AffiliateProgram"("activePlanId")');
   await prisma.$executeRawUnsafe(`
 DO $$
