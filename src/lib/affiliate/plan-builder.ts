@@ -10,6 +10,7 @@ import {
   type StructureLevelTemplate,
 } from "./structure-templates";
 import type { AffiliateStructureType } from "./types";
+import { getOrCreateDefaultShop } from "@/lib/shops/default-shop";
 
 export type AdminAffiliatePlanView = {
   id: string;
@@ -110,11 +111,7 @@ export async function createPlanFromTemplate(templateKey: string) {
   }
 
   const prisma = getPrisma();
-  const shop = await prisma.shop.findFirst({ where: { status: "active" }, orderBy: { createdAt: "asc" } });
-
-  if (!shop) {
-    return { ok: false as const, status: 409, error: "Create or seed a shop before creating affiliate plans." };
-  }
+  const shop = await getOrCreateDefaultShop();
 
   const program =
     (await prisma.affiliateProgram.findFirst({ where: { shopId: shop.id }, orderBy: { createdAt: "asc" } })) ??
