@@ -11,6 +11,7 @@ import {
 } from "./structure-templates";
 import type { AffiliateStructureType } from "./types";
 import { getOrCreateDefaultShop } from "@/lib/shops/default-shop";
+import { ensureAffiliateProgramActivePlanColumn } from "./schema-compat";
 
 export type AdminAffiliatePlanView = {
   id: string;
@@ -112,6 +113,7 @@ export async function createPlanFromTemplate(templateKey: string) {
 
   const prisma = getPrisma();
   const shop = await getOrCreateDefaultShop();
+  await ensureAffiliateProgramActivePlanColumn();
 
   const program =
     (await prisma.affiliateProgram.findFirst({ where: { shopId: shop.id }, orderBy: { createdAt: "asc" } })) ??
