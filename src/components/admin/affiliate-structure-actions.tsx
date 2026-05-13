@@ -21,31 +21,68 @@ const commissionBases: CommissionBase[] = [
   "gross_margin",
 ];
 
-export function UseStructureTemplateButton({ templateKey }: { templateKey: string }) {
+export function UseStructureTemplateButton({ templateKey, structureType }: { templateKey: string; structureType?: AffiliateStructureType }) {
   const [status, setStatus] = useState<"idle" | "saving" | "error">("idle");
+  const [message, setMessage] = useState("");
+  const [adminSecret, setAdminSecret] = useState("");
+  const [showAdminSecret, setShowAdminSecret] = useState(false);
   const router = useRouter();
 
   async function useTemplate() {
     setStatus("saving");
-    const response = await fetch("/api/admin/affiliates/structures/use-template", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ templateKey }),
-    });
-    const payload = await response.json().catch(() => ({}));
+    setMessage("");
+    try {
+      const resolvedAdminSecret = adminSecret.trim() || new URLSearchParams(window.location.search).get("admin_secret") || window.localStorage.getItem("footprintshub-admin-secret") || "";
+      if (resolvedAdminSecret) {
+        window.localStorage.setItem("footprintshub-admin-secret", resolvedAdminSecret);
+      }
 
-    if (!response.ok) {
+      const response = await fetch("/api/admin/affiliates/structures/use-template", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(resolvedAdminSecret ? { "x-admin-secret": resolvedAdminSecret } : {}) },
+        credentials: "same-origin",
+        body: JSON.stringify({ templateKey, structureType }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setShowAdminSecret(true);
+        }
+        setMessage(payload.error ?? "Could not create this structure. Check owner/admin access and try again.");
+        setStatus("error");
+        return;
+      }
+
+      setShowAdminSecret(false);
+      setMessage(payload.stored === false ? "Preview created. Connect DATABASE_URL for persistence." : "Structure created. Opening settings...");
+      router.push(payload.redirectTo ?? "/admin/affiliates/plans");
+    } catch (error) {
       setStatus("error");
+      setMessage(error instanceof Error ? error.message : "Could not reach the structure setup API.");
       return;
     }
-
-    router.push(payload.redirectTo ?? "/admin/affiliates/plans");
   }
 
   return (
-    <Button type="button" onClick={useTemplate} disabled={status === "saving"}>
-      {status === "saving" ? "Creating..." : status === "error" ? "Try again" : "Use This Structure"}
-    </Button>
+    <div className="grid gap-2">
+      {showAdminSecret ? (
+        <label className="grid gap-1 text-xs font-medium text-black/55">
+          Admin secret
+          <input
+            type="password"
+            value={adminSecret}
+            onChange={(event) => setAdminSecret(event.target.value)}
+            placeholder="Enter temporary admin secret"
+            className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
+          />
+        </label>
+      ) : null}
+      <Button type="button" onClick={useTemplate} disabled={status === "saving"}>
+        {status === "saving" ? "Creating..." : status === "error" ? "Try again" : "Use This Structure"}
+      </Button>
+      {message ? <p className={status === "error" ? "text-sm text-red-600" : "text-sm text-black/60"}>{message}</p> : null}
+    </div>
   );
 }
 
