@@ -29,7 +29,7 @@ export default async function AdminPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard label="Products" value={products.length.toString()} detail={`${activeCount} active in catalog`} />
           <MetricCard label="Orders" value="0" detail="Paid order persistence appears after Stripe webhooks and DATABASE_URL are configured." />
-          <MetricCard label="Refunds" value="0" detail="Refund review is scaffolded for Stripe, inventory, and affiliate reversal." />
+          <MetricCard label="Refunds" value="0" detail="Refund review is prepared for Stripe, inventory, and affiliate reversal." />
           <MetricCard label="Affiliate liability" value="$0.00" detail="Ledger-based commissions are created after verified payment." />
         </div>
 

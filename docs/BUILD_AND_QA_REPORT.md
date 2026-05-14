@@ -8,6 +8,20 @@ Prisma validation failed with:
 
 Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while keeping `OrderItem.refundItems RefundItem[]` for line-level refund records.
 
+## Latest Full MVP Audit Polish Verification - 2026-05-14
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `pwd` | pass | Confirmed the requested project context. The sandbox display path differed, but commands ran against `C:\Users\saveo\OneDrive\Documents\GitHub\footprintshub.com`. |
+| `git status --short --branch` | pass | Branch: `full-mvp-audit-polish`; untracked `prisma/migrations/` was intentionally left untouched. |
+| `git merge main` | pass | Fast-forwarded this branch to include the latest production affiliate structure fixes from `main`. |
+| `rg --files src/app` | pass | Confirmed broad route coverage for public, account, admin, affiliate, checkout, legal, and API surfaces. |
+| `rg` placeholder/dead-link scan | pass with intentional matches | No hash-only links, JavaScript void links, lorem ipsum, or local-only production URLs were found. Remaining matches are form placeholder attributes, setup-required labels, seed-product image paths, and the required Digital Twin Registration Placeholder product. |
+| `npm run typecheck` | pass | TypeScript check passed. |
+| `npm run lint` | pass | ESLint passed. |
+| `npm test` | pass | 63 tests passed. |
+| `npm run build` | pass | Next.js production build passed and generated 127 app routes/pages. A few static admin pages exceeded the first 60-second generation attempt and succeeded on retry. |
+
 ## Commands Run
 
 | Command | Result | Notes |
@@ -72,7 +86,7 @@ Fixed by adding the missing `OrderItem.refunds Refund[]` back relation while kee
 ### Notes
 
 - Unilevel is the functional launch payout engine.
-- Binary and Matrix are configurable, persisted, previewable, and explicitly marked scaffolded until their placement/volume engines are completed and tested.
+- Binary and Matrix are configurable, persisted, previewable, and marked owner-managed/configurable. Their deeper placement/volume payout automation still needs real transaction-volume testing before it should be described as a fully live payout engine.
 - Requested admin table row edit actions were added across products, categories, collections, inventory, Printful, fulfillment, shipping options, promotions, sales channels, regions, tax, and affiliates.
 
 ## Shopify-Like Product Editor - 2026-05-10

@@ -20,6 +20,7 @@ The audit covered the Next.js app routes, API routes, Prisma schema, cart and ch
 - Added missing public/admin/API routes.
 - Added a custom not-found page.
 - Added a real affiliate application client form.
+- Merged the latest production affiliate structure fixes so Binary, Matrix, and Unilevel structure cards are owner-configurable and use the shared admin-secret flow.
 - Added checkout review UX with terms, randomized-product acknowledgement, and server-total messaging.
 - Added shop search/filter/sort.
 - Upgraded product detail with badges, story panels, fulfillment/refund notes, affiliate share URL, gallery, and related products.
@@ -66,6 +67,7 @@ The audit covered the Next.js app routes, API routes, Prisma schema, cart and ch
 - Stripe session flow scaffold with server-side pricing route.
 - Health endpoint.
 - Affiliate application submission.
+- Affiliate structure template selection, plan creation, activation, level editing, and Binary/Matrix/Unilevel settings persistence when the production database schema is compatible.
 - Admin route coverage for launch-critical surfaces.
 
 ## 7. Scaffolded Or Partial
@@ -74,6 +76,7 @@ The audit covered the Next.js app routes, API routes, Prisma schema, cart and ch
 - Printful automatic order submission is scaffolded, not live.
 - Customer auth and real account order history remain future work.
 - Crypto checkout remains disabled unless explicitly configured and reviewed.
+- Binary and Matrix are owner-configurable, but their production payout/placement engines should not be marketed as fully live until real qualified-purchase volume scenarios are tested end to end.
 
 ## 8. Security And Legal
 
@@ -89,9 +92,10 @@ The audit covered the Next.js app routes, API routes, Prisma schema, cart and ch
 - Prisma generate: pass.
 - Typecheck: pass.
 - Lint: pass.
-- Tests: 49 pass.
+- Tests: 63 pass.
 - Build: pass.
-- Health route: pass at `http://127.0.0.1:3000/api/health`.
+- Latest build generated 127 app routes/pages.
+- Health route: previously passed at `http://127.0.0.1:3000/api/health`; not re-tested with a running local server in the final 2026-05-14 verification pass.
 
 ## 10. Manual Setup Required
 

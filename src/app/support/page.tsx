@@ -12,7 +12,7 @@ export default function SupportPage() {
       <div className="mt-8">
         <Accordion
           items={[
-            { title: "Order help", body: "Use your checkout email and order number when asking about a purchase. Customer account order history is scaffolded for the next auth phase." },
+            { title: "Order help", body: "Use your checkout email and order number when asking about a purchase. Customer account order history is prepared for the next secure account phase." },
             { title: "Refund help", body: "Refunds depend on product type, fulfillment status, digital delivery, preorder timing, and the posted refund policy." },
             { title: "Shipping help", body: "Physical and print-on-demand products require shipping. Digital-only products can skip shipping." },
             { title: "Affiliate help", body: "Affiliate commissions are paid only on qualified purchases and may be held, reversed, or rejected for refunds, chargebacks, fraud, or policy issues." },

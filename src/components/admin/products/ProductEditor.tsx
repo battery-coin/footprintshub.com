@@ -530,7 +530,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               <Field label="Meta description"><Textarea value={draft.seoDescription} onChange={(event) => update("seoDescription", event.target.value)} /></Field>
               <Field label="Canonical URL"><Input value={draft.canonicalUrl} onChange={(event) => update("canonicalUrl", event.target.value)} /></Field>
               <ToggleGrid>
-                <Toggle label="Token-gated placeholder" checked={draft.tokenGated} onChange={(value) => update("tokenGated", value)} />
+                <Toggle label="Future token utility gate" checked={draft.tokenGated} onChange={(value) => update("tokenGated", value)} />
                 <Toggle label="Affiliate eligible" checked={draft.affiliateEligible} onChange={(value) => update("affiliateEligible", value)} />
                 <Toggle label="Blind box" checked={draft.blindBoxEligible} onChange={(value) => update("blindBoxEligible", value)} />
                 <Toggle label="Booster pack" checked={draft.boosterPackEligible} onChange={(value) => update("boosterPackEligible", value)} />
@@ -592,7 +592,7 @@ export function ProductEditor({ mode, product }: ProductEditorProps) {
               <Button type="button" variant="secondary" onClick={() => previewCsv(false)}><Upload size={16} /> Preview CSV</Button>
               <Button type="button" variant="secondary" onClick={() => previewCsv(true)}>Import CSV</Button>
             </div>
-            <Input className="mt-4" value={apiUrl} onChange={(event) => setApiUrl(event.target.value)} placeholder="https://api.example.com/products.json" />
+            <Input className="mt-4" value={apiUrl} onChange={(event) => setApiUrl(event.target.value)} placeholder="https://supplier.example/products.json" />
             <div className="mt-3 flex flex-wrap gap-2">
               <Button type="button" variant="secondary" onClick={() => previewApi(false)}>Preview API</Button>
               <Button type="button" variant="secondary" onClick={() => previewApi(true)}>Import API</Button>

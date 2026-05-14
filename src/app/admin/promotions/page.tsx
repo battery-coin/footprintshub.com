@@ -18,7 +18,7 @@ export default function AdminPromotionsPage() {
           <div className="mt-4 grid gap-3 text-sm md:grid-cols-3">
             {["Coupon rules", "Automatic rules", "Affiliate coupons"].map((row) => (
               <div key={row} className="rounded-md bg-black/[0.04] p-3">
-                <p>{row}: {row === "Affiliate coupons" ? "mapped" : "scaffolded"}</p>
+                <p>{row}: {row === "Affiliate coupons" ? "mapped" : "setup ready"}</p>
                 <div className="mt-3">
                   <EditRowLink href={`/admin/promotions?edit=${encodeURIComponent(row.toLowerCase().replaceAll(" ", "-"))}`} />
                 </div>

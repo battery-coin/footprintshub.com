@@ -100,7 +100,7 @@ export function UseStructureTemplateButton({ templateKey, structureType }: { tem
             type="password"
             value={adminSecret}
             onChange={(event) => setAdminSecret(event.target.value)}
-            placeholder="Enter temporary admin secret"
+            placeholder="Enter admin secret"
             className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
           />
         </label>
@@ -142,7 +142,7 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
     setMessage(
       response.ok
         ? payload.stored === false
-          ? "Accepted as scaffold until DATABASE_URL is configured."
+          ? "Accepted in setup mode until DATABASE_URL is configured."
           : "Levels saved."
         : response.status === 401 || response.status === 403
           ? unauthorizedMessage(payload.error ?? "Unauthorized.")
@@ -165,7 +165,7 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
     setMessage(
       response.ok
         ? payload.stored === false
-          ? "Activation accepted as scaffold until DATABASE_URL is configured."
+          ? "Activation accepted in setup mode until DATABASE_URL is configured."
           : "Plan activated."
         : response.status === 401 || response.status === 403
           ? unauthorizedMessage(payload.error ?? "Unauthorized.")
@@ -278,7 +278,7 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
               type="password"
               value={adminSecret}
               onChange={(event) => setAdminSecret(event.target.value)}
-              placeholder="Enter temporary admin secret"
+              placeholder="Enter admin secret"
               className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
             />
           </label>
@@ -334,7 +334,7 @@ export function StructureSettingsForm({
     setMessage(
       response.ok
         ? body.stored === false
-          ? "Settings accepted as scaffold until DATABASE_URL is configured."
+          ? "Settings accepted in setup mode until DATABASE_URL is configured."
           : "Settings saved."
         : response.status === 401 || response.status === 403
           ? unauthorizedMessage(body.error ?? "Unauthorized.")
@@ -351,7 +351,7 @@ export function StructureSettingsForm({
             type="password"
             value={adminSecret}
             onChange={(event) => setAdminSecret(event.target.value)}
-            placeholder="Enter temporary admin secret"
+            placeholder="Enter admin secret"
             className="min-h-10 rounded-md border border-black/15 px-3 text-sm text-black"
           />
         </label>

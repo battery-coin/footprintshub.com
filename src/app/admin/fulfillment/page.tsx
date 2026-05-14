@@ -3,7 +3,7 @@ import { EditRowLink } from "@/components/admin/edit-row-link";
 
 const rows = [
   ["Default provider", "Manual fulfillment", "Enabled for MVP"],
-  ["Future provider", "Printful / warehouse", "Scaffolded"],
+  ["Future provider", "Printful / warehouse", "Setup ready"],
   ["Tracking", "Carrier and tracking URL", "Ready in schema"],
 ];
 

@@ -19,7 +19,10 @@ export default function AffiliateLinksPage() {
         ))}
       </div>
       <div className="mt-6 rounded-lg border border-black/10 bg-white p-5">
-        <p className="font-medium">QR code placeholder</p>
+        <p className="font-medium">QR preview</p>
+        <p className="mt-2 text-sm leading-6 text-black/60">
+          This preview reserves space for generated QR codes after affiliate identity and tracking-domain settings are connected.
+        </p>
         <div className="mt-4 grid h-36 w-36 grid-cols-6 gap-1 rounded-md bg-white p-3 shadow-inner">
           {Array.from({ length: 36 }).map((_, index) => (
             <span key={index} className={index % 2 === 0 || index % 7 === 0 ? "bg-black" : "bg-black/10"} />

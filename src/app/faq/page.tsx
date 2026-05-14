@@ -9,7 +9,7 @@ export default function FaqPage() {
       <div className="mt-8">
         <Accordion
           items={[
-            { title: "What can I buy here?", body: "FootprintsHub supports physical products, digital products, creator merch, memberships, blind box and booster pack scaffolds, and founder/supporter bundles." },
+            { title: "What can I buy here?", body: "FootprintsHub supports physical products, digital products, creator merch, memberships, blind box concepts, booster pack concepts, and founder/supporter bundles." },
             { title: "Is checkout secure?", body: "Stripe Checkout is created server-side after product and cart validation. FootprintsHub does not store raw card data." },
             { title: "Can I become an ambassador?", body: "Yes. The application flow is available, and commissions are limited to qualified purchases with disclosure, fraud controls, and refund reversals." },
             { title: "Are blind boxes live?", body: "Randomized products need published odds and clear assortment rules before paid public sales." },
