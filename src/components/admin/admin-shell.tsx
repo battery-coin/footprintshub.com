@@ -31,10 +31,10 @@ const links = [
 
 export function AdminShell({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[220px_1fr] lg:px-8">
-      <aside className="h-fit rounded-lg border border-black/10 bg-white p-4">
+    <main id="admin-top" className="mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl gap-8 overflow-visible px-4 py-10 pb-24 sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:px-8">
+      <aside className="h-fit rounded-lg border border-black/10 bg-white p-4 lg:sticky lg:top-24">
         <p className="px-2 text-sm font-semibold uppercase tracking-[0.18em] text-black/45">Admin</p>
-        <nav className="mt-4 grid gap-1">
+        <nav className="mt-4 grid max-h-[70vh] gap-1 overflow-y-auto pr-1">
           {links.map(([href, label]) => (
             <Link key={href} href={href} className="rounded-md px-3 py-2 text-sm hover:bg-black/5">
               {label}
@@ -42,7 +42,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
       </aside>
-      <section>{children}</section>
+      <section className="min-w-0 overflow-visible">{children}</section>
     </main>
   );
 }

@@ -40,6 +40,11 @@ export function AffiliateAdminPage({ title, children }: { title: string; childre
           ))}
         </div>
         {children ? <div className="mt-8">{children}</div> : null}
+        <div className="mt-10 flex justify-end">
+          <a href="#admin-top" className="rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black/70 hover:bg-black/[0.04]">
+            Back to top
+          </a>
+        </div>
       </div>
     </AdminShell>
   );

@@ -1,5 +1,6 @@
 import { AffiliateAdminPage } from "@/components/admin/affiliate-admin-page";
 import { StructureSettingsForm } from "@/components/admin/affiliate-structure-actions";
+import { ButtonLink } from "@/components/ui/button";
 import { getAdminAffiliatePlan } from "@/lib/affiliate/plan-builder";
 import { getAffiliateStructureTemplate, type BinaryStructureConfig } from "@/lib/affiliate/structure-templates";
 
@@ -11,6 +12,11 @@ export default async function BinaryPlanSettingsPage({ params }: { params: Promi
 
   return (
     <AffiliateAdminPage title="Binary structure settings">
+      <div className="mb-5 flex flex-wrap gap-3">
+        <ButtonLink href={`/admin/affiliates/plans/${plan?.id ?? id}`} variant="secondary">Plan overview</ButtonLink>
+        <ButtonLink href={`/admin/affiliates/plans/${plan?.id ?? id}/levels`} variant="secondary">Edit levels</ButtonLink>
+        <ButtonLink href="/admin/affiliates/structures" variant="secondary">Choose structure</ButtonLink>
+      </div>
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <StructureSettingsForm
           planId={plan?.id ?? id}
