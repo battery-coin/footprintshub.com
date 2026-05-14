@@ -9,12 +9,12 @@ test("includes binary, matrix, and unilevel templates", () => {
   );
 });
 
-test("marks only unilevel as a functional payout engine", () => {
+test("marks binary and matrix as configurable owner-managed structures", () => {
   const byType = Object.fromEntries(affiliateStructureTemplates.map((template) => [template.structureType, template]));
 
   assert.equal(byType.unilevel.engineStatus, "functional");
-  assert.equal(byType.binary.engineStatus, "scaffolded");
-  assert.equal(byType.matrix.engineStatus, "scaffolded");
-  assert.match(getStructureEngineNotice("binary"), /scaffolded/i);
-  assert.match(getStructureEngineNotice("matrix"), /scaffolded/i);
+  assert.equal(byType.binary.engineStatus, "configurable");
+  assert.equal(byType.matrix.engineStatus, "configurable");
+  assert.match(getStructureEngineNotice("binary"), /configuration is active/i);
+  assert.match(getStructureEngineNotice("matrix"), /configuration is active/i);
 });

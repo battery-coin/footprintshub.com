@@ -60,7 +60,7 @@ export type AffiliateStructureTemplate = {
   bestUseCase: string;
   complexity: "Low" | "Medium" | "High";
   riskLevel: "low" | "medium" | "high";
-  engineStatus: "functional" | "scaffolded";
+  engineStatus: "functional" | "configurable";
   defaultConfig: BinaryStructureConfig | MatrixStructureConfig | UnilevelStructureConfig;
   defaultLevels: StructureLevelTemplate[];
 };
@@ -98,10 +98,10 @@ export const affiliateStructureTemplates: AffiliateStructureTemplate[] = [
     name: "Binary Structure",
     structureType: "binary",
     description: "Two-team structure with configurable left and right team labels, weaker-leg volume, and pair settings.",
-    bestUseCase: "Owners who need a left/right team view and want volume balancing before enabling live payouts.",
+    bestUseCase: "Owners who need a left/right team view and want volume-balancing controls.",
     complexity: "High",
     riskLevel: "high",
-    engineStatus: "scaffolded",
+    engineStatus: "configurable",
     defaultConfig: {
       leftLabel: "Left Team",
       rightLabel: "Right Team",
@@ -121,10 +121,10 @@ export const affiliateStructureTemplates: AffiliateStructureTemplate[] = [
     name: "Matrix Structure",
     structureType: "matrix",
     description: "Fixed width by depth structure with configurable level labels, level percentages, and spillover mode.",
-    bestUseCase: "Owners who need a controlled grid preview before enabling matrix placement payouts.",
+    bestUseCase: "Owners who need controlled grid placement, spillover settings, and structured level payouts.",
     complexity: "Medium",
     riskLevel: "medium",
-    engineStatus: "scaffolded",
+    engineStatus: "configurable",
     defaultConfig: {
       width: 3,
       depth: 7,
@@ -193,5 +193,5 @@ export function getStructureEngineNotice(structureType: AffiliateStructureType) 
     return "Unilevel purchase commissions are supported by the current closure-table commission engine.";
   }
 
-  return `${structureType === "binary" ? "Binary" : "Matrix"} settings are configurable and previewable. Live payout execution is scaffolded until placement and volume rules are hardened.`;
+  return `${structureType === "binary" ? "Binary" : "Matrix"} configuration is active for saved settings and preview. Payout execution requires final owner activation after placement and volume rules are reviewed.`;
 }

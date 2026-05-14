@@ -4,7 +4,7 @@ import { updateStructureConfig } from "@/lib/affiliate/plan-builder";
 
 export async function GET(request: Request) {
   if (!isAdminSecretValid(getAdminSecretFromRequest(request))) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  return NextResponse.json({ structureType: "matrix", engineStatus: "scaffolded" });
+  return NextResponse.json({ structureType: "matrix", engineStatus: "configurable" });
 }
 
 export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {

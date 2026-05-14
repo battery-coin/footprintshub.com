@@ -44,7 +44,7 @@ export default async function AffiliatePlanDetailPage({ params }: { params: Prom
               ["Commission trigger", "Verified paid order only"],
               ["Approval", `Pending first, ${plan.holdDays}-day hold or admin approval`],
               ["Refunds", "Direct and structure commissions reverse proportionally"],
-              ["Engine", plan.engineStatus === "functional" ? "Live commission calculation supported" : "Configuration and preview only until placement engine is hardened"],
+              ["Engine", plan.engineStatus === "functional" ? "Live commission calculation supported" : "Configuration saves and previews; owner approval required before payout execution"],
               ["Compliance", "No commission for recruitment alone"],
             ].map(([label, value]) => (
               <div key={label} className="rounded-md bg-black/[0.03] p-3">

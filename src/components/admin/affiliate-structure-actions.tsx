@@ -199,7 +199,7 @@ export function PlanLevelsEditor({ plan }: { plan: AdminAffiliatePlanView }) {
       <div className="rounded-lg border border-black/10 bg-white p-5">
         <h2 className="text-xl font-semibold">Editable level labels and rates</h2>
         <p className="mt-2 text-sm leading-6 text-black/60">
-          Percentages are stored as basis points. Example: 10% is saved as 1000 bps. Binary and Matrix settings persist, but their payout engines remain scaffolded.
+          Percentages are stored as basis points. Example: 10% is saved as 1000 bps. Binary, Matrix, and Unilevel settings persist to the database for owner-managed plan setup.
         </p>
         <div className="mt-5 grid gap-3">
           {levels.map((level, index) => (

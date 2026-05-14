@@ -7,7 +7,10 @@ import {
   getAffiliateStructureTemplateByKey,
   getStructureEngineNotice,
   type AffiliateStructureTemplate,
+  type BinaryStructureConfig,
+  type MatrixStructureConfig,
   type StructureLevelTemplate,
+  type UnilevelStructureConfig,
 } from "./structure-templates";
 import type { AffiliateStructureType } from "./types";
 import { getOrCreateDefaultShop } from "@/lib/shops/default-shop";
@@ -26,9 +29,12 @@ export type AdminAffiliatePlanView = {
   maxCommissionPoolBps?: number | null;
   holdDays: number;
   cookieDays: number;
-  engineStatus: "functional" | "scaffolded";
+  engineStatus: "functional" | "configurable";
   levels: StructureLevelTemplate[];
   template: AffiliateStructureTemplate;
+  binaryConfig?: BinaryStructureConfig | null;
+  matrixConfig?: MatrixStructureConfig | null;
+  unilevelConfig?: UnilevelStructureConfig | null;
 };
 
 export function getFallbackPlan(structureType: AffiliateStructureType = "unilevel", id = "footprintshub-7-level"): AdminAffiliatePlanView {
@@ -50,6 +56,9 @@ export function getFallbackPlan(structureType: AffiliateStructureType = "unileve
     engineStatus: template.engineStatus,
     levels: template.defaultLevels,
     template,
+    binaryConfig: structureType === "binary" ? (template.defaultConfig as BinaryStructureConfig) : null,
+    matrixConfig: structureType === "matrix" ? (template.defaultConfig as MatrixStructureConfig) : null,
+    unilevelConfig: structureType === "unilevel" ? (template.defaultConfig as UnilevelStructureConfig) : null,
   };
 }
 
@@ -60,7 +69,12 @@ export async function listAdminAffiliatePlans(): Promise<AdminAffiliatePlanView[
 
   try {
     const plans = await getPrisma().affiliatePlan.findMany({
-      include: { levels: { orderBy: [{ sortOrder: "asc" }, { levelDepth: "asc" }] } },
+      include: {
+        levels: { orderBy: [{ sortOrder: "asc" }, { levelDepth: "asc" }] },
+        binaryConfig: true,
+        matrixConfig: true,
+        unilevelConfig: true,
+      },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
       take: 50,
     });
@@ -85,7 +99,12 @@ export async function getAdminAffiliatePlan(id: string): Promise<AdminAffiliateP
   try {
     const plan = await getPrisma().affiliatePlan.findUnique({
       where: { id },
-      include: { levels: { orderBy: [{ sortOrder: "asc" }, { levelDepth: "asc" }] } },
+      include: {
+        levels: { orderBy: [{ sortOrder: "asc" }, { levelDepth: "asc" }] },
+        binaryConfig: true,
+        matrixConfig: true,
+        unilevelConfig: true,
+      },
     });
 
     return plan ? mapPlan(plan) : null;
@@ -474,7 +493,11 @@ async function createStructureConfig({
   }
 }
 
-function mapPlan(plan: Prisma.AffiliatePlanGetPayload<{ include: { levels: true } }>): AdminAffiliatePlanView {
+function mapPlan(
+  plan: Prisma.AffiliatePlanGetPayload<{
+    include: { levels: true; binaryConfig: true; matrixConfig: true; unilevelConfig: true };
+  }>,
+): AdminAffiliatePlanView {
   const structureType = plan.structureType;
   const template = getAffiliateStructureTemplate(structureType) ?? getAffiliateStructureTemplate("unilevel")!;
   const levels = plan.levels.length
@@ -508,6 +531,39 @@ function mapPlan(plan: Prisma.AffiliatePlanGetPayload<{ include: { levels: true 
     engineStatus: template.engineStatus,
     levels,
     template,
+    binaryConfig: plan.binaryConfig
+      ? {
+          leftLabel: plan.binaryConfig.leftLabel,
+          rightLabel: plan.binaryConfig.rightLabel,
+          payoutBasis: plan.binaryConfig.payoutBasis,
+          pairRatioLeft: plan.binaryConfig.pairRatioLeft,
+          pairRatioRight: plan.binaryConfig.pairRatioRight,
+          pairCommissionType: plan.binaryConfig.pairCommissionType,
+          pairCommissionBps: plan.binaryConfig.pairCommissionBps ?? undefined,
+          pairFixedCents: plan.binaryConfig.pairFixedCents ?? undefined,
+          spilloverMode: plan.binaryConfig.spilloverMode,
+          carryForwardVolume: plan.binaryConfig.carryForwardVolume,
+          flushAfterPayout: plan.binaryConfig.flushAfterPayout,
+          maxPairsPerPeriod: plan.binaryConfig.maxPairsPerPeriod ?? undefined,
+        }
+      : null,
+    matrixConfig: plan.matrixConfig
+      ? {
+          width: plan.matrixConfig.width,
+          depth: plan.matrixConfig.depth,
+          spilloverMode: plan.matrixConfig.spilloverMode,
+          completionBonusEnabled: plan.matrixConfig.completionBonusEnabled,
+          completionBonusCents: plan.matrixConfig.completionBonusCents ?? undefined,
+          levelCommissionMode: plan.matrixConfig.levelCommissionMode,
+        }
+      : null,
+    unilevelConfig: plan.unilevelConfig
+      ? {
+          unlimitedFrontline: plan.unilevelConfig.unlimitedFrontline,
+          maxDepth: plan.unilevelConfig.maxDepth,
+          compressionBehavior: plan.unilevelConfig.compressionBehavior,
+        }
+      : null,
   };
 }
 

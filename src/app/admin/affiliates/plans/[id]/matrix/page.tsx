@@ -1,13 +1,13 @@
 import { AffiliateAdminPage } from "@/components/admin/affiliate-admin-page";
 import { StructureSettingsForm } from "@/components/admin/affiliate-structure-actions";
 import { getAdminAffiliatePlan } from "@/lib/affiliate/plan-builder";
-import { getAffiliateStructureTemplate } from "@/lib/affiliate/structure-templates";
+import { getAffiliateStructureTemplate, type MatrixStructureConfig } from "@/lib/affiliate/structure-templates";
 
 export default async function MatrixPlanSettingsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const plan = await getAdminAffiliatePlan(id);
   const template = getAffiliateStructureTemplate("matrix")!;
-  const config = template.defaultConfig as Record<string, string | number | boolean>;
+  const config = { ...(template.defaultConfig as MatrixStructureConfig), ...(plan?.matrixConfig ?? {}) };
 
   return (
     <AffiliateAdminPage title="Matrix structure settings">
@@ -24,8 +24,8 @@ export default async function MatrixPlanSettingsPage({ params }: { params: Promi
             { name: "completionBonusCents", label: "Completion bonus cents", value: config.completionBonusCents ?? 0, type: "number" },
           ]}
         />
-        <aside className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900/75">
-          Matrix payout execution is scaffolded. The owner can configure width, depth, spillover mode, and level rates, but live payout execution remains disabled until placement logic is hardened.
+        <aside className="rounded-lg border border-sky-200 bg-sky-50 p-5 text-sm leading-6 text-sky-900/75">
+          Matrix configuration is functional: width, depth, spillover mode, completion bonus, and level commission mode save to the database. Payout execution should be activated only after owner review of matrix placement rules.
         </aside>
       </div>
     </AffiliateAdminPage>
