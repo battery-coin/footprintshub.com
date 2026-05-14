@@ -24,6 +24,14 @@ BEGIN
 END $$;
 `);
 
+  await prisma.$executeRawUnsafe(`
+ALTER TYPE "CommissionBase" ADD VALUE IF NOT EXISTS 'direct_commission';
+ALTER TYPE "CommissionBase" ADD VALUE IF NOT EXISTS 'leg_volume';
+ALTER TYPE "CommissionBase" ADD VALUE IF NOT EXISTS 'weaker_leg_volume';
+ALTER TYPE "CommissionBase" ADD VALUE IF NOT EXISTS 'matrix_level_volume';
+ALTER TYPE "CommissionBase" ADD VALUE IF NOT EXISTS 'gross_margin';
+`);
+
   await prisma.$executeRawUnsafe('ALTER TABLE "AffiliateProgram" ADD COLUMN IF NOT EXISTS "activePlanId" TEXT');
   await prisma.$executeRawUnsafe('ALTER TABLE "AffiliateProgram" ADD COLUMN IF NOT EXISTS "defaultPlanType" "AffiliateStructureType"');
   await prisma.$executeRawUnsafe(`
