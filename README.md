@@ -21,6 +21,8 @@ FootprintsHub is the flagship standalone shop at `footprintshub.com`.
 
 Hero Studio commerce comes later through shared shop IDs, product cards, checkout redirects, webhooks, and digital unlock events. Magento is not embedded in Hero Studio.
 
+The living architecture record is [docs/ARCHITECTURE_CANON.md](docs/ARCHITECTURE_CANON.md). Update it with a dated snapshot after meaningful route, schema, workflow, deployment, or cross-repo integration changes.
+
 ## Development
 
 ```powershell
